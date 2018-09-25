@@ -370,10 +370,10 @@ void  executeGcodeLine(const String& gcodeLine){
             G10(gcodeLine);
             break;
         case 20:
-            setInchesToMillimetersConversion(INCHES);
+            setMeasurementUnitConversionFactor(INCHES_TO_MLLIMETERS);
             break;
         case 21:
-            setInchesToMillimetersConversion(MILLIMETERS);
+            setMeasurementUnitConversionFactor(MILLIMETERS);
             break;
         case 40:
             break; //the G40 command turns off cutter compensation which is already off so it is safe to ignore
@@ -643,10 +643,10 @@ void G1(const String& readString, int G0orG1){
 
     float currentZPos = zAxis.read();
 
-    xgoto      = sys.inchesToMMConversion*extractGcodeValue(readString, 'X', currentXPos/sys.inchesToMMConversion);
-    ygoto      = sys.inchesToMMConversion*extractGcodeValue(readString, 'Y', currentYPos/sys.inchesToMMConversion);
-    zgoto      = sys.inchesToMMConversion*extractGcodeValue(readString, 'Z', currentZPos/sys.inchesToMMConversion);
-    sys.feedrate   = sys.inchesToMMConversion*extractGcodeValue(readString, 'F', sys.feedrate/sys.inchesToMMConversion);
+    xgoto      = sys.mmConversionFactor*extractGcodeValue(readString, 'X', currentXPos/sys.mmConversionFactor);
+    ygoto      = sys.mmConversionFactor*extractGcodeValue(readString, 'Y', currentYPos/sys.mmConversionFactor);
+    zgoto      = sys.mmConversionFactor*extractGcodeValue(readString, 'Z', currentZPos/sys.mmConversionFactor);
+    sys.feedRate   = sys.mmConversionFactor*extractGcodeValue(readString, 'F', sys.feedRate/sys.mmConversionFactor);
 
     if (sys.useRelativeUnits){ //if we are using a relative coordinate system
 
@@ -661,18 +661,18 @@ void G1(const String& readString, int G0orG1){
         }
     }
 
-    sys.feedrate = constrain(sys.feedrate, 1, sysSettings.maxFeed);   //constrain the maximum feedrate, 35ipm = 900 mmpm
+    sys.feedRate = constrain(sys.feedRate, 1, sysSettings.xYMaxFeedRate);   //constrain the maximum feedrate, 35ipm = 900 mmpm
 
     //if the zaxis is attached
-    if(!sysSettings.zAxisAttached){
+    if(!sysSettings.zAxisMotorized){
         float threshold = .1; //units of mm
         if (abs(currentZPos - zgoto) > threshold){
             Serial.print(F("Message: Please adjust Z-Axis to a depth of "));
             if (zgoto > 0){
                 Serial.print(F("+"));
             }
-            Serial.print(zgoto/sys.inchesToMMConversion);
-            if (sys.inchesToMMConversion == INCHES){
+            Serial.print(zgoto/sys.mmConversionFactor);
+            if (sys.mmConversionFactor == INCHES_TO_MLLIMETERS){
                 Serial.println(F(" in"));
             }
             else{
@@ -690,11 +690,11 @@ void G1(const String& readString, int G0orG1){
 
     if (G0orG1 == 1){
         //if this is a regular move
-        coordinatedMove(xgoto, ygoto, zgoto, sys.feedrate); //The XY move is performed
+        coordinatedMove(xgoto, ygoto, zgoto, sys.feedRate); //The XY move is performed
     }
     else{
         //if this is a rapid move
-        coordinatedMove(xgoto, ygoto, zgoto, sysSettings.maxFeed); //move the same as a regular move, but go fast
+        coordinatedMove(xgoto, ygoto, zgoto, sysSettings.xYMaxFeedRate); //move the same as a regular move, but go fast
     }
 }
 
@@ -710,22 +710,22 @@ void G2(const String& readString, int G2orG3){
     float X1 = sys.xPosition; //does this work if units are inches? (It seems to)
     float Y1 = sys.yPosition;
 
-    float X2      = sys.inchesToMMConversion*extractGcodeValue(readString, 'X', X1/sys.inchesToMMConversion);
-    float Y2      = sys.inchesToMMConversion*extractGcodeValue(readString, 'Y', Y1/sys.inchesToMMConversion);
-    float I       = sys.inchesToMMConversion*extractGcodeValue(readString, 'I', 0.0);
-    float J       = sys.inchesToMMConversion*extractGcodeValue(readString, 'J', 0.0);
-    sys.feedrate      = sys.inchesToMMConversion*extractGcodeValue(readString, 'F', sys.feedrate/sys.inchesToMMConversion);
+    float X2      = sys.mmConversionFactor*extractGcodeValue(readString, 'X', X1/sys.mmConversionFactor);
+    float Y2      = sys.mmConversionFactor*extractGcodeValue(readString, 'Y', Y1/sys.mmConversionFactor);
+    float I       = sys.mmConversionFactor*extractGcodeValue(readString, 'I', 0.0);
+    float J       = sys.mmConversionFactor*extractGcodeValue(readString, 'J', 0.0);
+    sys.feedRate      = sys.mmConversionFactor*extractGcodeValue(readString, 'F', sys.feedRate/sys.mmConversionFactor);
 
     float centerX = X1 + I;
     float centerY = Y1 + J;
 
-    sys.feedrate = constrain(sys.feedrate, 1, sysSettings.maxFeed);   //constrain the maximum feedrate, 35ipm = 900 mmpm
+    sys.feedRate = constrain(sys.feedRate, 1, sysSettings.xYMaxFeedRate);   //constrain the maximum feedrate, 35ipm = 900 mmpm
 
     if (G2orG3 == 2){
-        arc(X1, Y1, X2, Y2, centerX, centerY, sys.feedrate, CLOCKWISE);
+        arc(X1, Y1, X2, Y2, centerX, centerY, sys.feedRate, CLOCKWISE);
     }
     else {
-        arc(X1, Y1, X2, Y2, centerX, centerY, sys.feedrate, COUNTERCLOCKWISE);
+        arc(X1, Y1, X2, Y2, centerX, centerY, sys.feedRate, COUNTERCLOCKWISE);
     }
 }
 
@@ -761,7 +761,7 @@ void  G4(const String& readString){
 void  G10(const String& readString){
     /*The G10() function handles the G10 gcode which re-zeros one or all of the machine's axes.*/
     float currentZPos = zAxis.read();
-    float zgoto      = sys.inchesToMMConversion*extractGcodeValue(readString, 'Z', currentZPos/sys.inchesToMMConversion);
+    float zgoto      = sys.mmConversionFactor*extractGcodeValue(readString, 'Z', currentZPos/sys.mmConversionFactor);
 
     zAxis.set(zgoto);
     zAxis.endMove(zgoto);
@@ -770,7 +770,7 @@ void  G10(const String& readString){
 
 void  G38(const String& readString) {
   //if the zaxis is attached
-  if (sysSettings.zAxisAttached) {
+  if (sysSettings.zAxisMotorized) {
     /*
        The G38() function handles the G38 gcode which zeros the machine's z axis.
        Currently ignores X and Y options
@@ -778,13 +778,13 @@ void  G38(const String& readString) {
     if (readString.substring(3, 5) == ".2") {
       Serial.println(F("probing for z axis zero"));
       float zgoto;
-
+      float zMaxFeedRate = getZMaxFeedRate();
 
       float currentZPos = zAxis.read();
 
-      zgoto      = sys.inchesToMMConversion * extractGcodeValue(readString, 'Z', currentZPos / sys.inchesToMMConversion);
-      sys.feedrate   = sys.inchesToMMConversion * extractGcodeValue(readString, 'F', sys.feedrate / sys.inchesToMMConversion);
-      sys.feedrate = constrain(sys.feedrate, 1, sysSettings.maxZRPM * abs(zAxis.getPitch()));
+      zgoto      = sys.mmConversionFactor * extractGcodeValue(readString, 'Z', currentZPos / sys.mmConversionFactor);
+      sys.feedRate   = sys.mmConversionFactor * extractGcodeValue(readString, 'F', sys.feedRate / sys.mmConversionFactor);
+      sys.feedRate = constrain(sys.feedRate, 1, zMaxFeedRate);
 
       if (sys.useRelativeUnits) { //if we are using a relative coordinate system
         if (readString.indexOf('Z') >= 0) { //if z has moved
@@ -796,7 +796,7 @@ void  G38(const String& readString) {
       Serial.print(zgoto);
       Serial.println(F(" mm."));
       Serial.print(F("feedrate "));
-      Serial.print(sys.feedrate);
+      Serial.print(sys.feedRate);
       Serial.println(F(" mm per min."));
 
 
@@ -804,12 +804,12 @@ void  G38(const String& readString) {
       pinMode(ProbePin, INPUT_PULLUP);
       digitalWrite(ProbePin, HIGH);
 
-      if (zgoto != currentZPos / sys.inchesToMMConversion) {
+      if (zgoto != currentZPos / sys.mmConversionFactor) {
         //        now move z to the Z destination;
         //        Currently ignores X and Y options
         //          we need a version of singleAxisMove that quits if the AUXn input changes (goes LOW)
         //          which will act the same as the stop found in singleAxisMove (need both?)
-        //        singleAxisMove(&zAxis, zgoto, feedrate);
+        //        singleAxisMove(&zAxis, zgoto, zFeedrate);
 
         /*
            Takes a pointer to an axis object and mo ves that axis to endPos at speed MMPerMin
@@ -822,7 +822,7 @@ void  G38(const String& readString) {
 
         float direction            = moveDist / abs(moveDist); //determine the direction of the move
 
-        float stepSizeMM           = 0.01;                    //step size in mm
+        float stepSizeMM           = 0.01;                    //step size in mm for each PID Control LOOP INTERVAL
 
         //the argument to abs should only be a variable -- splitting calc into 2 lines
         long finalNumberOfSteps    = moveDist / stepSizeMM;    //number of steps taken in move
@@ -855,7 +855,7 @@ void  G38(const String& readString) {
           if (checkForProbeTouch(ProbePin)) {
             zAxis.set(0);
             zAxis.endMove(0);
-            zAxis.attach();
+            zAxis.attach(); // should it not be detach at the end of the move?
             Serial.println(F("z axis zeroed"));
             return;
           }
@@ -869,7 +869,7 @@ void  G38(const String& readString) {
         axis->endMove(endPos);
         Serial.println(F("error: probe did not connect\nprogram stopped\nz axis not set\n"));
         sys.stop = true;
-      } // end if zgoto != currentZPos / sys.inchesToMMConversion
+      } // end if zgoto != currentZPos / sys.mmConversionFactor
 
     } else {
       Serial.print(F("G38"));
@@ -881,6 +881,6 @@ void  G38(const String& readString) {
   }
 }
 
-void  setInchesToMillimetersConversion(float newConversionFactor){
-    sys.inchesToMMConversion = newConversionFactor;
+void  setMeasurementUnitConversionFactor(float newConversionFactor){
+    sys.mmConversionFactor = newConversionFactor;
 }

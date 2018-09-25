@@ -36,7 +36,7 @@ void  calibrateChainLengths(String gcodeLine){
     if (extractGcodeValue(gcodeLine, 'L', 0)){
         //measure out the left chain
         Serial.println(F("Measuring out left chain"));
-        singleAxisMove(&leftAxis, sysSettings.originalChainLength, (sysSettings.maxFeed * .9));
+        singleAxisMove(&leftAxis, sysSettings.originalChainLength, (sysSettings.xYMaxFeedRate * .9));
 
         Serial.print(leftAxis.read());
         Serial.println(F("mm"));
@@ -46,7 +46,7 @@ void  calibrateChainLengths(String gcodeLine){
     else if(extractGcodeValue(gcodeLine, 'R', 0)){
         //measure out the right chain
         Serial.println(F("Measuring out right chain"));
-        singleAxisMove(&rightAxis, sysSettings.originalChainLength, (sysSettings.maxFeed * .9));
+        singleAxisMove(&rightAxis, sysSettings.originalChainLength, (sysSettings.xYMaxFeedRate * .9));
 
         Serial.print(rightAxis.read());
         Serial.println(F("mm"));
@@ -248,6 +248,12 @@ void   setupAxes(){
     if(pcbVersion == 3){ // TLE5206
       configAuxHigh(aux7, aux8, aux9);
     }
+}
+
+// Calculate resulting z axis max feed rate based on system setttings
+float getZMaxFeedRate(){
+	float tempRate = sysSettings.zScrewMaxRPM * abs(zAxis.getPitch());
+	return tempRate;
 }
 
 // Assign AUX pins to extern variables used by functions like Spindle and Probe

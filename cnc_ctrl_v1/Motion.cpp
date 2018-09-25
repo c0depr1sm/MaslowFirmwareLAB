@@ -16,7 +16,7 @@
 
 #include "Maslow.h"
 
-// Flag for when to send movement commands
+// Flag for when to send movement commands. If false, then the PID control process is ready to ge a new target value. When true, the target position was updated but not yet captured by the PID control process loop as the next target.
 volatile bool  movementUpdated  =  false;
 // Global variables for misloop tracking
 #if misloopDebug > 0
@@ -28,7 +28,7 @@ void initMotion(){
     // Called on startup or after a stop command
     leftAxis.stop();
     rightAxis.stop();
-    if(sysSettings.zAxisAttached){
+    if(sysSettings.zAxisMotorized){
       zAxis.stop();
     }
 }
@@ -71,17 +71,22 @@ void movementUpdate(){
 
 
 // why does this return anything
-int   coordinatedMove(const float& xEnd, const float& yEnd, const float& zEnd, float MMPerMin){
+// moveSpeed (formerly MMPerMin) describes the demanded displacement speed in mm/min
+int   coordinatedMove(const float& xEnd, const float& yEnd, const float& zEnd, float moveSpeed){
     
     /*The move() function moves the tool in a straight line to the position (xEnd, yEnd) at 
-    the speed moveSpeed. Movements are correlated so that regardless of the distances moved in each 
-    direction, the tool moves to the target in a straight line. This function is used by the G00 
-    and G01 commands. The units at this point should all be in mm or mm per minute*/
+    the speed moveSpeed. 
+    * The move is not necessarily occuring at a depth where cutting occurs. So the movespeed is not a feedrate.
+    * Movements are correlated so that regardless of the distances moved in each 
+    direction, the tool moves to the target in a straight line. 
+    * Speed is scalled down as necessary to make sure no axis exceeds its max rate.
+    * This function is used by the G00 and G01 commands. The units at this point should all 
+    * be in mm or mm per minute*/
     
     float  xStartingLocation = sys.xPosition;
     float  yStartingLocation = sys.yPosition;
     float  zStartingLocation = zAxis.read();  // I don't know why we treat the zaxis differently
-    float  zMaxFeed          = sysSettings.maxZRPM * abs(zAxis.getPitch());
+    float  zMaxFeed          = getZMaxFeedRate();
     
     //find the total distances to move
     float  distanceToMoveInMM         = sqrt(  sq(xEnd - xStartingLocation)  +  sq(yEnd - yStartingLocation)  + sq(zEnd - zStartingLocation));
@@ -90,18 +95,18 @@ int   coordinatedMove(const float& xEnd, const float& yEnd, const float& zEnd, f
     float  zDistanceToMoveInMM        = zEnd - zStartingLocation;
     
     //compute feed details
-    MMPerMin = constrain(MMPerMin, 1, sysSettings.maxFeed);   //constrain the maximum feedrate, 35ipm = 900 mmpm
-    float  stepSizeMM           = computeStepSize(MMPerMin);
+    moveSpeed = constrain(moveSpeed, 1, sysSettings.xYMaxFeedRate);   //constrain the maximum feedrate,
+    float  stepSizeMM           = computeStepSize(moveSpeed);
     float  finalNumberOfSteps   = abs(distanceToMoveInMM/stepSizeMM);
     float  delayTime            = LOOPINTERVAL;
     float  zFeedrate            = calculateFeedrate(abs(zDistanceToMoveInMM/finalNumberOfSteps), delayTime);
     
-    //throttle back federate if it exceeds zaxis max
+    //throttle back feedrate if it exceeds zaxis max
     if (zFeedrate > zMaxFeed){
       float  zStepSizeMM        = computeStepSize(zMaxFeed);
       finalNumberOfSteps        = abs(zDistanceToMoveInMM/zStepSizeMM);
       stepSizeMM                = (distanceToMoveInMM/finalNumberOfSteps);
-      MMPerMin                  = calculateFeedrate(stepSizeMM, delayTime);
+      moveSpeed                  = calculateFeedrate(stepSizeMM, delayTime);
     }
     
     // (fraction of distance in x direction)* size of step toward target
@@ -112,7 +117,7 @@ int   coordinatedMove(const float& xEnd, const float& yEnd, const float& zEnd, f
     //attach the axes
     leftAxis.attach();
     rightAxis.attach();
-    if(sysSettings.zAxisAttached){
+    if(sysSettings.zAxisMotorized){
       zAxis.attach();
     }
     
@@ -142,7 +147,7 @@ int   coordinatedMove(const float& xEnd, const float& yEnd, const float& zEnd, f
             // This section ~180us
             leftAxis.write(aChainLength);
             rightAxis.write(bChainLength);
-            if(sysSettings.zAxisAttached){
+            if(sysSettings.zAxisMotorized){
               zAxis.write(zPosition);
             }
             
@@ -163,7 +168,7 @@ int   coordinatedMove(const float& xEnd, const float& yEnd, const float& zEnd, f
     kinematics.inverse(xEnd,yEnd,&aChainLength,&bChainLength);
     leftAxis.endMove(aChainLength);
     rightAxis.endMove(bChainLength);
-    if(sysSettings.zAxisAttached){
+    if(sysSettings.zAxisMotorized){
       zAxis.endMove(zPosition);
     }
     
@@ -173,10 +178,10 @@ int   coordinatedMove(const float& xEnd, const float& yEnd, const float& zEnd, f
     return 1;
     
 }
-
-void  singleAxisMove(Axis* axis, const float& endPos, const float& MMPerMin){
+// moveSpeed (formerly MMPerMin) describes the demanded displacement speed in mm/min
+void  singleAxisMove(Axis* axis, const float& endPos, const float& moveSpeed){
     /*
-    Takes a pointer to an axis object and moves that axis to endPos at speed MMPerMin
+    Takes a pointer to an axis object and moves that axis to endPos at moveSpeed
     */
     
     float startingPos          = axis->read();
@@ -184,7 +189,7 @@ void  singleAxisMove(Axis* axis, const float& endPos, const float& MMPerMin){
     
     float direction            = moveDist/abs(moveDist); //determine the direction of the move
     
-    float stepSizeMM           = computeStepSize(MMPerMin);                    //step size in mm
+    float stepSizeMM           = computeStepSize(moveSpeed);                    //step size in mm
 
     //the argument to abs should only be a variable -- splitting calc into 2 lines
     long finalNumberOfSteps    = abs(moveDist/stepSizeMM);      //number of steps taken in move
@@ -229,12 +234,15 @@ void  singleAxisMove(Axis* axis, const float& endPos, const float& MMPerMin){
 int sign(double x) { return x<0 ? -1 : 1; }
 
 // why does this return anything
-int   arc(const float& X1, const float& Y1, const float& X2, const float& Y2, const float& centerX, const float& centerY, const float& MMPerMin, const float& direction){
+// moveSpeed (formerly MMPerMin) describes the demanded displacement speed in mm/min
+int   arc(const float& X1, const float& Y1, const float& X2, const float& Y2, const float& centerX, const float& centerY, const float& moveSpeed, const float& direction){
     /*
     
     Move the machine through an arc from point (X1, Y1) to point (X2, Y2) along the 
-    arc defined by center (centerX, centerY) at speed MMPerMin
+    arc defined by center (centerX, centerY) at speed up to moveSpeed
     
+    Does not handle the Z axis. So this can only implement a  subset of G2 and G3.
+    * Helix paths are not supported.
     */
     
     //compute geometry 
@@ -269,7 +277,7 @@ int   arc(const float& X1, const float& Y1, const float& X2, const float& Y2, co
       // In either case, the gcode cut was essentially a straight line, so 
       // Replace it with a G1 cut to the endpoint
       String gcodeSubstitution = "G1 X";
-      gcodeSubstitution = gcodeSubstitution + String(X2 / sys.inchesToMMConversion, 3) + " Y" + String(Y2 / sys.inchesToMMConversion, 3) + " ";
+      gcodeSubstitution = gcodeSubstitution + String(X2 / sys.mmConversionFactor, 3) + " Y" + String(Y2 / sys.mmConversionFactor, 3) + " ";
       Serial.println("Large-radius arc replaced by straight line to improve accuracy: " + gcodeSubstitution);
       G1(gcodeSubstitution, 1);
       return 1;
@@ -280,7 +288,7 @@ int   arc(const float& X1, const float& Y1, const float& X2, const float& Y2, co
     //set up variables for movement
     long numberOfStepsTaken       =  0;
     
-    float stepSizeMM             =  computeStepSize(MMPerMin);
+    float stepSizeMM             =  computeStepSize(moveSpeed);
 
     //the argument to abs should only be a variable -- splitting calc into 2 lines
     long   finalNumberOfSteps     =  arcLengthMM/stepSizeMM;

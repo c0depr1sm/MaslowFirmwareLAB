@@ -59,7 +59,7 @@ void setup(){
     Serial.print(getPCBVersion());
     if (TLE5206 == true) { Serial.print(F(" TLE5206 ")); }
     Serial.println(F(" Detected"));
-    sys.inchesToMMConversion = 1;
+    sys.mmConversionFactor = 1; // Default is to use milimeter: This is actually a Gcode value to milimeter conversion factor set to 1 (was inchesToMMConversion)
     settingsLoadFromEEprom();
     setupAxes();
     settingsLoadStepsFromEEprom();

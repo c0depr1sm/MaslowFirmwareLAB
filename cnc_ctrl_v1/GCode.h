@@ -43,7 +43,7 @@ void  G2(const String&, int);
 void  G4(const String&);
 void  G10(const String&);
 void  G38(const String&);
-void  setInchesToMillimetersConversion(float);
+void  setMeasurementUnitConversionFactor(float);
 extern int SpindlePowerControlPin;
 extern int ProbePin;
 

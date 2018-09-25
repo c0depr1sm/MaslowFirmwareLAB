@@ -47,12 +47,12 @@ void settingsLoadFromEEprom(){
     // Apply settings
     setPWMPrescalers(int(sysSettings.fPWM));
     kinematics.recomputeGeometry();
-    leftAxis.changeEncoderResolution(&sysSettings.encoderSteps);
-    rightAxis.changeEncoderResolution(&sysSettings.encoderSteps);
+    leftAxis.changeEncoderResolution(&sysSettings.encoderLRMotorStepsCountPerOutputShaftTurn);
+    rightAxis.changeEncoderResolution(&sysSettings.encoderLRMotorStepsCountPerOutputShaftTurn);
     leftAxis.changePitch(&sysSettings.distPerRotLeftChainTolerance);
     rightAxis.changePitch(&sysSettings.distPerRotRightChainTolerance);
     zAxis.changePitch(&sysSettings.zDistPerRot);
-    zAxis.changeEncoderResolution(&sysSettings.zEncoderSteps);
+    zAxis.changeEncoderResolution(&sysSettings.encoderZScrewStepsCountPerTurn);
 }
 
 void settingsReset() {
@@ -63,25 +63,25 @@ void settingsReset() {
     so that if a value is not changed by a user or is not used, it doesn't
     need to be updated here.
     */
-    sysSettings.machineWidth = 2438.4; // float machineWidth;
-    sysSettings.machineHeight = 1219.2; // float machineHeight;
-    sysSettings.distBetweenMotors = 2978.4; // float distBetweenMotors;
-    sysSettings.motorOffsetY = 463.0;  // float motorOffsetY;
+    sysSettings.workSurfaceWidth = 2438.4; // float workSurfaceWidth
+    sysSettings.workSurfaceHeight = 1219.2; // float workSurfaceHeight;
+    sysSettings.distBetweenLRMotors = 2978.4; // float distBetweenLRMotors;
+    sysSettings.lRMotorsYOffsetAboveWorkSurface = 463.0;  // float LRMotorsYOffsetAboveWorkSurface;
     sysSettings.sledWidth = 310.0;  // float sledWidth;
     sysSettings.sledHeight = 139.0;  // float sledHeight;
     sysSettings.sledCG = 79.0;   // float sledCG;
     sysSettings.kinematicsType = 1;      // byte kinematicsType;
-    sysSettings.rotationDiskRadius = 250.0;  // float rotationDiskRadius;
-    sysSettings.axisDetachTime = 2000;   // int axisDetachTime;
+    sysSettings.sledRotationDiskRadius = 250.0;  // float sledRotationDiskRadius;
+    sysSettings.axisPIDControlDetachTimeOutDelay = 2000;   // int axisPIDControlDetachTimeOutDelay;
     sysSettings.originalChainLength = 1650;   // int originalChainLength;
-    sysSettings.encoderSteps = 8113.7; // float encoderSteps;
+    sysSettings.encoderLRMotorStepsCountPerOutputShaftTurn = 8113.7; // float encoderLRMotorStepsCountPerOutputShaftTurn;
     sysSettings.distPerRot = 63.5;   // float distPerRot;
-    sysSettings.maxFeed = 700;   // int maxFeed;
-    sysSettings.zAxisAttached = true;   // zAxisAttached;
+    sysSettings.xYMaxFeedRate = 700;   // int XYmaxFeed
+    sysSettings.zAxisMotorized = true;   // zAxisMotorized;
     sysSettings.spindleAutomateType = NONE;  // bool spindleAutomate;
-    sysSettings.maxZRPM = 12.60;  // float maxZRPM;
+    sysSettings.zScrewMaxRPM = 12.60;  // float zScrewMaxRPM;
     sysSettings.zDistPerRot = 3.17;   // float zDistPerRot;
-    sysSettings.zEncoderSteps = 7560.0; // float zEncoderSteps;
+    sysSettings.encoderZScrewStepsCountPerTurn = 7560.0; // float zEncoderSteps;
     sysSettings.KpPos = 1300.0; // float KpPos;
     sysSettings.KiPos = 0.0;    // float KiPos;
     sysSettings.KdPos = 34.0;   // float KdPos;
@@ -98,7 +98,7 @@ void settingsReset() {
     sysSettings.zKiV = 0.0;    // float zKiV;
     sysSettings.zKdV = 0.28;   // float zKdV;
     sysSettings.zPropWeightV = 1.0;    // float zPropWeightV;
-    sysSettings.chainSagCorrection = 0.0;  // float chainSagCorrection;
+    sysSettings.chainSagCorrectionFactor = 0.0;  // float chainSagCorrectionFactor;
     sysSettings.chainOverSprocket = 1;   // byte chainOverSprocket;
     sysSettings.fPWM = 3;   // byte fPWM;
     sysSettings.distPerRotLeftChainTolerance = 63.5;    // float distPerRotLeftChainTolerance;
@@ -226,16 +226,16 @@ byte settingsStoreGlobalSetting(const byte& parameter,const float& value){
         case 0: case 1: case 2: case 3: case 4: case 5: case 6: case 7: case 8:
             switch(parameter) {
                 case 0:
-                      sysSettings.machineWidth = value;
+                      sysSettings.workSurfaceWidth = value;
                       break;
                 case 1:
-                      sysSettings.machineHeight = value;
+                      sysSettings.workSurfaceHeight = value;
                       break;
                 case 2:
-                      sysSettings.distBetweenMotors = value;
+                      sysSettings.distBetweenLRMotors = value;
                       break;
                 case 3:
-                      sysSettings.motorOffsetY = value;
+                      sysSettings.lRMotorsYOffsetAboveWorkSurface = value;
                       break;
                 case 4:
                       sysSettings.sledWidth = value;
@@ -250,24 +250,24 @@ byte settingsStoreGlobalSetting(const byte& parameter,const float& value){
                       sysSettings.kinematicsType = value;
                       break;
                 case 8:
-                      sysSettings.rotationDiskRadius = value;
+                      sysSettings.sledRotationDiskRadius = value;
                       break;
             }
             kinematics.init();
             break;
         case 9:
-              sysSettings.axisDetachTime = value;
+              sysSettings.axisPIDControlDetachTimeOutDelay = value;
               break;
         case 10:
-              sysSettings.chainLength = value;
+              sysSettings.maxChainReachBeyondSprocketTop = value;
               break;
         case 11:
               sysSettings.originalChainLength = value;
               break;
         case 12:
-              sysSettings.encoderSteps = value;
-              leftAxis.changeEncoderResolution(&sysSettings.encoderSteps);
-              rightAxis.changeEncoderResolution(&sysSettings.encoderSteps);
+              sysSettings.encoderLRMotorStepsCountPerOutputShaftTurn = value;
+              leftAxis.changeEncoderResolution(&sysSettings.encoderLRMotorStepsCountPerOutputShaftTurn);
+              rightAxis.changeEncoderResolution(&sysSettings.encoderLRMotorStepsCountPerOutputShaftTurn);
               if (sys.oldSettingsFlag){
                 bit_false(sys.oldSettingsFlag, NEED_ENCODER_STEPS);
                 if (!sys.oldSettingsFlag){
@@ -288,16 +288,16 @@ byte settingsStoreGlobalSetting(const byte& parameter,const float& value){
               kinematics.init();
               break;
         case 15:
-              sysSettings.maxFeed = value;
+              sysSettings.xYMaxFeedRate = value;
               break;
         case 16:
-              sysSettings.zAxisAttached = value;
+              sysSettings.zAxisMotorized = value;
               break;
         case 17: 
               sysSettings.spindleAutomateType = static_cast<SpindleAutomationType>(value);
               break;
         case 18:
-              sysSettings.maxZRPM = value;
+              sysSettings.zScrewMaxRPM = value;
               break;
         case 19:
               sysSettings.zDistPerRot = value;
@@ -310,8 +310,8 @@ byte settingsStoreGlobalSetting(const byte& parameter,const float& value){
               }
               break;
         case 20:
-              sysSettings.zEncoderSteps = value;
-              zAxis.changeEncoderResolution(&sysSettings.zEncoderSteps);
+              sysSettings.encoderZScrewStepsCountPerTurn = value;
+              zAxis.changeEncoderResolution(&sysSettings.encoderZScrewStepsCountPerTurn);
               if (sys.oldSettingsFlag){
                 bit_false(sys.oldSettingsFlag, NEED_Z_ENCODER_STEPS);
                 if (!sys.oldSettingsFlag){
@@ -379,7 +379,7 @@ byte settingsStoreGlobalSetting(const byte& parameter,const float& value){
             zAxis.setPIDValues(&sysSettings.zKpPos, &sysSettings.zKiPos, &sysSettings.zKdPos, &sysSettings.zPropWeightPos, &sysSettings.zKpV, &sysSettings.zKiV, &sysSettings.zKdV, &sysSettings.zPropWeightV);
             break;
         case 37:
-              sysSettings.chainSagCorrection = value;
+              sysSettings.chainSagCorrectionFactor = value;
               break;
         case 38:
               settingsSaveStepstoEEprom();

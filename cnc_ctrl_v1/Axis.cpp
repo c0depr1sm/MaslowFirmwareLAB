@@ -213,9 +213,9 @@ bool   Axis::attached(){
 void   Axis::detachIfIdle(){
     /*
     Detaches the axis, turning off the motor and PID control, if it has been
-    stationary for more than axisDetachTime
+    stationary for more than axisPIDControlDetachTimeOutDelay
     */
-    if (millis() - _timeLastMoved > sysSettings.axisDetachTime){
+    if (millis() - _timeLastMoved > sysSettings.axisPIDControlDetachTimeOutDelay){
         detach();
     }
     

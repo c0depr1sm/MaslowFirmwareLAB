@@ -54,10 +54,10 @@ void Kinematics::recomputeGeometry(){
     Psi1 = Theta - Phi;
     Psi2 = Theta + Phi;
   
-    halfWidth = sysSettings.machineWidth / 2.0;
-    halfHeight = sysSettings.machineHeight / 2.0;
-    _xCordOfMotor = sysSettings.distBetweenMotors/2;
-    _yCordOfMotor = halfHeight + sysSettings.motorOffsetY;
+    halfWidth = sysSettings.workSurfaceWidth / 2.0;
+    halfHeight = sysSettings.workSurfaceHeight / 2.0;
+    _xCordOfMotor = sysSettings.distBetweenLRMotors/2;
+    _yCordOfMotor = halfHeight + sysSettings.lRMotorsYOffsetAboveWorkSurface;
 
 }
 
@@ -84,8 +84,8 @@ void  Kinematics::quadrilateralInverse(float xTarget,float yTarget, float* aChai
     _verifyValidTarget(&xTarget, &yTarget);
 
     //coordinate shift to put (0,0) in the center of the plywood from the left sprocket
-    y = (halfHeight) + sysSettings.motorOffsetY  - yTarget;
-    x = (sysSettings.distBetweenMotors/2.0) + xTarget;
+    y = (halfHeight) + sysSettings.lRMotorsYOffsetAboveWorkSurface  - yTarget;
+    x = (sysSettings.distBetweenLRMotors/2.0) + xTarget;
 
     //Coordinates definition:
     //         x -->, y |
@@ -94,8 +94,8 @@ void  Kinematics::quadrilateralInverse(float xTarget,float yTarget, float* aChai
     // upper left corner of plywood (270, 270)
 
     byte Tries = 0;                                  //initialize
-    if(x > sysSettings.distBetweenMotors/2.0){                              //the right half of the board mirrors the left half so all computations are done  using left half coordinates.
-      x = sysSettings.distBetweenMotors-x;                                  //Chain lengths are swapped at exit if the x,y is on the right half
+    if(x > sysSettings.distBetweenLRMotors/2.0){                              //the right half of the board mirrors the left half so all computations are done  using left half coordinates.
+      x = sysSettings.distBetweenLRMotors-x;                                  //Chain lengths are swapped at exit if the x,y is on the right half
       Mirror = true;
     }
     else{
@@ -103,7 +103,7 @@ void  Kinematics::quadrilateralInverse(float xTarget,float yTarget, float* aChai
     }
 
     TanGamma = y/x;
-    TanLambda = y/(sysSettings.distBetweenMotors-x);
+    TanLambda = y/(sysSettings.distBetweenLRMotors-x);
     Y1Plus = R * sqrt(1 + TanGamma * TanGamma);
     Y2Plus = R * sqrt(1 + TanLambda * TanLambda);
 
@@ -116,7 +116,7 @@ void  Kinematics::quadrilateralInverse(float xTarget,float yTarget, float* aChai
 
         Crit[0]=  - _moment(Y1Plus, Y2Plus, MySinPhi, SinPsi1, CosPsi1, SinPsi2, CosPsi2);
         Crit[1] = - _YOffsetEqn(Y1Plus, x - h * CosPsi1, SinPsi1);
-        Crit[2] = - _YOffsetEqn(Y2Plus, sysSettings.distBetweenMotors - (x + h * CosPsi2), SinPsi2);
+        Crit[2] = - _YOffsetEqn(Y2Plus, sysSettings.distBetweenLRMotors - (x + h * CosPsi2), SinPsi2);
 
         if (abs(Crit[0]) < KINEMATICSMAXERROR) {
             if (abs(Crit[1]) < KINEMATICSMAXERROR) {
@@ -137,9 +137,9 @@ void  Kinematics::quadrilateralInverse(float xTarget,float yTarget, float* aChai
         Jac[3] = (_YOffsetEqn(Y1Plus, x - h * CosPsi1D, SinPsi1D) + Crit[1])/DELTAPHI;
         Jac[4] = (_YOffsetEqn(Y1Plus + DELTAY, x - h * CosPsi1,SinPsi1) + Crit[1])/DELTAY;
         Jac[5] = 0.0;
-        Jac[6] = (_YOffsetEqn(Y2Plus, sysSettings.distBetweenMotors - (x + h * CosPsi2D), SinPsi2D) + Crit[2])/DELTAPHI;
+        Jac[6] = (_YOffsetEqn(Y2Plus, sysSettings.distBetweenLRMotors - (x + h * CosPsi2D), SinPsi2D) + Crit[2])/DELTAPHI;
         Jac[7] = 0.0;
-        Jac[8] = (_YOffsetEqn(Y2Plus + DELTAY, sysSettings.distBetweenMotors - (x + h * CosPsi2D), SinPsi2) + Crit[2])/DELTAY;
+        Jac[8] = (_YOffsetEqn(Y2Plus + DELTAY, sysSettings.distBetweenLRMotors - (x + h * CosPsi2D), SinPsi2) + Crit[2])/DELTAY;
 
 
         //solve for the next guess
@@ -169,7 +169,7 @@ void  Kinematics::quadrilateralInverse(float xTarget,float yTarget, float* aChai
     Offsety1 = h *  SinPsi1;
     Offsety2 = h * SinPsi2;
     TanGamma = (y - Offsety1 + Y1Plus)/(x - Offsetx1);
-    TanLambda = (y - Offsety2 + Y2Plus)/(sysSettings.distBetweenMotors -(x + Offsetx2));
+    TanLambda = (y - Offsety2 + Y2Plus)/(sysSettings.distBetweenLRMotors -(x + Offsetx2));
     Gamma = atan(TanGamma);
     Lambda =atan(TanLambda);
 
@@ -177,11 +177,11 @@ void  Kinematics::quadrilateralInverse(float xTarget,float yTarget, float* aChai
 
     if(Mirror){
         Chain2 = sqrt((x - Offsetx1)*(x - Offsetx1) + (y + Y1Plus - Offsety1)*(y + Y1Plus - Offsety1)) - R * TanGamma + R * Gamma;   //right chain length
-        Chain1 = sqrt((sysSettings.distBetweenMotors - (x + Offsetx2))*(sysSettings.distBetweenMotors - (x + Offsetx2))+(y + Y2Plus - Offsety2)*(y + Y2Plus - Offsety2)) - R * TanLambda + R * Lambda;   //left chain length
+        Chain1 = sqrt((sysSettings.distBetweenLRMotors - (x + Offsetx2))*(sysSettings.distBetweenLRMotors - (x + Offsetx2))+(y + Y2Plus - Offsety2)*(y + Y2Plus - Offsety2)) - R * TanLambda + R * Lambda;   //left chain length
     }
     else{
         Chain1 = sqrt((x - Offsetx1)*(x - Offsetx1) + (y + Y1Plus - Offsety1)*(y + Y1Plus - Offsety1)) - R * TanGamma + R * Gamma;   //left chain length
-        Chain2 = sqrt((sysSettings.distBetweenMotors - (x + Offsetx2))*(sysSettings.distBetweenMotors - (x + Offsetx2))+(y + Y2Plus - Offsety2)*(y + Y2Plus - Offsety2)) - R * TanLambda + R * Lambda;   //right chain length
+        Chain2 = sqrt((sysSettings.distBetweenLRMotors - (x + Offsetx2))*(sysSettings.distBetweenLRMotors - (x + Offsetx2))+(y + Y2Plus - Offsety2)*(y + Y2Plus - Offsety2)) - R * TanLambda + R * Lambda;   //right chain length
     }
 
     *aChainLength = Chain1;
@@ -232,16 +232,16 @@ void  Kinematics::triangularInverse(float xTarget,float yTarget, float* aChainLe
     float Chain2Straight = sqrt(pow(Motor2Distance,2)-pow(RrightChainTolerance,2));
 
     //Correct the straight chain lengths to account for chain sag
-    Chain1Straight *= (1 + ((sysSettings.chainSagCorrection / 1000000000000) * pow(cos(Chain1Angle),2) * pow(Chain1Straight,2) * pow((tan(Chain2Angle) * cos(Chain1Angle)) + sin(Chain1Angle),2)));
-    Chain2Straight *= (1 + ((sysSettings.chainSagCorrection / 1000000000000) * pow(cos(Chain2Angle),2) * pow(Chain2Straight,2) * pow((tan(Chain1Angle) * cos(Chain2Angle)) + sin(Chain2Angle),2)));
+    Chain1Straight *= (1 + ((sysSettings.chainSagCorrectionFactor / 1000000000000) * pow(cos(Chain1Angle),2) * pow(Chain1Straight,2) * pow((tan(Chain2Angle) * cos(Chain1Angle)) + sin(Chain1Angle),2)));
+    Chain2Straight *= (1 + ((sysSettings.chainSagCorrectionFactor / 1000000000000) * pow(cos(Chain2Angle),2) * pow(Chain2Straight,2) * pow((tan(Chain1Angle) * cos(Chain2Angle)) + sin(Chain2Angle),2)));
 
     //Calculate total chain lengths accounting for sprocket geometry and chain sag
     float Chain1 = Chain1AroundSprocket + Chain1Straight;
     float Chain2 = Chain2AroundSprocket + Chain2Straight;
 
     //Subtract of the virtual length which is added to the chain by the rotation mechanism
-    Chain1 = Chain1 - sysSettings.rotationDiskRadius;
-    Chain2 = Chain2 - sysSettings.rotationDiskRadius;
+    Chain1 = Chain1 - sysSettings.sledRotationDiskRadius;
+    Chain2 = Chain2 - sysSettings.sledRotationDiskRadius;
     
     *aChainLength = Chain1;
     *bChainLength = Chain2;
@@ -287,8 +287,8 @@ void  Kinematics::forward(const float& chainALength, const float& chainBLength, 
         // No need for sys.stop check here
 
         //if we've converged on the point...or it's time to give up, exit the loop
-        if((abs(aChainError) < .1 && abs(bChainError) < .1) or guessCount > KINEMATICSMAXGUESS or guessLengthA > sysSettings.chainLength  or guessLengthB > sysSettings.chainLength){
-            if((guessCount > KINEMATICSMAXGUESS) or guessLengthA > sysSettings.chainLength or guessLengthB > sysSettings.chainLength){
+        if((abs(aChainError) < .1 && abs(bChainError) < .1) or guessCount > KINEMATICSMAXGUESS or guessLengthA > sysSettings.maxChainReachBeyondSprocketTop  or guessLengthB > sysSettings.maxChainReachBeyondSprocketTop){
+            if((guessCount > KINEMATICSMAXGUESS) or guessLengthA > sysSettings.maxChainReachBeyondSprocketTop or guessLengthB > sysSettings.maxChainReachBeyondSprocketTop){
                 Serial.print(F("Message: Unable to find valid machine position for chain lengths "));
                 Serial.print(chainALength);
                 Serial.print(", ");
@@ -371,7 +371,7 @@ float Kinematics::_moment(const float& Y1Plus, const float& Y2Plus, const float&
     Offsety1 = h * MSinPsi1;
     Offsety2 = h * MSinPsi2;
     TanGamma = (y - Offsety1 + Y1Plus)/(x - Offsetx1);
-    TanLambda = (y - Offsety2 + Y2Plus)/(sysSettings.distBetweenMotors -(x + Offsetx2));
+    TanLambda = (y - Offsety2 + Y2Plus)/(sysSettings.distBetweenLRMotors -(x + Offsetx2));
 
     return sysSettings.sledCG*MSinPhi + (h/(TanLambda+TanGamma))*(MSinPsi2 - MSinPsi1 + (TanGamma*MCosPsi1 - TanLambda * MCosPsi2));
 }
