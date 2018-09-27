@@ -640,13 +640,15 @@ void G1(const String& readString, int G0orG1){
 
     float currentXPos = sys.xPosition;
     float currentYPos = sys.yPosition;
-
     float currentZPos = zAxis.read();
+    
+    float tempFeedRate; // make sure to not change the sys.feedrate with a value until validated and constrained
 
     xgoto      = sys.mmConversionFactor*extractGcodeValue(readString, 'X', currentXPos/sys.mmConversionFactor);
     ygoto      = sys.mmConversionFactor*extractGcodeValue(readString, 'Y', currentYPos/sys.mmConversionFactor);
     zgoto      = sys.mmConversionFactor*extractGcodeValue(readString, 'Z', currentZPos/sys.mmConversionFactor);
-    sys.feedRate   = sys.mmConversionFactor*extractGcodeValue(readString, 'F', sys.feedRate/sys.mmConversionFactor);
+    tempFeedRate = sys.mmConversionFactor*extractGcodeValue(readString, 'F', sys.feedRate/sys.mmConversionFactor);
+    sys.feedRate = constrain(tempFeedRate, 1, sysSettings.xYMaxFeedRate);   //constrain to the maximum feedrate,
 
     if (sys.useRelativeUnits){ //if we are using a relative coordinate system
 
@@ -660,8 +662,6 @@ void G1(const String& readString, int G0orG1){
             zgoto = currentZPos + zgoto;
         }
     }
-
-    sys.feedRate = constrain(sys.feedRate, 1, sysSettings.xYMaxFeedRate);   //constrain the maximum feedrate, 35ipm = 900 mmpm
 
     //if the zaxis is attached
     if(!sysSettings.zAxisMotorized){
@@ -706,6 +706,7 @@ void G2(const String& readString, int G2orG3){
 
     */
 
+    //is it supposed to handle relative units? Apparently, unlike B09 G38 or G0 and G1,  it does not.
 
     float X1 = sys.xPosition; //does this work if units are inches? (It seems to)
     float Y1 = sys.yPosition;
@@ -714,12 +715,13 @@ void G2(const String& readString, int G2orG3){
     float Y2      = sys.mmConversionFactor*extractGcodeValue(readString, 'Y', Y1/sys.mmConversionFactor);
     float I       = sys.mmConversionFactor*extractGcodeValue(readString, 'I', 0.0);
     float J       = sys.mmConversionFactor*extractGcodeValue(readString, 'J', 0.0);
-    sys.feedRate      = sys.mmConversionFactor*extractGcodeValue(readString, 'F', sys.feedRate/sys.mmConversionFactor);
+    // make sure to not change the sys.feedrate with a value until validated and constrained
+    float tempFeedRate = sys.mmConversionFactor*extractGcodeValue(readString, 'F', sys.feedRate/sys.mmConversionFactor);
 
     float centerX = X1 + I;
     float centerY = Y1 + J;
 
-    sys.feedRate = constrain(sys.feedRate, 1, sysSettings.xYMaxFeedRate);   //constrain the maximum feedrate, 35ipm = 900 mmpm
+    sys.feedRate = constrain(tempFeedRate, 1, sysSettings.xYMaxFeedRate);   //constrain the maximum feedrate, 
 
     if (G2orG3 == 2){
         arc(X1, Y1, X2, Y2, centerX, centerY, sys.feedRate, CLOCKWISE);

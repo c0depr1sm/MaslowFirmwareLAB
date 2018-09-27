@@ -65,7 +65,7 @@ void settingsReset() {
     */
     sysSettings.workSurfaceWidth = 2438.4; // float workSurfaceWidth
     sysSettings.workSurfaceHeight = 1219.2; // float workSurfaceHeight;
-    sysSettings.distBetweenLRMotors = 2978.4; // float distBetweenLRMotors;
+    sysSettings.distBetweenLRMotorsOutputShaft = 2978.4; // float distBetweenLRMotors;
     sysSettings.lRMotorsYOffsetAboveWorkSurface = 463.0;  // float LRMotorsYOffsetAboveWorkSurface;
     sysSettings.sledWidth = 310.0;  // float sledWidth;
     sysSettings.sledHeight = 139.0;  // float sledHeight;
@@ -232,7 +232,7 @@ byte settingsStoreGlobalSetting(const byte& parameter,const float& value){
                       sysSettings.workSurfaceHeight = value;
                       break;
                 case 2:
-                      sysSettings.distBetweenLRMotors = value;
+                      sysSettings.distBetweenLRMotorsOutputShaft = value;
                       break;
                 case 3:
                       sysSettings.lRMotorsYOffsetAboveWorkSurface = value;

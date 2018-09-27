@@ -95,7 +95,7 @@ int   coordinatedMove(const float& xEnd, const float& yEnd, const float& zEnd, f
     float  zDistanceToMoveInMM        = zEnd - zStartingLocation;
     
     //compute feed details
-    moveSpeed = constrain(moveSpeed, 1, sysSettings.xYMaxFeedRate);   //constrain the maximum feedrate,
+    moveSpeed = constrain(moveSpeed, 1, sysSettings.xYMaxFeedRate);   //constrain the maximum feedrate, just in case the caller did not yet limit the rate 
     float  stepSizeMM           = computeStepSize(moveSpeed);
     float  finalNumberOfSteps   = abs(distanceToMoveInMM/stepSizeMM);
     float  delayTime            = LOOPINTERVAL;
