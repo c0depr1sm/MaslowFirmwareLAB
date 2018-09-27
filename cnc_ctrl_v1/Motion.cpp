@@ -34,7 +34,7 @@ void initMotion(){
 }
 
 
-float calculateFeedrate(const float& stepSizeMM, const float& usPerStep){
+float calculateFeedrate(const float& stepSizeMMPerLoopInterval, const float& usPerStep){
     /*
     Calculate the time delay between each step for a given feedrate
     */
@@ -43,7 +43,7 @@ float calculateFeedrate(const float& stepSizeMM, const float& usPerStep){
     
     // derivation: ms / step = 1 min in ms / dist in one min
     
-    float tempFeedrate = (stepSizeMM*MINUTEINUS)/usPerStep;
+    float tempFeedrate = (stepSizeMMPerLoopInterval*MINUTEINUS)/usPerStep;
     
     return tempFeedrate;
 }
@@ -96,17 +96,17 @@ int   coordinatedMove(const float& xEnd, const float& yEnd, const float& zEnd, f
     
     //compute feed details
     moveSpeed = constrain(moveSpeed, 1, sysSettings.xYMaxFeedRate);   //constrain the maximum feedrate, just in case the caller did not yet limit the rate 
-    float  stepSizeMM           = computeStepSize(moveSpeed);
-    float  finalNumberOfSteps   = abs(distanceToMoveInMM/stepSizeMM);
+    float  stepSizeMMPerLoopInterval  = computeStepSize(moveSpeed);
+    float  finalNumberOfSteps   = abs(distanceToMoveInMM/stepSizeMMPerLoopInterval);
     float  delayTime            = LOOPINTERVAL;
     float  zFeedrate            = calculateFeedrate(abs(zDistanceToMoveInMM/finalNumberOfSteps), delayTime);
     
     //throttle back feedrate if it exceeds zaxis max
     if (zFeedrate > zMaxFeed){
-      float  zStepSizeMM        = computeStepSize(zMaxFeed);
-      finalNumberOfSteps        = abs(zDistanceToMoveInMM/zStepSizeMM);
-      stepSizeMM                = (distanceToMoveInMM/finalNumberOfSteps);
-      moveSpeed                  = calculateFeedrate(stepSizeMM, delayTime);
+      float  zStepSizeMMPerLoopInterval = computeStepSize(zMaxFeed);
+      finalNumberOfSteps        = abs(zDistanceToMoveInMM/zStepSizeMMPerLoopInterval);
+      stepSizeMMPerLoopInterval = (distanceToMoveInMM/finalNumberOfSteps);
+      moveSpeed                  = calculateFeedrate(stepSizeMMPerLoopInterval, delayTime);
     }
     
     // (fraction of distance in x direction)* size of step toward target
@@ -189,12 +189,12 @@ void  singleAxisMove(Axis* axis, const float& endPos, const float& moveSpeed){
     
     float direction            = moveDist/abs(moveDist); //determine the direction of the move
     
-    float stepSizeMM           = computeStepSize(moveSpeed);                    //step size in mm
+    float stepSizeMMPerLoopInterval = computeStepSize(moveSpeed);                    //step size in mm
 
     //the argument to abs should only be a variable -- splitting calc into 2 lines
-    long finalNumberOfSteps    = abs(moveDist/stepSizeMM);      //number of steps taken in move
+    long finalNumberOfSteps    = abs(moveDist/stepSizeMMPerLoopInterval);      //number of steps taken in move
     finalNumberOfSteps = abs(finalNumberOfSteps);
-    stepSizeMM = stepSizeMM*direction;
+    stepSizeMMPerLoopInterval = stepSizeMMPerLoopInterval*direction;
     
     long numberOfStepsTaken    = 0;
     
@@ -208,7 +208,7 @@ void  singleAxisMove(Axis* axis, const float& endPos, const float& moveSpeed){
     while(numberOfStepsTaken < finalNumberOfSteps){
         if (!movementUpdated) {
           //find the target point for this step
-          whereAxisShouldBeAtThisStep += stepSizeMM;
+          whereAxisShouldBeAtThisStep += stepSizeMMPerLoopInterval;
           
           //write to axis
           axis->write(whereAxisShouldBeAtThisStep);
@@ -288,10 +288,10 @@ int   arcMove(const float& X1, const float& Y1, const float& X2, const float& Y2
     //set up variables for movement
     long numberOfStepsTaken       =  0;
     
-    float stepSizeMM             =  computeStepSize(moveSpeed);
+    float stepSizeMMPerLoopInterval  =  computeStepSize(moveSpeed);
 
     //the argument to abs should only be a variable -- splitting calc into 2 lines
-    long   finalNumberOfSteps     =  arcLengthMM/stepSizeMM;
+    long   finalNumberOfSteps     =  arcLengthMM/stepSizeMMPerLoopInterval;
     //finalNumberOfSteps = abs(finalNumberOfSteps);
     
     //Compute the starting position

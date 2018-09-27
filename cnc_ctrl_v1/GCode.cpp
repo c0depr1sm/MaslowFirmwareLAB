@@ -724,10 +724,10 @@ void G2(const String& readString, int G2orG3){
     sys.feedRate = constrain(tempFeedRate, 1, sysSettings.xYMaxFeedRate);   //constrain the maximum feedrate, 
 
     if (G2orG3 == 2){
-        arc(X1, Y1, X2, Y2, centerX, centerY, sys.feedRate, CLOCKWISE);
+        arcMove(X1, Y1, X2, Y2, centerX, centerY, sys.feedRate, CLOCKWISE);
     }
     else {
-        arc(X1, Y1, X2, Y2, centerX, centerY, sys.feedRate, COUNTERCLOCKWISE);
+        arcMove(X1, Y1, X2, Y2, centerX, centerY, sys.feedRate, COUNTERCLOCKWISE);
     }
 }
 
@@ -824,10 +824,10 @@ void  G38(const String& readString) {
 
         float direction            = moveDist / abs(moveDist); //determine the direction of the move
 
-        float stepSizeMM           = 0.01;                    //step size in mm for each PID Control LOOP INTERVAL
+        float stepSizeMMPerLoopInterval           = 0.01;                    //step size in mm for each PID Control LOOP INTERVAL
 
         //the argument to abs should only be a variable -- splitting calc into 2 lines
-        long finalNumberOfSteps    = moveDist / stepSizeMM;    //number of steps taken in move
+        long finalNumberOfSteps    = moveDist / stepSizeMMPerLoopInterval;    //number of steps taken in move
         finalNumberOfSteps = abs(finalNumberOfSteps);
 
         long numberOfStepsTaken    = 0;
@@ -839,7 +839,7 @@ void  G38(const String& readString) {
         while (numberOfStepsTaken < finalNumberOfSteps) {
           if (!movementUpdated){
               //find the target point for this step
-              whereAxisShouldBeAtThisStep += stepSizeMM * direction;
+              whereAxisShouldBeAtThisStep += stepSizeMMPerLoopInterval * direction;
 
               //write to each axis
               axis->write(whereAxisShouldBeAtThisStep);
