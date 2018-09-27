@@ -235,7 +235,7 @@ int sign(double x) { return x<0 ? -1 : 1; }
 
 // why does this return anything
 // moveSpeed (formerly MMPerMin) describes the demanded displacement speed in mm/min
-int   arc(const float& X1, const float& Y1, const float& X2, const float& Y2, const float& centerX, const float& centerY, const float& moveSpeed, const float& direction){
+int   arcMove(const float& X1, const float& Y1, const float& X2, const float& Y2, const float& centerX, const float& centerY, const float& moveSpeed, const float& direction){
     /*
     
     Move the machine through an arc from point (X1, Y1) to point (X2, Y2) along the 
