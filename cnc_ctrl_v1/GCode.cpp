@@ -189,9 +189,6 @@ byte  executeBcodeLine(const String& gcodeLine){
     }
 
     if(gcodeLine.substring(0, 3) == "B08"){
-        float estimatedBitTipXPosition;
-        float estimatedBitTipYPosition;
-        
         //Manually recalibrate chain lengths
         leftAxis.set(sysSettings.originalChainLength);
         rightAxis.set(sysSettings.originalChainLength);
@@ -204,11 +201,7 @@ byte  executeBcodeLine(const String& gcodeLine){
         Serial.println(F("mm"));
 
         //Estimate the XY position based on the machine geometry and chain lenght extending beyond the sproket top.
-        kinematics.forward(leftAxis.read(), rightAxis.read(), &estimatedBitTipXPosition, &estimatedBitTipYPosition, 0, 0);
-
-        //Set these estimations as the starting point for movements.
-	    sys.xPosition = estimatedBitTipXPosition;
-	    sys.yPosition = estimatedBitTipYPosition;
+        kinematics.forward(leftAxis.read(), rightAxis.read(), &sys.estimatedBitTipXPosition, &sys.estimatedBitTipYPosition, 0, 0);
 	    
         Serial.println(F("Message: The machine chains have been manually re-calibrated."));
 
@@ -325,8 +318,6 @@ byte  executeBcodeLine(const String& gcodeLine){
 
     if(gcodeLine.substring(0, 3) == "B15"){
         //The B15 command moves the chains to the length which will put the sled in the center of the sheet
-        float estimatedBitTipXPosition;
-        float estimatedBitTipYPosition;
 
         //Compute chain length for position 0,0
         float chainLengthAtMiddle;
@@ -339,12 +330,8 @@ byte  executeBcodeLine(const String& gcodeLine){
         singleAxisMove(&rightAxis, chainLengthAtMiddle, 800);
 
         //Estimate the XY position based on the machine geometry and chain new lenght extending beyond the sproket top.
-        kinematics.forward(leftAxis.read(), rightAxis.read(), &estimatedBitTipXPosition, &estimatedBitTipYPosition, 0, 0);
-        
-        //Set these estimations as the starting point for movements.
-	    sys.xPosition = estimatedBitTipXPosition;
-	    sys.yPosition = estimatedBitTipYPosition;
-        
+        kinematics.forward(leftAxis.read(), rightAxis.read(), &sys.estimatedBitTipXPosition, &sys.estimatedBitTipYPosition, 0, 0);
+                
         return STATUS_OK;
     }
     return STATUS_INVALID_STATEMENT;
@@ -653,8 +640,8 @@ void G1(const String& readString, int G0orG1){
     float finalZPos;
 
     //identify the estimated starting coordinates of this straight path coordinated move
-    float initialXPos = sys.xPosition;
-    float initialYPos = sys.yPosition;
+    float initialXPos = sys.estimatedBitTipXPosition;
+    float initialYPos = sys.estimatedBitTipYPosition;
     float initialZPos = zAxis.read();
     
     float tempFeedRate; // make sure to not change the sys.targetFeedrate with a value until validated and constrained
@@ -728,8 +715,8 @@ void G2(const String& readString, int G2orG3){
     //is it supposed to handle relative units? Apparently, unlike B09 G38 or G0 and G1,  it does not.
 
     //identify the estimated starting coordinates of this straight path coordinated move
-    float X1 = sys.xPosition; //does this work if units are inches? (It seems to)
-    float Y1 = sys.yPosition;
+    float X1 = sys.estimatedBitTipXPosition; //does this work if units are inches? (It seems to)
+    float Y1 = sys.estimatedBitTipYPosition;
 
     //extract and compute the target coordinates of this arc path move
     float X2      = sys.mmConversionFactor*extractGcodeValue(readString, 'X', X1/sys.mmConversionFactor);

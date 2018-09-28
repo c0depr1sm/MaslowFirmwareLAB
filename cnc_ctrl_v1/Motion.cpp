@@ -83,8 +83,8 @@ int   coordinatedMove(const float& xEnd, const float& yEnd, const float& zEnd, f
     * This function is used by the G00 and G01 commands. The units at this point should all 
     * be in mm or mm per minute*/
     
-    float  xStartingLocation = sys.xPosition;
-    float  yStartingLocation = sys.yPosition;
+    float  xStartingLocation = sys.estimatedBitTipXPosition;
+    float  yStartingLocation = sys.estimatedBitTipYPosition;
     float  zStartingLocation = zAxis.read();  // I don't know why we treat the zaxis differently
     float  zMaxFeedRate      = getZMaxFeedRate();
     
@@ -135,13 +135,13 @@ int   coordinatedMove(const float& xEnd, const float& yEnd, const float& zEnd, f
         if (!movementUpdated) {
             //find the target point for this step
             // This section ~20us
-            sys.xPosition +=  xStepSize;
-            sys.yPosition +=  yStepSize;
+            sys.estimatedBitTipXPosition +=  xStepSize;
+            sys.estimatedBitTipYPosition +=  yStepSize;
             zPosition += zStepSize;
             
             //find the chain lengths for this step
             // This section ~180us
-            kinematics.inverse(sys.xPosition,sys.yPosition,&aChainLength,&bChainLength);
+            kinematics.inverse(sys.estimatedBitTipXPosition,sys.estimatedBitTipYPosition,&aChainLength,&bChainLength);
             
             //write to each axis
             // This section ~180us
@@ -172,8 +172,8 @@ int   coordinatedMove(const float& xEnd, const float& yEnd, const float& zEnd, f
       zAxis.endMove(zPosition);
     }
     
-    sys.xPosition = xEnd;
-    sys.yPosition = yEnd;
+    sys.estimatedBitTipXPosition = xEnd;
+    sys.estimatedBitTipYPosition = yEnd;
     
     return 1;
     
@@ -317,10 +317,10 @@ int   arcMove(const float& X1, const float& Y1, const float& X2, const float& Y2
             
             angleNow = startingAngle + theta*direction*degreeComplete;
             
-            sys.xPosition = radius * cos(angleNow) + centerX;
-            sys.yPosition = radius * sin(angleNow) + centerY;
+            sys.estimatedBitTipXPosition = radius * cos(angleNow) + centerX;
+            sys.estimatedBitTipYPosition = radius * sin(angleNow) + centerY;
             
-            kinematics.inverse(sys.xPosition,sys.yPosition,&aChainLength,&bChainLength);
+            kinematics.inverse(sys.estimatedBitTipXPosition,sys.estimatedBitTipYPosition,&aChainLength,&bChainLength);
             
             leftAxis.write(aChainLength);
             rightAxis.write(bChainLength); 
@@ -341,8 +341,8 @@ int   arcMove(const float& X1, const float& Y1, const float& X2, const float& Y2
     leftAxis.endMove(aChainLength);
     rightAxis.endMove(bChainLength);
     
-    sys.xPosition = X2;
-    sys.yPosition = Y2;
+    sys.estimatedBitTipXPosition = X2;
+    sys.estimatedBitTipYPosition = Y2;
     
     return 1;
 }

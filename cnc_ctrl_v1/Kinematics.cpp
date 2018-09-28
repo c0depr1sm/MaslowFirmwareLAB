@@ -30,14 +30,9 @@ Kinematics::Kinematics(){
 void Kinematics::init(){
     recomputeGeometry();
     if (sys.state != STATE_OLD_SETTINGS){
-     float estimatedBitTipXPosition;
-     float estimatedBitTipYPosition;
      //Estimate the XY position based on the machine geometry and chain new lenght extending beyond the sproket top.
-     forward(leftAxis.read(), rightAxis.read(), &estimatedBitTipXPosition, &estimatedBitTipYPosition, sys.xPosition, sys.yPosition);
+     forward(leftAxis.read(), rightAxis.read(), &sys.estimatedBitTipXPosition, &sys.estimatedBitTipYPosition, sys.estimatedBitTipXPosition, sys.estimatedBitTipYPosition);
 
-      //Set these estimations as the starting point for movements.
-      sys.xPosition = estimatedBitTipXPosition;
-      sys.yPosition = estimatedBitTipYPosition;
     }
 }
 

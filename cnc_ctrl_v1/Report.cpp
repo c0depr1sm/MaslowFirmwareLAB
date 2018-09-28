@@ -274,9 +274,9 @@ void  returnPoz(){
         else{
             Serial.print(F("Idle,MPos:"));
         }
-        Serial.print(sys.xPosition/sys.mmConversionFactor);
+        Serial.print(sys.estimatedBitTipXPosition/sys.mmConversionFactor);
         Serial.print(F(","));
-        Serial.print(sys.yPosition/sys.mmConversionFactor);
+        Serial.print(sys.estimatedBitTipYPosition/sys.mmConversionFactor);
         Serial.print(F(","));
         Serial.print(zAxis.read()/sys.mmConversionFactor);
         Serial.println(F(",WPos:0.000,0.000,0.000>"));

@@ -54,8 +54,8 @@ typedef struct {
   bool stop;                  // Stop flag.
   byte state;                 // State tracking flag
   byte pause;                 // Pause flag.
-  float xPosition;            // Cartessian position of XY axes
-  float yPosition;            // Cached because calculating position is intensive
+  float estimatedBitTipXPosition; // bit tip XY cartesian position estimation
+  float estimatedBitTipYPosition; // Cached because calculating position is intensive
   float steps[3];             // Encoder position of axes... Currently unused?
   bool  useRelativeUnits;     //
   unsigned long lastSerialRcvd; // The millis of the last rcvd serial command, apparently not used
