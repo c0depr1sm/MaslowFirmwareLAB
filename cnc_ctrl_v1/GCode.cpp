@@ -648,32 +648,32 @@ void G1(const String& readString, int G0orG1){
     /*G1() is the function which is called to process the string if it begins with
     'G01' or 'G00'*/
 
-    float xgoto;
-    float ygoto;
-    float zgoto;
+    float finalXPos;
+    float finalYPos;
+    float finalZPos;
 
     //identify the estimated starting coordinates of this straight path coordinated move
-    float currentXPos = sys.xPosition;
-    float currentYPos = sys.yPosition;
-    float currentZPos = zAxis.read();
+    float initialXPos = sys.xPosition;
+    float initialYPos = sys.yPosition;
+    float initialZPos = zAxis.read();
     
     float tempFeedRate; // make sure to not change the sys.feedrate with a value until validated and constrained
 
     //extract and compute the target coordinates of this straight path move
-    xgoto      = sys.mmConversionFactor*extractGcodeValue(readString, 'X', currentXPos/sys.mmConversionFactor);
-    ygoto      = sys.mmConversionFactor*extractGcodeValue(readString, 'Y', currentYPos/sys.mmConversionFactor);
-    zgoto      = sys.mmConversionFactor*extractGcodeValue(readString, 'Z', currentZPos/sys.mmConversionFactor);
+    finalXPos      = sys.mmConversionFactor*extractGcodeValue(readString, 'X', initialXPos/sys.mmConversionFactor);
+    finalYPos      = sys.mmConversionFactor*extractGcodeValue(readString, 'Y', initialYPos/sys.mmConversionFactor);
+    finalZPos      = sys.mmConversionFactor*extractGcodeValue(readString, 'Z', initialZPos/sys.mmConversionFactor);
 
     if (sys.useRelativeUnits){ //if we are using a relative coordinate system
 
         if(readString.indexOf('X') >= 0){ //if there is an X command
-            xgoto = currentXPos + xgoto;
+            finalXPos = initialXPos + finalXPos;
         }
         if(readString.indexOf('Y') >= 0){ //if y has moved
-            ygoto = currentYPos + ygoto;
+            finalYPos = initialYPos + finalYPos;
         }
         if(readString.indexOf('Z') >= 0){ //if y has moved
-            zgoto = currentZPos + zgoto;
+            finalZPos = initialZPos + finalZPos;
         }
     }
 
@@ -685,12 +685,12 @@ void G1(const String& readString, int G0orG1){
     //if the zaxis is not attached, then get manual ajustment done before move.
     if(!sysSettings.zAxisMotorized){
         float threshold = .1; //units of mm
-        if (abs(currentZPos - zgoto) > threshold){
+        if (abs(initialZPos - finalZPos) > threshold){
             Serial.print(F("Message: Please adjust Z-Axis to a depth of "));
-            if (zgoto > 0){
+            if (finalZPos > 0){
                 Serial.print(F("+"));
             }
-            Serial.print(zgoto/sys.mmConversionFactor);
+            Serial.print(finalZPos/sys.mmConversionFactor);
             if (sys.mmConversionFactor == INCHES_TO_MLLIMETERS){
                 Serial.println(F(" in"));
             }
@@ -700,7 +700,7 @@ void G1(const String& readString, int G0orG1){
 
             pause(); //Wait until the z-axis is adjusted
 
-            zAxis.set(zgoto);
+            zAxis.set(finalZPos);
 
             maslowDelay(1000);
         }
@@ -709,11 +709,11 @@ void G1(const String& readString, int G0orG1){
 
     if (G0orG1 == 1){
         //if this is a regular move
-        coordinatedMove(xgoto, ygoto, zgoto, sys.feedRate); //The XY move is performed
+        coordinatedMove(finalXPos, finalYPos, finalZPos, sys.feedRate); //The XY move is performed
     }
     else{
         //if this is a rapid move
-        coordinatedMove(xgoto, ygoto, zgoto, sysSettings.xYMaxFeedRate); //move the same as a regular move, but seek fastest feed rate
+        coordinatedMove(finalXPos, finalYPos, finalZPos, sysSettings.xYMaxFeedRate); //move the same as a regular move, but seek fastest feed rate
     }
 }
 
@@ -789,11 +789,11 @@ void  G4(const String& readString){
 
 void  G10(const String& readString){
     /*The G10() function handles the G10 gcode which re-zeros one or all of the machine's axes.*/
-    float currentZPos = zAxis.read();
-    float zgoto      = sys.mmConversionFactor*extractGcodeValue(readString, 'Z', currentZPos/sys.mmConversionFactor);
+    float initialZPos = zAxis.read();
+    float finalZPos   = sys.mmConversionFactor*extractGcodeValue(readString, 'Z', initialZPos/sys.mmConversionFactor);
 
-    zAxis.set(zgoto);
-    zAxis.endMove(zgoto);
+    zAxis.set(finalZPos);
+    zAxis.endMove(finalZPos);
     zAxis.attach();
 }
 
@@ -806,18 +806,18 @@ void  G38(const String& readString) {
     */
     if (readString.substring(3, 5) == ".2") {
       Serial.println(F("probing for z axis zero"));
-      float zgoto;
+      float finalZPos;
       float zMaxFeedRate = getZMaxFeedRate();
 
-      float currentZPos = zAxis.read();
+      float initialZPos = zAxis.read();
 
       float tempFeedRate; // make sure to not change the sys.feedrate with a value until validated and constrained
 
       //extract and compute the target Z limit coordinate of this plunge move
-      zgoto      = sys.mmConversionFactor * extractGcodeValue(readString, 'Z', currentZPos / sys.mmConversionFactor);
+      finalZPos = sys.mmConversionFactor * extractGcodeValue(readString, 'Z', initialZPos / sys.mmConversionFactor);
       if (sys.useRelativeUnits) { //if we are using a relative coordinate system
         if (readString.indexOf('Z') >= 0) { //if z has moved
-          zgoto = currentZPos + zgoto;
+          finalZPos = initialZPos + finalZPos;
         }
       }
 
@@ -827,7 +827,7 @@ void  G38(const String& readString) {
       sys.feedRate = constrain(tempFeedRate, 1, zMaxFeedRate);
 
       Serial.print(F("max depth "));
-      Serial.print(zgoto);
+      Serial.print(finalZPos);
       Serial.println(F(" mm."));
       Serial.print(F("feedrate "));
       Serial.print(sys.feedRate);
@@ -837,12 +837,12 @@ void  G38(const String& readString) {
       pinMode(ProbePin, INPUT_PULLUP);
       digitalWrite(ProbePin, HIGH);
 
-      if (zgoto != currentZPos) { // inapropriate unit conversion of currentZPos was removed.
+      if (finalZPos != initialZPos) { // inapropriate unit conversion of currentZPos was removed.
         //        now move z to the Z destination;
         //        Currently ignores X and Y options
         //          we need a version of singleAxisMove that quits if the AUXn input changes (goes LOW)
         //          which will act the same as the stop found in singleAxisMove (need both?)
-        //        singleAxisMove(&zAxis, zgoto, zFeedrate);
+        //        singleAxisMove(&zAxis, finalZPos, zFeedrate);
 
         /*
            Takes a pointer to an axis object and mo ves that axis to endPos at speed MMPerMin
@@ -850,8 +850,8 @@ void  G38(const String& readString) {
 
         Axis* axis = &zAxis;
         float startingPos          = axis->read();
-        float endPos               = zgoto;
-        float moveDist             = endPos - currentZPos; //total distance to move
+        float endPos               = finalZPos;
+        float moveDist             = endPos - initialZPos; //total distance to move
 
         float direction            = moveDist / abs(moveDist); //determine the direction of the move
 
@@ -902,7 +902,7 @@ void  G38(const String& readString) {
         axis->endMove(endPos);
         Serial.println(F("error: probe did not connect\nprogram stopped\nz axis not set\n"));
         sys.stop = true;
-      } // end if zgoto != currentZPos
+      } // end if finalZPos != initialZPos
 
     } else {
       Serial.print(F("G38"));
