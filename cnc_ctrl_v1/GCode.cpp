@@ -837,7 +837,7 @@ void  G38(const String& readString) {
       pinMode(ProbePin, INPUT_PULLUP);
       digitalWrite(ProbePin, HIGH);
 
-      if (zgoto != currentZPos / sys.mmConversionFactor) { // that unit conversion seems inapropriate... BUG?
+      if (zgoto != currentZPos) { // inapropriate unit conversion of currentZPos was removed.
         //        now move z to the Z destination;
         //        Currently ignores X and Y options
         //          we need a version of singleAxisMove that quits if the AUXn input changes (goes LOW)
@@ -902,7 +902,7 @@ void  G38(const String& readString) {
         axis->endMove(endPos);
         Serial.println(F("error: probe did not connect\nprogram stopped\nz axis not set\n"));
         sys.stop = true;
-      } // end if zgoto != currentZPos / sys.mmConversionFactor
+      } // end if zgoto != currentZPos
 
     } else {
       Serial.print(F("G38"));
