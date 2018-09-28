@@ -86,7 +86,7 @@ int   coordinatedMove(const float& xEnd, const float& yEnd, const float& zEnd, f
     float  xStartingLocation = sys.xPosition;
     float  yStartingLocation = sys.yPosition;
     float  zStartingLocation = zAxis.read();  // I don't know why we treat the zaxis differently
-    float  zMaxFeed          = getZMaxFeedRate();
+    float  zMaxFeedRate      = getZMaxFeedRate();
     
     //find the total distances to move
     float  distanceToMoveInMM         = sqrt(  sq(xEnd - xStartingLocation)  +  sq(yEnd - yStartingLocation)  + sq(zEnd - zStartingLocation));
@@ -99,11 +99,11 @@ int   coordinatedMove(const float& xEnd, const float& yEnd, const float& zEnd, f
     float  stepSizeMMPerLoopInterval  = computeStepSize(moveSpeed);
     float  finalNumberOfSteps   = abs(distanceToMoveInMM/stepSizeMMPerLoopInterval);
     float  delayTime            = LOOPINTERVAL;
-    float  zFeedrate            = calculateFeedrate(abs(zDistanceToMoveInMM/finalNumberOfSteps), delayTime);
+    float  neededZFeedRate            = calculateFeedrate(abs(zDistanceToMoveInMM/finalNumberOfSteps), delayTime);
     
     //throttle back feedrate if it exceeds zaxis max
-    if (zFeedrate > zMaxFeed){
-      float  zStepSizeMMPerLoopInterval = computeStepSize(zMaxFeed);
+    if (neededZFeedRate > zMaxFeedRate){
+      float  zStepSizeMMPerLoopInterval = computeStepSize(zMaxFeedRate);
       finalNumberOfSteps        = abs(zDistanceToMoveInMM/zStepSizeMMPerLoopInterval);
       stepSizeMMPerLoopInterval = (distanceToMoveInMM/finalNumberOfSteps);
       moveSpeed                  = calculateFeedrate(stepSizeMMPerLoopInterval, delayTime);
