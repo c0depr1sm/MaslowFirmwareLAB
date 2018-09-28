@@ -76,7 +76,7 @@ int   coordinatedMove(const float& xEnd, const float& yEnd, const float& zEnd, f
     
     /*The move() function moves the tool in a straight line to the position (xEnd, yEnd) at 
     the speed moveSpeed. 
-    * The move is not necessarily occuring at a depth where cutting occurs. So the movespeed is not a feedrate.
+    * The move is not necessarily occuring at a depth where cutting occurs. So the movespeed is not necessarily a feedrate.
     * Movements are correlated so that regardless of the distances moved in each 
     direction, the tool moves to the target in a straight line. 
     * Speed is scalled down as necessary to make sure no axis exceeds its max rate.

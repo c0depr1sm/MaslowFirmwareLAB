@@ -32,7 +32,9 @@ void PIDTestVelocity(Axis* axis, const float start, const float stop, const floa
     float reportedSpeed;
     float span = stop - start;
     float speed;
-    
+    float estimatedBitTipXPosition;
+    float estimatedBitTipYPosition;
+   
     // Start the steps
     axis->disablePositionPID();
     axis->attach();
@@ -66,7 +68,13 @@ void PIDTestVelocity(Axis* axis, const float start, const float stop, const floa
     axis->write(axis->read());
     axis->detach();
     axis->enablePositionPID();
-    kinematics.forward(leftAxis.read(), rightAxis.read(), &sys.xPosition, &sys.yPosition, 0.0, 0.0);
+
+    //Estimate the XY position based on the machine geometry and chain lenght extending beyond the sproket top.
+    kinematics.forward(leftAxis.read(), rightAxis.read(), &estimatedBitTipXPosition, &estimatedBitTipYPosition, 0, 0);
+
+    //Set these estimations as the starting point for movements.
+    sys.xPosition = estimatedBitTipXPosition;
+    sys.yPosition = estimatedBitTipYPosition;
 }
 
 void positionPIDOutput (Axis* axis, float setpoint, float startingPoint){
@@ -99,6 +107,8 @@ void PIDTestPosition(Axis* axis, float start, float stop, const float steps, con
     stop  = startingPoint + stop;
     float span = stop - start;
     float location;
+    float estimatedBitTipXPosition;
+    float estimatedBitTipYPosition;
     
     // Start the steps
     axis->attach();
@@ -145,7 +155,13 @@ void PIDTestPosition(Axis* axis, float start, float stop, const float steps, con
     Serial.println(F("--PID Position Test Stop--\n"));
     axis->write(axis->read());
     axis->detach();
-    kinematics.forward(leftAxis.read(), rightAxis.read(), &sys.xPosition, &sys.yPosition, 0.0, 0.0);
+
+    //Estimate the XY position based on the machine geometry and chain lenght extending beyond the sproket top.
+    kinematics.forward(leftAxis.read(), rightAxis.read(), &estimatedBitTipXPosition, &estimatedBitTipYPosition, 0, 0);
+
+    //Set these estimations as the starting point for movements.
+    sys.xPosition = estimatedBitTipXPosition;
+    sys.yPosition = estimatedBitTipYPosition;
 }
 
 void voltageTest(Axis* axis, int start, int stop){
@@ -158,7 +174,9 @@ void voltageTest(Axis* axis, int start, int stop){
     unsigned long startTime = millis() + 200;
     unsigned long currentTime = millis();
     unsigned long printTime = 0;
-    
+    float estimatedBitTipXPosition;
+    float estimatedBitTipYPosition;
+   
     for (int i = 0; i <= steps; i++){
         axis->motorGearboxEncoder.motor.directWrite((start + (i*direction)));
         while (startTime > currentTime - (i * 200)){
@@ -177,5 +195,10 @@ void voltageTest(Axis* axis, int start, int stop){
     axis->motorGearboxEncoder.motor.directWrite(0);
     Serial.println(F("--Voltage Test Stop--\n"));
     axis->write(axis->read());
-    kinematics.forward(leftAxis.read(), rightAxis.read(), &sys.xPosition, &sys.yPosition, 0.0, 0.0);
+    //Estimate the XY position based on the machine geometry and chain lenght extending beyond the sproket top.
+    kinematics.forward(leftAxis.read(), rightAxis.read(), &estimatedBitTipXPosition, &estimatedBitTipYPosition, 0, 0);
+
+    //Set these estimations as the starting point for movements.
+    sys.xPosition = estimatedBitTipXPosition;
+    sys.yPosition = estimatedBitTipYPosition;
 }

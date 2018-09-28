@@ -189,6 +189,9 @@ byte  executeBcodeLine(const String& gcodeLine){
     }
 
     if(gcodeLine.substring(0, 3) == "B08"){
+        float estimatedBitTipXPosition;
+        float estimatedBitTipYPosition;
+        
         //Manually recalibrate chain lengths
         leftAxis.set(sysSettings.originalChainLength);
         rightAxis.set(sysSettings.originalChainLength);
@@ -200,8 +203,13 @@ byte  executeBcodeLine(const String& gcodeLine){
         Serial.print(rightAxis.read());
         Serial.println(F("mm"));
 
-        kinematics.forward(leftAxis.read(), rightAxis.read(), &sys.xPosition, &sys.yPosition, 0, 0);
+        //Estimate the XY position based on the machine geometry and chain lenght extending beyond the sproket top.
+        kinematics.forward(leftAxis.read(), rightAxis.read(), &estimatedBitTipXPosition, &estimatedBitTipYPosition, 0, 0);
 
+        //Set these estimations as the starting point for movements.
+	    sys.xPosition = estimatedBitTipXPosition;
+	    sys.yPosition = estimatedBitTipYPosition;
+	    
         Serial.println(F("Message: The machine chains have been manually re-calibrated."));
 
         return STATUS_OK;
@@ -317,6 +325,8 @@ byte  executeBcodeLine(const String& gcodeLine){
 
     if(gcodeLine.substring(0, 3) == "B15"){
         //The B15 command moves the chains to the length which will put the sled in the center of the sheet
+        float estimatedBitTipXPosition;
+        float estimatedBitTipYPosition;
 
         //Compute chain length for position 0,0
         float chainLengthAtMiddle;
@@ -328,9 +338,13 @@ byte  executeBcodeLine(const String& gcodeLine){
         //Adjust right chain length
         singleAxisMove(&rightAxis, chainLengthAtMiddle, 800);
 
-        //Reload the position
-        kinematics.forward(leftAxis.read(), rightAxis.read(), &sys.xPosition, &sys.yPosition, 0, 0);
-
+        //Estimate the XY position based on the machine geometry and chain new lenght extending beyond the sproket top.
+        kinematics.forward(leftAxis.read(), rightAxis.read(), &estimatedBitTipXPosition, &estimatedBitTipYPosition, 0, 0);
+        
+        //Set these estimations as the starting point for movements.
+	    sys.xPosition = estimatedBitTipXPosition;
+	    sys.yPosition = estimatedBitTipYPosition;
+        
         return STATUS_OK;
     }
     return STATUS_INVALID_STATEMENT;
@@ -721,7 +735,7 @@ void G2(const String& readString, int G2orG3){
     float centerX = X1 + I;
     float centerY = Y1 + J;
 
-    sys.feedRate = constrain(tempFeedRate, 1, sysSettings.xYMaxFeedRate);   //constrain the maximum feedrate, 
+    sys.feedRate = constrain(tempFeedRate, 1, sysSettings.xYMaxFeedRate);   //constrain to the maximum feedrate, 
 
     if (G2orG3 == 2){
         arcMove(X1, Y1, X2, Y2, centerX, centerY, sys.feedRate, CLOCKWISE);

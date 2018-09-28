@@ -30,7 +30,14 @@ Kinematics::Kinematics(){
 void Kinematics::init(){
     recomputeGeometry();
     if (sys.state != STATE_OLD_SETTINGS){
-      forward(leftAxis.read(), rightAxis.read(), &sys.xPosition, &sys.yPosition, sys.xPosition, sys.yPosition);
+     float estimatedBitTipXPosition;
+     float estimatedBitTipYPosition;
+     //Estimate the XY position based on the machine geometry and chain new lenght extending beyond the sproket top.
+     forward(leftAxis.read(), rightAxis.read(), &estimatedBitTipXPosition, &estimatedBitTipYPosition, sys.xPosition, sys.yPosition);
+
+      //Set these estimations as the starting point for movements.
+      sys.xPosition = estimatedBitTipXPosition;
+      sys.yPosition = estimatedBitTipYPosition;
     }
 }
 
@@ -198,7 +205,7 @@ void  Kinematics::triangularInverse(float xTarget,float yTarget, float* aChainLe
     
     */
     
-    //Confirm that the coordinates are on the wood
+    //Confirm that the coordinates are on the work surface
     _verifyValidTarget(&xTarget, &yTarget);
 
     //Set up variables
