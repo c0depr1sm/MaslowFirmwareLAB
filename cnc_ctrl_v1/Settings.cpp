@@ -76,7 +76,7 @@ void settingsReset() {
     sysSettings.originalChainLength = 1650;   // int originalChainLength;
     sysSettings.encoderLRMotorStepsCountPerOutputShaftTurn = 8113.7; // float encoderLRMotorStepsCountPerOutputShaftTurn;
     sysSettings.distPerRot = 63.5;   // float distPerRot;
-    sysSettings.xYMaxFeedRate = 700;   // int XYmaxFeed
+    sysSettings.targetMaxXYFeedRate = 700;   // int targetMaxXYFeedRate
     sysSettings.zAxisMotorized = true;   // zAxisMotorized;
     sysSettings.spindleAutomateType = NONE;  // bool spindleAutomate;
     sysSettings.zScrewMaxRPM = 12.60;  // float zScrewMaxRPM;
@@ -288,7 +288,7 @@ byte settingsStoreGlobalSetting(const byte& parameter,const float& value){
               kinematics.init();
               break;
         case 15:
-              sysSettings.xYMaxFeedRate = value;
+              sysSettings.targetMaxXYFeedRate = value;
               break;
         case 16:
               sysSettings.zAxisMotorized = value;

@@ -36,7 +36,7 @@ void  calibrateChainLengths(String gcodeLine){
     if (extractGcodeValue(gcodeLine, 'L', 0)){
         //measure out the left chain
         Serial.println(F("Measuring out left chain"));
-        singleAxisMove(&leftAxis, sysSettings.originalChainLength, (sysSettings.xYMaxFeedRate * .9));
+        singleAxisMove(&leftAxis, sysSettings.originalChainLength, (sysSettings.targetMaxXYFeedRate * .9));
 
         Serial.print(leftAxis.read());
         Serial.println(F("mm"));
@@ -46,7 +46,7 @@ void  calibrateChainLengths(String gcodeLine){
     else if(extractGcodeValue(gcodeLine, 'R', 0)){
         //measure out the right chain
         Serial.println(F("Measuring out right chain"));
-        singleAxisMove(&rightAxis, sysSettings.originalChainLength, (sysSettings.xYMaxFeedRate * .9));
+        singleAxisMove(&rightAxis, sysSettings.originalChainLength, (sysSettings.targetMaxXYFeedRate * .9));
 
         Serial.print(rightAxis.read());
         Serial.println(F("mm"));
