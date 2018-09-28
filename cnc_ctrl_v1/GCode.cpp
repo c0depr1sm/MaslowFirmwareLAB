@@ -657,7 +657,7 @@ void G1(const String& readString, int G0orG1){
     float initialYPos = sys.yPosition;
     float initialZPos = zAxis.read();
     
-    float tempFeedRate; // make sure to not change the sys.feedrate with a value until validated and constrained
+    float tempFeedRate; // make sure to not change the sys.targetFeedrate with a value until validated and constrained
 
     //extract and compute the target coordinates of this straight path move
     finalXPos      = sys.mmConversionFactor*extractGcodeValue(readString, 'X', initialXPos/sys.mmConversionFactor);
@@ -678,9 +678,9 @@ void G1(const String& readString, int G0orG1){
     }
 
     //keep the last used feedrate if none specified in the Gcode line 
-    tempFeedRate = sys.mmConversionFactor*extractGcodeValue(readString, 'F', sys.feedRate/sys.mmConversionFactor);
+    tempFeedRate = sys.mmConversionFactor*extractGcodeValue(readString, 'F', sys.targetFeedrate/sys.mmConversionFactor);
     //Top the target rate to the maximum XY feedrate,
-    sys.feedRate = constrain(tempFeedRate, 1, sysSettings.xYMaxFeedRate);   
+    sys.targetFeedrate = constrain(tempFeedRate, 1, sysSettings.xYMaxFeedRate);   
 
     //if the zaxis is not attached, then get manual ajustment done before move.
     if(!sysSettings.zAxisMotorized){
@@ -709,7 +709,7 @@ void G1(const String& readString, int G0orG1){
 
     if (G0orG1 == 1){
         //if this is a regular move
-        coordinatedMove(finalXPos, finalYPos, finalZPos, sys.feedRate); //The XY move is performed
+        coordinatedMove(finalXPos, finalYPos, finalZPos, sys.targetFeedrate); //The XY move is performed
     }
     else{
         //if this is a rapid move
@@ -743,18 +743,18 @@ void G2(const String& readString, int G2orG3){
     float centerX = X1 + I;
     float centerY = Y1 + J;
 
-    //make sure to not change the sys.feedrate with a value until validated and constrained
+    //make sure to not change the sys.targetFeedrate with a value until validated and constrained
     float tempFeedRate; 
     //keep the last used feedrate if none specified in the Gcode line 
-    tempFeedRate = sys.mmConversionFactor*extractGcodeValue(readString, 'F', sys.feedRate/sys.mmConversionFactor);
+    tempFeedRate = sys.mmConversionFactor*extractGcodeValue(readString, 'F', sys.targetFeedrate/sys.mmConversionFactor);
     //Top the target rate to the maximum XY feedrate,
-    sys.feedRate = constrain(tempFeedRate, 1, sysSettings.xYMaxFeedRate);    
+    sys.targetFeedrate = constrain(tempFeedRate, 1, sysSettings.xYMaxFeedRate);    
 
     if (G2orG3 == 2){
-        arcMove(X1, Y1, X2, Y2, centerX, centerY, sys.feedRate, CLOCKWISE);
+        arcMove(X1, Y1, X2, Y2, centerX, centerY, sys.targetFeedrate, CLOCKWISE);
     }
     else {
-        arcMove(X1, Y1, X2, Y2, centerX, centerY, sys.feedRate, COUNTERCLOCKWISE);
+        arcMove(X1, Y1, X2, Y2, centerX, centerY, sys.targetFeedrate, COUNTERCLOCKWISE);
     }
 }
 
@@ -811,7 +811,7 @@ void  G38(const String& readString) {
 
       float initialZPos = zAxis.read();
 
-      float tempFeedRate; // make sure to not change the sys.feedrate with a value until validated and constrained
+      float tempFeedRate; // make sure to not change the sys.targetFeedrate with a value until validated and constrained
 
       //extract and compute the target Z limit coordinate of this plunge move
       finalZPos = sys.mmConversionFactor * extractGcodeValue(readString, 'Z', initialZPos / sys.mmConversionFactor);
@@ -822,15 +822,15 @@ void  G38(const String& readString) {
       }
 
       //keep the last used feedrate if none specified in the Gcode line 
-      tempFeedRate = sys.mmConversionFactor*extractGcodeValue(readString, 'F', sys.feedRate/sys.mmConversionFactor);
+      tempFeedRate = sys.mmConversionFactor*extractGcodeValue(readString, 'F', sys.targetFeedrate/sys.mmConversionFactor);
       //Top the target rate to the maximum Z feedrate,
-      sys.feedRate = constrain(tempFeedRate, 1, zMaxFeedRate);
+      sys.targetFeedrate = constrain(tempFeedRate, 1, zMaxFeedRate);
 
       Serial.print(F("max depth "));
       Serial.print(finalZPos);
       Serial.println(F(" mm."));
-      Serial.print(F("feedrate "));
-      Serial.print(sys.feedRate);
+      Serial.print(F("target feedrate "));
+      Serial.print(sys.targetFeedrate);
       Serial.println(F(" mm per min."));
 
       //set Probe to input with pullup
