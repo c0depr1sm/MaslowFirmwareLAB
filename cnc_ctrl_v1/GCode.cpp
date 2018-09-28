@@ -811,15 +811,20 @@ void  G38(const String& readString) {
 
       float currentZPos = zAxis.read();
 
-      zgoto      = sys.mmConversionFactor * extractGcodeValue(readString, 'Z', currentZPos / sys.mmConversionFactor);
-      sys.feedRate   = sys.mmConversionFactor * extractGcodeValue(readString, 'F', sys.feedRate / sys.mmConversionFactor);
-      sys.feedRate = constrain(sys.feedRate, 1, zMaxFeedRate);
+      float tempFeedRate; // make sure to not change the sys.feedrate with a value until validated and constrained
 
+      //extract and compute the target Z limit coordinate of this plunge move
+      zgoto      = sys.mmConversionFactor * extractGcodeValue(readString, 'Z', currentZPos / sys.mmConversionFactor);
       if (sys.useRelativeUnits) { //if we are using a relative coordinate system
         if (readString.indexOf('Z') >= 0) { //if z has moved
           zgoto = currentZPos + zgoto;
         }
       }
+
+      //keep the last used feedrate if none specified in the Gcode line 
+      tempFeedRate = sys.mmConversionFactor*extractGcodeValue(readString, 'F', sys.feedRate/sys.mmConversionFactor);
+      //Top the target rate to the maximum Z feedrate,
+      sys.feedRate = constrain(tempFeedRate, 1, zMaxFeedRate);
 
       Serial.print(F("max depth "));
       Serial.print(zgoto);
@@ -828,12 +833,11 @@ void  G38(const String& readString) {
       Serial.print(sys.feedRate);
       Serial.println(F(" mm per min."));
 
-
       //set Probe to input with pullup
       pinMode(ProbePin, INPUT_PULLUP);
       digitalWrite(ProbePin, HIGH);
 
-      if (zgoto != currentZPos / sys.mmConversionFactor) {
+      if (zgoto != currentZPos / sys.mmConversionFactor) { // that unit conversion seems inapropriate... BUG?
         //        now move z to the Z destination;
         //        Currently ignores X and Y options
         //          we need a version of singleAxisMove that quits if the AUXn input changes (goes LOW)
