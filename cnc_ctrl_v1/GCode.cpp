@@ -652,17 +652,17 @@ void G1(const String& readString, int G0orG1){
     float ygoto;
     float zgoto;
 
+    //identify the estimated starting coordinates of this straight path coordinated move
     float currentXPos = sys.xPosition;
     float currentYPos = sys.yPosition;
     float currentZPos = zAxis.read();
     
     float tempFeedRate; // make sure to not change the sys.feedrate with a value until validated and constrained
 
+    //extract and compute the target coordinates of this straight path move
     xgoto      = sys.mmConversionFactor*extractGcodeValue(readString, 'X', currentXPos/sys.mmConversionFactor);
     ygoto      = sys.mmConversionFactor*extractGcodeValue(readString, 'Y', currentYPos/sys.mmConversionFactor);
     zgoto      = sys.mmConversionFactor*extractGcodeValue(readString, 'Z', currentZPos/sys.mmConversionFactor);
-    tempFeedRate = sys.mmConversionFactor*extractGcodeValue(readString, 'F', sys.feedRate/sys.mmConversionFactor);
-    sys.feedRate = constrain(tempFeedRate, 1, sysSettings.xYMaxFeedRate);   //constrain to the maximum feedrate,
 
     if (sys.useRelativeUnits){ //if we are using a relative coordinate system
 
@@ -677,7 +677,12 @@ void G1(const String& readString, int G0orG1){
         }
     }
 
-    //if the zaxis is attached
+    //keep the last used feedrate if none specified in the Gcode line 
+    tempFeedRate = sys.mmConversionFactor*extractGcodeValue(readString, 'F', sys.feedRate/sys.mmConversionFactor);
+    //Top the target rate to the maximum XY feedrate,
+    sys.feedRate = constrain(tempFeedRate, 1, sysSettings.xYMaxFeedRate);   
+
+    //if the zaxis is not attached, then get manual ajustment done before move.
     if(!sysSettings.zAxisMotorized){
         float threshold = .1; //units of mm
         if (abs(currentZPos - zgoto) > threshold){
@@ -708,7 +713,7 @@ void G1(const String& readString, int G0orG1){
     }
     else{
         //if this is a rapid move
-        coordinatedMove(xgoto, ygoto, zgoto, sysSettings.xYMaxFeedRate); //move the same as a regular move, but go fast
+        coordinatedMove(xgoto, ygoto, zgoto, sysSettings.xYMaxFeedRate); //move the same as a regular move, but seek fastest feed rate
     }
 }
 
@@ -722,20 +727,28 @@ void G2(const String& readString, int G2orG3){
 
     //is it supposed to handle relative units? Apparently, unlike B09 G38 or G0 and G1,  it does not.
 
+    //identify the estimated starting coordinates of this straight path coordinated move
     float X1 = sys.xPosition; //does this work if units are inches? (It seems to)
     float Y1 = sys.yPosition;
 
+    //extract and compute the target coordinates of this arc path move
     float X2      = sys.mmConversionFactor*extractGcodeValue(readString, 'X', X1/sys.mmConversionFactor);
     float Y2      = sys.mmConversionFactor*extractGcodeValue(readString, 'Y', Y1/sys.mmConversionFactor);
     float I       = sys.mmConversionFactor*extractGcodeValue(readString, 'I', 0.0);
     float J       = sys.mmConversionFactor*extractGcodeValue(readString, 'J', 0.0);
-    // make sure to not change the sys.feedrate with a value until validated and constrained
-    float tempFeedRate = sys.mmConversionFactor*extractGcodeValue(readString, 'F', sys.feedRate/sys.mmConversionFactor);
+ 
+    //is it supposed to handle relative units? Apparently, unlike B09 G38 or G0 and G1,  it does not.
 
+    //compute the circle center coordinates of this arc path move
     float centerX = X1 + I;
     float centerY = Y1 + J;
 
-    sys.feedRate = constrain(tempFeedRate, 1, sysSettings.xYMaxFeedRate);   //constrain to the maximum feedrate, 
+    //make sure to not change the sys.feedrate with a value until validated and constrained
+    float tempFeedRate; 
+    //keep the last used feedrate if none specified in the Gcode line 
+    tempFeedRate = sys.mmConversionFactor*extractGcodeValue(readString, 'F', sys.feedRate/sys.mmConversionFactor);
+    //Top the target rate to the maximum XY feedrate,
+    sys.feedRate = constrain(tempFeedRate, 1, sysSettings.xYMaxFeedRate);    
 
     if (G2orG3 == 2){
         arcMove(X1, Y1, X2, Y2, centerX, centerY, sys.feedRate, CLOCKWISE);
