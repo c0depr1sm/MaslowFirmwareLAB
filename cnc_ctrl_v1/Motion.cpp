@@ -123,8 +123,10 @@ int   coordinatedMove(const float& xEnd, const float& yEnd, const float& zEnd, f
     
     float aChainLength;
     float bChainLength;
-    float zPosition                   = zStartingLocation;
-    long   numberOfStepsTaken         =  0;
+    long  numberOfStepsTaken = 0;
+    float nextXPosition = sys.estimatedBitTipXPosition;
+    float nextYPosition = sys.estimatedBitTipYPosition;
+    float nextZPosition = zStartingLocation;
     
     while(numberOfStepsTaken < finalNumberOfSteps){
       
@@ -135,23 +137,28 @@ int   coordinatedMove(const float& xEnd, const float& yEnd, const float& zEnd, f
         if (!movementUpdated) {
             //find the target point for this step
             // This section ~20us
-            sys.estimatedBitTipXPosition +=  xStepSize;
-            sys.estimatedBitTipYPosition +=  yStepSize;
-            zPosition += zStepSize;
+            nextXPosition += xStepSize;
+            nextYPosition += yStepSize;
+            nextZPosition += zStepSize;
             
             //find the chain lengths for this step
             // This section ~180us
-            kinematics.inverse(sys.estimatedBitTipXPosition,sys.estimatedBitTipYPosition,&aChainLength,&bChainLength);
+            kinematics.inverse(nextXPosition,nextYPosition,&aChainLength,&bChainLength);
             
             //write to each axis
             // This section ~180us
             leftAxis.write(aChainLength);
             rightAxis.write(bChainLength);
             if(sysSettings.zAxisMotorized){
-              zAxis.write(zPosition);
+              zAxis.write(nextZPosition);
             }
             
             movementUpdate();
+            
+            //record new position estimations
+            sys.estimatedBitTipXPosition = nextXPosition;
+            sys.estimatedBitTipYPosition = nextYPosition;
+            // = nextZPosition; // that is stored in the zAxis, when we move it.
             
             //increment the number of steps taken
             numberOfStepsTaken++;
@@ -169,11 +176,13 @@ int   coordinatedMove(const float& xEnd, const float& yEnd, const float& zEnd, f
     leftAxis.endMove(aChainLength);
     rightAxis.endMove(bChainLength);
     if(sysSettings.zAxisMotorized){
-      zAxis.endMove(zPosition);
+      zAxis.endMove(nextZPosition);
     }
     
+    //finalize new position estimations
     sys.estimatedBitTipXPosition = xEnd;
     sys.estimatedBitTipYPosition = yEnd;
+    // = nextZPosition; // that is stored in the zAxis, when we move it.
     
     return 1;
     
@@ -301,6 +310,10 @@ int   arcMove(const float& X1, const float& Y1, const float& X2, const float& Y2
     float aChainLength;
     float bChainLength;
     
+    float nextXPosition = sys.estimatedBitTipXPosition;
+    float nextYPosition = sys.estimatedBitTipYPosition;
+    // float nextZPosition = ...; // z move not yet implemented in arcMove()
+
     //attach the axes
     leftAxis.attach();
     rightAxis.attach();
@@ -317,15 +330,25 @@ int   arcMove(const float& X1, const float& Y1, const float& X2, const float& Y2
             
             angleNow = startingAngle + theta*direction*degreeComplete;
             
-            sys.estimatedBitTipXPosition = radius * cos(angleNow) + centerX;
-            sys.estimatedBitTipYPosition = radius * sin(angleNow) + centerY;
+            nextXPosition = radius * cos(angleNow) + centerX;
+            nextYPosition = radius * sin(angleNow) + centerY;
             
-            kinematics.inverse(sys.estimatedBitTipXPosition,sys.estimatedBitTipYPosition,&aChainLength,&bChainLength);
+            kinematics.inverse(nextXPosition,nextYPosition,&aChainLength,&bChainLength);
             
             leftAxis.write(aChainLength);
             rightAxis.write(bChainLength); 
+            //if(sysSettings.zAxisMotorized){ // not yet  implemented in arcMove()
+            //  zAxis.write(nextZPosition);
+            //}
+
+            //increment the number of steps taken
             movementUpdate();
             
+            //record new position estimations
+            sys.estimatedBitTipXPosition = nextXPosition;
+            sys.estimatedBitTipYPosition = nextYPosition;
+            // = nextZPosition; // that is stored in the zAxis, when we move it.
+
             // Run realtime commands
             execSystemRealtime();
             if (sys.stop){return 1;}
@@ -340,9 +363,14 @@ int   arcMove(const float& X1, const float& Y1, const float& X2, const float& Y2
     kinematics.inverse(X2,Y2,&aChainLength,&bChainLength);
     leftAxis.endMove(aChainLength);
     rightAxis.endMove(bChainLength);
-    
+    //if(sysSettings.zAxisMotorized){ // z move not yet implemented in arcMove()
+    //  zAxis.endMove(nextZPosition);
+    //}
+        
+    //finalize new position estimations
     sys.estimatedBitTipXPosition = X2;
     sys.estimatedBitTipYPosition = Y2;
+    // = nextZPosition; // that is stored in the zAxis, when we move it.
     
     return 1;
 }

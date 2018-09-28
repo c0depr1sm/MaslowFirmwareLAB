@@ -715,7 +715,7 @@ void G2(const String& readString, int G2orG3){
     //is it supposed to handle relative units? Apparently, unlike B09 G38 or G0 and G1,  it does not.
 
     //identify the estimated starting coordinates of this straight path coordinated move
-    float X1 = sys.estimatedBitTipXPosition; //does this work if units are inches? (It seems to)
+    float X1 = sys.estimatedBitTipXPosition; 
     float Y1 = sys.estimatedBitTipYPosition;
 
     //extract and compute the target coordinates of this arc path move
