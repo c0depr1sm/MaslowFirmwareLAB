@@ -217,30 +217,30 @@ void  Kinematics::triangularInverse(float xTarget,float yTarget, float* aChainLe
     float Chain2AroundSprocket = 0;
 
     //Calculate motor axes length to the bit
-    float Motor1Distance = sqrt(pow((-1*leftMotorX - xTarget),2)+pow((leftMotorY - yTarget),2)); // updated to reflect new madgrizzle proposal of using X,Y coordinates of motors
-    float Motor2Distance = sqrt(pow((rightMotorX - xTarget),2)+pow((rightMotorY - yTarget),2));
+    float leftMotorDistance = sqrt(pow((-1*leftMotorX - xTarget),2)+pow((leftMotorY - yTarget),2)); // updated to reflect new madgrizzle proposal of using X,Y coordinates of motors
+    float rightMotorDistance = sqrt(pow((rightMotorX - xTarget),2)+pow((rightMotorY - yTarget),2));
 
     //Calculate the chain angles from horizontal, based on if the chain connects to the sled from the top or bottom of the sprocket
     if(sysSettings.chainOverSprocket == 1){
 		// Thanks to madgrizle pointing out that 
 		//            this part is the chain not touching the sprocket + this part is the chain wrapped around the sprocket(held at tooth pitch distance).
-        Chain1Angle = asin((leftMotorY - yTarget)/Motor1Distance) + asin(R/Motor1Distance); // removing chain tolerance and , updated to reflect new way of using X,Y coordinates of motors
-        Chain2Angle = asin((rightMotorY - yTarget)/Motor2Distance) + asin(R/Motor2Distance);
+        Chain1Angle = asin((leftMotorY - yTarget)/leftMotorDistance) + asin(R/leftMotorDistance); // removing chain tolerance and , updated to reflect new way of using X,Y coordinates of motors
+        Chain2Angle = asin((rightMotorY - yTarget)/rightMotorDistance) + asin(R/rightMotorDistance);
 
         Chain1AroundSprocket = R * Chain1Angle;
         Chain2AroundSprocket = R * Chain2Angle;
     }
     else{
-        Chain1Angle = asin((leftMotorY - yTarget)/Motor1Distance) - asin(R/Motor1Distance); // removing chain tolerance and , updated to reflect new way of using X,Y coordinates of motors
-        Chain2Angle = asin((rightMotorY - yTarget)/Motor2Distance) - asin(R/Motor2Distance);
+        Chain1Angle = asin((leftMotorY - yTarget)/leftMotorDistance) - asin(R/leftMotorDistance); // removing chain tolerance and , updated to reflect new way of using X,Y coordinates of motors
+        Chain2Angle = asin((rightMotorY - yTarget)/rightMotorDistance) - asin(R/rightMotorDistance);
 
         Chain1AroundSprocket = R * (3.14159 - Chain1Angle);
         Chain2AroundSprocket = R * (3.14159 - Chain2Angle);
     }
 
     //Calculate the straight chain length from the sprocket to the bit
-    float Chain1Straight = sqrt(pow(Motor1Distance,2)-pow(R,2)); // will apply chain tolerance after sag correction... because Ground control computes a correction without chain tolerance? (ask madgrizzle 
-    float Chain2Straight = sqrt(pow(Motor2Distance,2)-pow(R,2));
+    float Chain1Straight = sqrt(pow(leftMotorDistance,2)-pow(R,2)); // will apply chain tolerance after sag correction... because Ground control computes a correction without chain tolerance? (ask madgrizzle 
+    float Chain2Straight = sqrt(pow(rightMotorDistance,2)-pow(R,2));
 
     //Correct the straight chain lengths to account for chain sag
     Chain1Straight *= (1 + ((sysSettings.chainSagCorrectionFactor / 1000000000000) * pow(cos(Chain1Angle),2) * pow(Chain1Straight,2) * pow((tan(Chain2Angle) * cos(Chain1Angle)) + sin(Chain1Angle),2)));
