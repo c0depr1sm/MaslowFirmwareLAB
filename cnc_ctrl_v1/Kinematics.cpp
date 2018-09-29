@@ -31,7 +31,7 @@ void Kinematics::init(){
     recomputeGeometry();
     if (sys.state != STATE_OLD_SETTINGS){
      //Estimate the XY position based on the machine geometry and chain new lenght extending beyond the sproket top.
-     forward(leftAxis.read(), rightAxis.read(), &sys.estimatedBitTipXPosition, &sys.estimatedBitTipYPosition, sys.estimatedBitTipXPosition, sys.estimatedBitTipYPosition);
+     forward(leftAxle.read(), rightAxle.read(), &sys.estimatedBitTipXPosition, &sys.estimatedBitTipYPosition, sys.estimatedBitTipXPosition, sys.estimatedBitTipYPosition);
     }
 }
 

@@ -174,7 +174,7 @@ void Motor::write(int speed, bool force){
 
 void Motor::directWrite(int voltage){
     /*
-    Write directly to the motor, ignoring if the axis is attached or any applied calibration.
+    Write directly to the motor, ignoring if the axle is attached or any applied calibration.
     */
     write(voltage, true);
 }

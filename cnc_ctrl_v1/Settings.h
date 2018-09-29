@@ -41,20 +41,20 @@ enum SpindleAutomationType {
 typedef struct {  // I think this is about ~128 bytes in size if I counted correctly
   float workSurfaceWidth; // Formerly machineWidth  but needed clarification as it involves a specific area for kynematics calculation
   float workSurfaceHeight; // Formerly machineHeight  but needed clarification as it involves a specific area for kynematics calculation
-  float distBetweenLRMotorsOutputShaft; // Formerly distBetweenMotors but needed clarification as it does not concern Z axis motor
-  float lRMotorsYOffsetAboveWorkSurface; // Formerly motorOffsetY but needed clarification as it does not concern Z axis motor
+  float distBetweenLRMotorsOutputShaft; // Formerly distBetweenMotors but needed clarification as it does not concern Z axle motor
+  float lRMotorsYOffsetAboveWorkSurface; // Formerly motorOffsetY but needed clarification as it does not concern Z axle motor
   float sledWidth;
   float sledHeight;
   float sledCG;
   byte kinematicsType;
   float sledRotationDiskRadius;  // Formerly rotationDiskRadius but could be confused with L or R moror sprocket radius.
-  unsigned int axisPIDControlDetachTimeOutDelay; // Formerly  axisDetachTime but relationship to PID control application and timeout is now explicit
+  unsigned int axlePIDControlDetachTimeOutDelay; // Formerly  axisDetachTime but relationship to PID control application and timeout is now explicit
   unsigned int maxChainReachBeyondSprocketTop; // Formerly chainLength but the starting point and the fact that it is a machine property more than a chain position makes it clearer 
   unsigned int originalChainLength;
   float encoderLRMotorStepsCountPerOutputShaftTurn; // Formerly encoderSteps but pointing out this is machine property measured at the output shaft on LR motors makes it clearer 
   float distPerRot;
   unsigned int targetMaxXYFeedRate; // Formerly maxFeed but needed clarification as it does not apply to Z axis;
-  bool zAxisMotorized; //Formerly called zAxisAttached, renamed to avoid confusion with Axis.Attached() method.
+  bool zAxleMotorized; //Formerly called zAxisAttached, renamed to avoid confusion with Axis.Attached() method.
   SpindleAutomationType spindleAutomateType;
   float zScrewMaxRPM; //Formerly called maxZRPM, renamed to clarify location. This assumes the screw is connected to the Z motor gearbox output shatf in a 1:1 ratio 
   float zDistPerRot;

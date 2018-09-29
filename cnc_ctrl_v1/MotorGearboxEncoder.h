@@ -48,7 +48,7 @@
             float      *_Kp, *_Ki, *_Kd;
             // This could be converted to a pointer to save 4 bytes, but the
             // calculation would have to be done at a much higher level and 
-            // passed through each axis for it to have a single pointer to 
+            // passed through each axle for it to have a single pointer to 
             // both main motors
             float      _encoderStepsToRPMScaleFactor = 7394.9;   //6*10^7 us per minute divided by 8113.7 steps per revolution
     };

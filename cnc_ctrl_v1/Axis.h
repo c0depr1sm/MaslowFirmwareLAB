@@ -15,15 +15,15 @@
     
     Copyright 2014-2017 Bar Smith*/ 
     
-    #ifndef Axis_h
-    #define Axis_h
+    #ifndef Axle_h
+    #define Axle_h
 
-    class Axis{
+    class Axle{
         public:
-            void   setup(const int& pwmPin, const int& directionPin1, const int& directionPin2, const int& encoderPin1, const int& encoderPin2, const char& axisName, const unsigned long& loopInterval);
+            void   setup(const int& pwmPin, const int& directionPin1, const int& directionPin2, const int& encoderPin1, const int& encoderPin2, const char& axlesName, const unsigned long& loopInterval);
             void   write(const float& targetPosition);
             float  read();
-            void   set(const float& newAxisPosition);
+            void   set(const float& newAxlePosition);
             void   setSteps(const long& steps);
             int    updatePositionFromEncoder();
             void   initializePID(const unsigned long& loopInterval);
@@ -63,8 +63,8 @@
             PID        _pidController;
             float      *_mmPerRotation;
             float      *_encoderSteps;
-            bool       _disableAxisForTesting = false;
-            char       _axisName;
+            bool       _disableAxleForTesting = false;
+            char       _axleName;
     };
 
     #endif

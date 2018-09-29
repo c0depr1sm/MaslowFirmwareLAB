@@ -26,10 +26,10 @@ volatile bool  movementUpdated  =  false;
 
 void initMotion(){
     // Called on startup or after a stop command
-    leftAxis.stop();
-    rightAxis.stop();
-    if(sysSettings.zAxisMotorized){
-      zAxis.stop();
+    leftAxle.stop();
+    rightAxle.stop();
+    if(sysSettings.zAxleMotorized){
+      zAxle.stop();
     }
 }
 
@@ -85,7 +85,7 @@ int   coordinatedMove(const float& xEnd, const float& yEnd, const float& zEnd, f
     
     float  xStartingLocation = sys.estimatedBitTipXPosition;
     float  yStartingLocation = sys.estimatedBitTipYPosition;
-    float  zStartingLocation = zAxis.read();  // I don't know why we treat the zaxis differently
+    float  zStartingLocation = zAxle.read();  // It turn out that the Z axle's length position = the Router Bit z axis position. 
     float  zMaxFeedRate      = getZMaxFeedRate();
     
     //find the total distances to move
@@ -101,7 +101,7 @@ int   coordinatedMove(const float& xEnd, const float& yEnd, const float& zEnd, f
     float  delayTime            = LOOPINTERVAL;
     float  neededZFeedRate            = calculateFeedrate(abs(zDistanceToMoveInMM/finalNumberOfSteps), delayTime);
     
-    //throttle back feedrate if it exceeds zaxis max
+    //throttle back feedrate if it exceeds the z axis max feed rate
     if (neededZFeedRate > zMaxFeedRate){
       float  zStepSizeMMPerLoopInterval = computeStepSize(zMaxFeedRate);
       finalNumberOfSteps        = abs(zDistanceToMoveInMM/zStepSizeMMPerLoopInterval);
@@ -115,10 +115,10 @@ int   coordinatedMove(const float& xEnd, const float& yEnd, const float& zEnd, f
     float  zStepSize            = (zDistanceToMoveInMM/finalNumberOfSteps);
     
     //attach the axes
-    leftAxis.attach();
-    rightAxis.attach();
-    if(sysSettings.zAxisMotorized){
-      zAxis.attach();
+    leftAxle.attach();
+    rightAxle.attach();
+    if(sysSettings.zAxleMotorized){
+      zAxle.attach();
     }
     
     float aChainLength;
@@ -147,10 +147,10 @@ int   coordinatedMove(const float& xEnd, const float& yEnd, const float& zEnd, f
             
             //write to each axis
             // This section ~180us
-            leftAxis.write(aChainLength);
-            rightAxis.write(bChainLength);
-            if(sysSettings.zAxisMotorized){
-              zAxis.write(nextZPosition);
+            leftAxle.write(aChainLength);
+            rightAxle.write(bChainLength);
+            if(sysSettings.zAxleMotorized){
+              zAxle.write(nextZPosition);
             }
             
             movementUpdate();
@@ -158,7 +158,7 @@ int   coordinatedMove(const float& xEnd, const float& yEnd, const float& zEnd, f
             //record new position estimations
             sys.estimatedBitTipXPosition = nextXPosition;
             sys.estimatedBitTipYPosition = nextYPosition;
-            // = nextZPosition; // that is stored in the zAxis, when we move it.
+            // = nextZPosition; // that is stored in the z axle when we move it.
             
             //increment the number of steps taken
             numberOfStepsTaken++;
@@ -173,27 +173,27 @@ int   coordinatedMove(const float& xEnd, const float& yEnd, const float& zEnd, f
     #endif
     
     kinematics.inverse(xEnd,yEnd,&aChainLength,&bChainLength);
-    leftAxis.endMove(aChainLength);
-    rightAxis.endMove(bChainLength);
-    if(sysSettings.zAxisMotorized){
-      zAxis.endMove(nextZPosition);
+    leftAxle.endMove(aChainLength);
+    rightAxle.endMove(bChainLength);
+    if(sysSettings.zAxleMotorized){
+      zAxle.endMove(nextZPosition);
     }
     
     //finalize new position estimations
     sys.estimatedBitTipXPosition = xEnd;
     sys.estimatedBitTipYPosition = yEnd;
-    // = nextZPosition; // that is stored in the zAxis, when we move it.
+    // = nextZPosition; // that is stored in the z axle when we move it.
     
     return 1;
     
 }
 // moveSpeed (formerly MMPerMin) describes the demanded displacement speed in mm/min
-void  singleAxisMove(Axis* axis, const float& endPos, const float& moveSpeed){
+void  singleAxleMove(Axle* axle, const float& endPos, const float& moveSpeed){
     /*
-    Takes a pointer to an axis object and moves that axis to endPos at moveSpeed
+    Takes a pointer to an axle object and rotates that axle up to endPos position at moveSpeed
     */
     
-    float startingPos          = axis->read();
+    float startingPos          = axle->read();
     float moveDist             = endPos - startingPos; //total distance to move
     
     float direction            = moveDist/abs(moveDist); //determine the direction of the move
@@ -207,20 +207,20 @@ void  singleAxisMove(Axis* axis, const float& endPos, const float& moveSpeed){
     
     long numberOfStepsTaken    = 0;
     
-    //attach the axis we want to move
-    axis->attach();
+    //attach the axle we want to move
+    axle->attach();
     
-    float whereAxisShouldBeAtThisStep = startingPos;
+    float whereAxleShouldBeAtThisStep = startingPos;
     #if misloopDebug > 0
     inMovementLoop = true;
     #endif
     while(numberOfStepsTaken < finalNumberOfSteps){
         if (!movementUpdated) {
           //find the target point for this step
-          whereAxisShouldBeAtThisStep += stepSizeMMPerLoopInterval;
+          whereAxleShouldBeAtThisStep += stepSizeMMPerLoopInterval;
           
-          //write to axis
-          axis->write(whereAxisShouldBeAtThisStep);
+          //write to axle
+          axle->write(whereAxleShouldBeAtThisStep);
           movementUpdate();
           
           // Run realtime commands
@@ -235,7 +235,7 @@ void  singleAxisMove(Axis* axis, const float& endPos, const float& moveSpeed){
     inMovementLoop = false;
     #endif
     
-    axis->endMove(endPos);
+    axle->endMove(endPos);
     
 }
 
@@ -250,8 +250,8 @@ int   arcMove(const float& X1, const float& Y1, const float& X2, const float& Y2
     Move the machine through an arc from point (X1, Y1) to point (X2, Y2) along the 
     arc defined by center (centerX, centerY) at speed up to moveSpeed
     
-    Does not handle the Z axis. So this can only implement a  subset of G2 and G3.
-    * Helix paths are not supported.
+    Does not handle moves along the Z axis. So this can only implement a  subset of G2 and G3.
+    because helix paths are not supported.
     */
     
     //compute geometry 
@@ -315,8 +315,8 @@ int   arcMove(const float& X1, const float& Y1, const float& X2, const float& Y2
     // float nextZPosition = ...; // z move not yet implemented in arcMove()
 
     //attach the axes
-    leftAxis.attach();
-    rightAxis.attach();
+    leftAxle.attach();
+    rightAxle.attach();
     
     while(numberOfStepsTaken < abs(finalNumberOfSteps)){
         #if misloopDebug > 0
@@ -335,10 +335,10 @@ int   arcMove(const float& X1, const float& Y1, const float& X2, const float& Y2
             
             kinematics.inverse(nextXPosition,nextYPosition,&aChainLength,&bChainLength);
             
-            leftAxis.write(aChainLength);
-            rightAxis.write(bChainLength); 
-            //if(sysSettings.zAxisMotorized){ // not yet  implemented in arcMove()
-            //  zAxis.write(nextZPosition);
+            leftAxle.write(aChainLength);
+            rightAxle.write(bChainLength); 
+            //if(sysSettings.zAxleMotorized){ // not yet  implemented in arcMove()
+            //  zAxle.write(nextZPosition);
             //}
 
             //increment the number of steps taken
@@ -347,7 +347,7 @@ int   arcMove(const float& X1, const float& Y1, const float& X2, const float& Y2
             //record new position estimations
             sys.estimatedBitTipXPosition = nextXPosition;
             sys.estimatedBitTipYPosition = nextYPosition;
-            // = nextZPosition; // that is stored in the zAxis, when we move it.
+            // = nextZPosition; // that is stored in the Z axle object when we move it.
 
             // Run realtime commands
             execSystemRealtime();
@@ -361,16 +361,16 @@ int   arcMove(const float& X1, const float& Y1, const float& X2, const float& Y2
     #endif
     
     kinematics.inverse(X2,Y2,&aChainLength,&bChainLength);
-    leftAxis.endMove(aChainLength);
-    rightAxis.endMove(bChainLength);
-    //if(sysSettings.zAxisMotorized){ // z move not yet implemented in arcMove()
-    //  zAxis.endMove(nextZPosition);
+    leftAxle.endMove(aChainLength);
+    rightAxle.endMove(bChainLength);
+    //if(sysSettings.zAxleMotorized){ // z move not yet implemented in arcMove()
+    //  zAxle.endMove(nextZPosition);
     //}
         
     //finalize new position estimations
     sys.estimatedBitTipXPosition = X2;
     sys.estimatedBitTipYPosition = Y2;
-    // = nextZPosition; // that is stored in the zAxis, when we move it.
+    // = nextZPosition; // that is stored in the Z axle object when we move it.
     
     return 1;
 }
@@ -383,7 +383,7 @@ void  motionDetachIfIdle(){
     
     */
     
-    leftAxis.detachIfIdle();
-    rightAxis.detachIfIdle();
-    zAxis.detachIfIdle();
+    leftAxle.detachIfIdle();
+    rightAxle.detachIfIdle();
+    zAxle.detachIfIdle();
 }

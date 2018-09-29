@@ -45,9 +45,9 @@ settings_t sysSettings;
 byte systemRtExecAlarm;  
 
 // Define axes, it might be tighter to define these within the sys struct
-Axis leftAxis;
-Axis rightAxis;
-Axis zAxis;
+Axle leftAxle;
+Axle rightAxle;
+Axle zAxle;
 
 // Define kinematics, is it necessary for this to be a class?  Is this really
 // going to be reused?
@@ -64,9 +64,9 @@ void setup(){
     setupAxes();
     settingsLoadStepsFromEEprom();
     // Set initial desired position of the machine to its current position
-    leftAxis.write(leftAxis.read());
-    rightAxis.write(rightAxis.read());
-    zAxis.write(zAxis.read());
+    leftAxle.write(leftAxle.read());
+    rightAxle.write(rightAxle.read());
+    zAxle.write(zAxle.read());
     readyCommandString.reserve(INCBUFFERLENGTH);           //Allocate memory so that this string doesn't fragment the heap as it grows and shrinks
     gcodeLine.reserve(INCBUFFERLENGTH);
 
@@ -89,9 +89,9 @@ void runsOnATimer(){
     }
     #endif
     movementUpdated = false;
-    leftAxis.computePID();
-    rightAxis.computePID();
-    zAxis.computePID();
+    leftAxle.computePID();
+    rightAxle.computePID();
+    zAxle.computePID();
 }
 
 void loop(){

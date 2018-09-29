@@ -23,7 +23,7 @@ bool TLE5206;
 
 // extern values using AUX pins defined in  configAuxLow() and configAuxHigh()
 int SpindlePowerControlPin;  // output for controlling spindle power
-int ProbePin;                // use this input for zeroing zAxis with G38.2 gcode
+int ProbePin;                // use this input for detecting knowwn Router Bit depth position with G38.2 gcode
 int LaserPowerPin;           // Use this output to turn on and off a laser diode
 
 
@@ -36,22 +36,22 @@ void  calibrateChainLengths(String gcodeLine){
     if (extractGcodeValue(gcodeLine, 'L', 0)){
         //measure out the left chain
         Serial.println(F("Measuring out left chain"));
-        singleAxisMove(&leftAxis, sysSettings.originalChainLength, (sysSettings.targetMaxXYFeedRate * .9));
+        singleAxleMove(&leftAxle, sysSettings.originalChainLength, (sysSettings.targetMaxXYFeedRate * .9));
 
-        Serial.print(leftAxis.read());
+        Serial.print(leftAxle.read());
         Serial.println(F("mm"));
 
-        leftAxis.detach();
+        leftAxle.detach();
     }
     else if(extractGcodeValue(gcodeLine, 'R', 0)){
         //measure out the right chain
         Serial.println(F("Measuring out right chain"));
-        singleAxisMove(&rightAxis, sysSettings.originalChainLength, (sysSettings.targetMaxXYFeedRate * .9));
+        singleAxleMove(&rightAxle, sysSettings.originalChainLength, (sysSettings.targetMaxXYFeedRate * .9));
 
-        Serial.print(rightAxis.read());
+        Serial.print(rightAxle.read());
         Serial.println(F("mm"));
 
-        rightAxis.detach();
+        rightAxle.detach();
     }
 
 }
@@ -106,7 +106,7 @@ void   setupAxes(){
         in2 = 8;        // OUTPUT
         enA = 6;        // PWM
 
-        //MP2 - Z-axis
+        //MP2 - Z-axle
         encoder2A = 2;  // INPUT
         encoder2B = 3;  // INPUT
         in3 = 11;       // OUTPUT
@@ -137,7 +137,7 @@ void   setupAxes(){
         in2 = 4;        // OUTPUT
         enA = 5;        // PWM
 
-        //MP2 - Z-axis
+        //MP2 - Z-axle
         encoder2A = 19; // INPUT
         encoder2B = 18; // INPUT
         in3 = 9;        // OUTPUT
@@ -169,7 +169,7 @@ void   setupAxes(){
         in2 = 6;         // OUTPUT
         enA = 5;         // PWM
 
-        //MP2 - Z-axis
+        //MP2 - Z-axle
         encoder2A = 19;  // INPUT
         encoder2B = 18;  // INPUT
         in3 = 7;         // OUTPUT
@@ -200,7 +200,7 @@ void   setupAxes(){
         in2 = 4;        // OUTPUT
         enA = 5;        // errorFlag
 
-        //MP2 - Z-axis
+        //MP2 - Z-axle
         encoder2A = 19; // INPUT
         encoder2B = 18; // INPUT
         in3 = 7;        // OUTPUT
@@ -227,18 +227,18 @@ void   setupAxes(){
     }
 
     if(sysSettings.chainOverSprocket == 1){
-        leftAxis.setup (enC, in6, in5, encoder3B, encoder3A, 'L', LOOPINTERVAL);
-        rightAxis.setup(enA, in1, in2, encoder1A, encoder1B, 'R', LOOPINTERVAL);
+        leftAxle.setup (enC, in6, in5, encoder3B, encoder3A, 'L', LOOPINTERVAL);
+        rightAxle.setup(enA, in1, in2, encoder1A, encoder1B, 'R', LOOPINTERVAL);
     }
     else{
-        leftAxis.setup (enC, in5, in6, encoder3A, encoder3B, 'L', LOOPINTERVAL);
-        rightAxis.setup(enA, in2, in1, encoder1B, encoder1A, 'R', LOOPINTERVAL);
+        leftAxle.setup (enC, in5, in6, encoder3A, encoder3B, 'L', LOOPINTERVAL);
+        rightAxle.setup(enA, in2, in1, encoder1B, encoder1A, 'R', LOOPINTERVAL);
     }
 
-    zAxis.setup    (enB, in3, in4, encoder2B, encoder2A, 'Z', LOOPINTERVAL);
-    leftAxis.setPIDValues(&sysSettings.KpPos, &sysSettings.KiPos, &sysSettings.KdPos, &sysSettings.propWeightPos, &sysSettings.KpV, &sysSettings.KiV, &sysSettings.KdV, &sysSettings.propWeightV);
-    rightAxis.setPIDValues(&sysSettings.KpPos, &sysSettings.KiPos, &sysSettings.KdPos, &sysSettings.propWeightPos, &sysSettings.KpV, &sysSettings.KiV, &sysSettings.KdV, &sysSettings.propWeightV);
-    zAxis.setPIDValues(&sysSettings.zKpPos, &sysSettings.zKiPos, &sysSettings.zKdPos, &sysSettings.zPropWeightPos, &sysSettings.zKpV, &sysSettings.zKiV, &sysSettings.zKdV, &sysSettings.zPropWeightV);
+    zAxle.setup    (enB, in3, in4, encoder2B, encoder2A, 'Z', LOOPINTERVAL);
+    leftAxle.setPIDValues(&sysSettings.KpPos, &sysSettings.KiPos, &sysSettings.KdPos, &sysSettings.propWeightPos, &sysSettings.KpV, &sysSettings.KiV, &sysSettings.KdV, &sysSettings.propWeightV);
+    rightAxle.setPIDValues(&sysSettings.KpPos, &sysSettings.KiPos, &sysSettings.KdPos, &sysSettings.propWeightPos, &sysSettings.KpV, &sysSettings.KiV, &sysSettings.KdV, &sysSettings.propWeightV);
+    zAxle.setPIDValues(&sysSettings.zKpPos, &sysSettings.zKiPos, &sysSettings.zKdPos, &sysSettings.zPropWeightPos, &sysSettings.zKpV, &sysSettings.zKiV, &sysSettings.zKdV, &sysSettings.zPropWeightV);
 
     // implement the AUXx values that are 'used'. This accomplishes setting their values at runtime.
     // Using a separate function is a compiler work-around to avoid
@@ -250,16 +250,16 @@ void   setupAxes(){
     }
 }
 
-// Calculate resulting z axis max feed rate based on system setttings
+// Calculate resulting z axle max feed rate based on system setttings
 float getZMaxFeedRate(){
-	float tempRate = sysSettings.zScrewMaxRPM * abs(zAxis.getPitch());
+	float tempRate = sysSettings.zScrewMaxRPM * abs(zAxle.getPitch());
 	return tempRate;
 }
 
 // Assign AUX pins to extern variables used by functions like Spindle and Probe
 void configAuxLow(int aux1, int aux2, int aux3, int aux4, int aux5, int aux6) {
   SpindlePowerControlPin = aux1;   // output for controlling spindle power
-  ProbePin = aux4;                 // use this input for zeroing zAxis with G38.2 gcode
+  ProbePin = aux4;                 // use this input for detecting a Router Bit known depth position with G38.2 gcode
   LaserPowerPin = aux2;            // output for controlling a laser diode
   pinMode(LaserPowerPin, OUTPUT);
   digitalWrite(LaserPowerPin, LOW);
@@ -416,7 +416,7 @@ void systemSaveAxesPosition(){
     /*
     Save steps of axes to EEPROM if they are all detached
     */
-    if (!leftAxis.attached() && !rightAxis.attached() && !zAxis.attached()){
+    if (!leftAxle.attached() && !rightAxle.attached() && !zAxle.attached()){
         settingsSaveStepstoEEprom();
     }
 }
@@ -425,9 +425,9 @@ void systemReset(){
     /*
     Stops everything and resets the arduino
     */
-    leftAxis.detach();
-    rightAxis.detach();
-    zAxis.detach();
+    leftAxle.detach();
+    rightAxle.detach();
+    zAxle.detach();
     setSpindlePower(false);
     // Reruns the initial setup function and calls stop to re-init state
     sys.stop = true;
@@ -484,7 +484,7 @@ byte systemExecuteCmdstring(String& cmdString){
               //     }
               //   } // Otherwise, no effect.
               //   break;
-            }
+            } 
             break;
           //case 'J' : break;  // Jogging methods
               // TODO: Here jogging can be placed for execution as a seperate subprogram. It does not need to be

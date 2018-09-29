@@ -69,9 +69,9 @@ typedef struct {
   byte oldSettingsFlag;
 } system_t;
 extern system_t sys;
-extern Axis leftAxis;
-extern Axis rightAxis;
-extern Axis zAxis;
+extern Axle leftAxle;
+extern Axle rightAxle;
+extern Axle zAxle;
 extern RingBuffer incSerialBuffer;
 extern Kinematics kinematics;
 extern byte systemRtExecAlarm;

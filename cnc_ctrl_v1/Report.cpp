@@ -149,13 +149,13 @@ void reportMaslowSettings() {
     Serial.print(F("$6=")); Serial.println(sysSettings.sledCG, 8);
     Serial.print(F("$7=")); Serial.println(sysSettings.kinematicsType);
     Serial.print(F("$8=")); Serial.println(sysSettings.sledRotationDiskRadius, 8);
-    Serial.print(F("$9=")); Serial.println(sysSettings.axisPIDControlDetachTimeOutDelay);
+    Serial.print(F("$9=")); Serial.println(sysSettings.axlePIDControlDetachTimeOutDelay);
     Serial.print(F("$10=")); Serial.println(sysSettings.maxChainReachBeyondSprocketTop);
     Serial.print(F("$11=")); Serial.println(sysSettings.originalChainLength);
     Serial.print(F("$12=")); Serial.println(sysSettings.encoderLRMotorStepsCountPerOutputShaftTurn, 8);
     Serial.print(F("$13=")); Serial.println(sysSettings.distPerRot, 8);
     Serial.print(F("$15=")); Serial.println(sysSettings.targetMaxXYFeedRate);
-    Serial.print(F("$16=")); Serial.println(sysSettings.zAxisMotorized);
+    Serial.print(F("$16=")); Serial.println(sysSettings.zAxleMotorized);
     Serial.print(F("$17=")); Serial.println(sysSettings.spindleAutomate);
     Serial.print(F("$18=")); Serial.println(sysSettings.zScrewMaxRPM, 8);
     Serial.print(F("$19=")); Serial.println(sysSettings.zDistPerRot, 8);
@@ -193,18 +193,18 @@ void reportMaslowSettings() {
     Serial.print(F(" (sled height, mm)\r\n$6=")); Serial.print(sysSettings.sledCG, 8);
     Serial.print(F(" (sled cg, mm)\r\n$7=")); Serial.print(sysSettings.kinematicsType);
     Serial.print(F(" (Kinematics Type 1=Quadrilateral, 2=Triangular)\r\n$8=")); Serial.print(sysSettings.sledRotationDiskRadius, 8);
-    Serial.print(F(" (rotation radius, mm)\r\n$9=")); Serial.print(sysSettings.axisPIDControlDetachTimeOutDelay);
-    Serial.print(F(" (axis idle before detach, ms)\r\n$10=")); Serial.print(sysSettings.maxChainReachBeyondSprocketTop);
+    Serial.print(F(" (rotation radius, mm)\r\n$9=")); Serial.print(sysSettings.axlePIDControlDetachTimeOutDelay);
+    Serial.print(F(" (axle idle time before PID control detach, ms)\r\n$10=")); Serial.print(sysSettings.maxChainReachBeyondSprocketTop);
     Serial.print(F(" (full length of chain, mm)\r\n$11=")); Serial.print(sysSettings.originalChainLength);
     Serial.print(F(" (calibration chain length, mm)\r\n$12=")); Serial.print(sysSettings.encoderLRMotorStepsCountPerOutputShaftTurn, 8);
     Serial.print(F(" (main steps per revolution)\r\n$13=")); Serial.print(sysSettings.distPerRot, 8);
     Serial.print(F(" (distance / rotation, mm)\r\n$15=")); Serial.print(sysSettings.targetMaxXYFeedRate);
-    Serial.print(F(" (max feed, mm/min)\r\n$16=")); Serial.print(sysSettings.zAxisMotorized);
-    Serial.print(F(" (Auto Z Axis, 1 = Yes)\r\n$17=")); Serial.print(sysSettings.spindleAutomateType);
+    Serial.print(F(" (max feed, mm/min)\r\n$16=")); Serial.print(sysSettings.zAxleMotorized);
+    Serial.print(F(" (Motorized Z Axle, 1 = Yes)\r\n$17=")); Serial.print(sysSettings.spindleAutomateType);
     Serial.print(F(" (auto spindle enable 1=servo, 2=relay_h, 3=relay_l)\r\n$18=")); Serial.print(sysSettings.zScrewMaxRPM, 8);
-    Serial.print(F(" (max z axis RPM)\r\n$19=")); Serial.print(sysSettings.zDistPerRot, 8);
-    Serial.print(F(" (z axis distance / rotation)\r\n$20=")); Serial.print(sysSettings.encoderZScrewStepsCountPerTurn, 8);
-    Serial.print(F(" (z axis steps per revolution)\r\n$21=")); Serial.print(sysSettings.KpPos, 8);
+    Serial.print(F(" (max z axle RPM)\r\n$19=")); Serial.print(sysSettings.zDistPerRot, 8);
+    Serial.print(F(" (z axle distance / rotation)\r\n$20=")); Serial.print(sysSettings.encoderZScrewStepsCountPerTurn, 8);
+    Serial.print(F(" (z axle's encoder step counts per revolution)\r\n$21=")); Serial.print(sysSettings.KpPos, 8);
     Serial.print(F(" (main Kp Pos)\r\n$22=")); Serial.print(sysSettings.KiPos, 8);
     Serial.print(F(" (main Ki Pos)\r\n$23=")); Serial.print(sysSettings.KdPos, 8);
     Serial.print(F(" (main Kd Pos)\r\n$24=")); Serial.print(sysSettings.propWeightPos, 8);
@@ -213,14 +213,14 @@ void reportMaslowSettings() {
     Serial.print(F(" (main Ki Velocity)\r\n$27=")); Serial.print(sysSettings.KdV, 8);
     Serial.print(F(" (main Kd Velocity)\r\n$28=")); Serial.print(sysSettings.propWeightV, 8);
     Serial.print(F(" (main Velocity proportional weight)\r\n$29=")); Serial.print(sysSettings.zKpPos, 8);
-    Serial.print(F(" (z axis Kp Pos)\r\n$30=")); Serial.print(sysSettings.zKiPos, 8);
-    Serial.print(F(" (z axis Ki Pos)\r\n$31=")); Serial.print(sysSettings.zKdPos, 8);
-    Serial.print(F(" (z axis Kd Pos)\r\n$32=")); Serial.print(sysSettings.zPropWeightPos, 8);
-    Serial.print(F(" (z axis Pos proportional weight)\r\n$33=")); Serial.print(sysSettings.zKpV, 8);
-    Serial.print(F(" (z axis Kp Velocity)\r\n$34=")); Serial.print(sysSettings.zKiV, 8);
-    Serial.print(F(" (z axis Ki Velocity)\r\n$35=")); Serial.print(sysSettings.zKdV, 8);
-    Serial.print(F(" (z axis Kd Velocity)\r\n$36=")); Serial.print(sysSettings.zPropWeightV, 8);
-    Serial.print(F(" (z axis Velocity proportional weight)\r\n$37=")); Serial.print(sysSettings.chainSagCorrectionFactor, 8);
+    Serial.print(F(" (z axle Kp Pos)\r\n$30=")); Serial.print(sysSettings.zKiPos, 8);
+    Serial.print(F(" (z axle Ki Pos)\r\n$31=")); Serial.print(sysSettings.zKdPos, 8);
+    Serial.print(F(" (z axle Kd Pos)\r\n$32=")); Serial.print(sysSettings.zPropWeightPos, 8);
+    Serial.print(F(" (z axle Pos proportional weight)\r\n$33=")); Serial.print(sysSettings.zKpV, 8);
+    Serial.print(F(" (z axle Kp Velocity)\r\n$34=")); Serial.print(sysSettings.zKiV, 8);
+    Serial.print(F(" (z axle Ki Velocity)\r\n$35=")); Serial.print(sysSettings.zKdV, 8);
+    Serial.print(F(" (z axle Kd Velocity)\r\n$36=")); Serial.print(sysSettings.zPropWeightV, 8);
+    Serial.print(F(" (z axle Velocity proportional weight)\r\n$37=")); Serial.print(sysSettings.chainSagCorrectionFactor, 8);
     Serial.print(F(" (chain sag correction value)\r\n$38=")); Serial.print(sysSettings.chainOverSprocket);
     Serial.print(F(" (chain over sprocket)\r\n$39=")); Serial.print(sysSettings.fPWM);
     Serial.print(F(" (PWM frequency value 1=39,000Hz, 2=4,100Hz, 3=490Hz)\r\n$40=")); Serial.print(sysSettings.distPerRotLeftChainTolerance, 8);
@@ -237,15 +237,15 @@ void  returnError(){
     gcode buffer
     */
         Serial.print(F("[PE:"));
-        Serial.print(leftAxis.error());
+        Serial.print(leftAxle.error());
         Serial.print(',');
-        Serial.print(rightAxis.error());
+        Serial.print(rightAxle.error());
         Serial.print(',');
         Serial.print(incSerialBuffer.spaceAvailable());
         Serial.println(F("]"));
         if (!sys.stop) {
           if (!(sys.state & STATE_POS_ERR_IGNORE)) {
-            if ((abs(leftAxis.error()) >= sysSettings.positionErrorLimit) || (abs(rightAxis.error()) >= sysSettings.positionErrorLimit)) {
+            if ((abs(leftAxle.error()) >= sysSettings.positionErrorLimit) || (abs(rightAxle.error()) >= sysSettings.positionErrorLimit)) {
                 reportAlarmMessage(ALARM_POSITION_LIMIT_ERROR);
             }
           }
@@ -278,7 +278,7 @@ void  returnPoz(){
         Serial.print(F(","));
         Serial.print(sys.estimatedBitTipYPosition/sys.mmConversionFactor);
         Serial.print(F(","));
-        Serial.print(zAxis.read()/sys.mmConversionFactor);
+        Serial.print(zAxle.read()/sys.mmConversionFactor);
         Serial.println(F(",WPos:0.000,0.000,0.000>"));
         
         

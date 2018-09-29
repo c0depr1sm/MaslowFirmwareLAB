@@ -92,8 +92,8 @@
             float Gamma;
 
             // Motor axes length to the bit for triangular kinematics
-            float Motor1Distance; //left motor axis distance to sled
-            float Motor2Distance; //right motor axis distance to sled
+            float Motor1Distance; //left motor's gearbox output shaft distance to sled
+            float Motor2Distance; //right motor's gearbox output shaft distance to sled
 
             // output = chain lengths measured from 12 o'clock
             float Chain1; //left chain length 
