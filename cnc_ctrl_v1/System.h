@@ -25,6 +25,7 @@ Copyright 2014-2017 Bar Smith*/
 #define COUNTERCLOCKWISE  1
 #define MILLIMETERS       1
 #define INCHES_TO_MLLIMETERS      25.4
+#define DEGREE_TO_RADIAN  0.0174532925199433 // the trigonometric functions like COS use RADIAN units. but the firmware handles DEGREE parameters for the machine
 
 // Define various pause bits
 #define PAUSE_FLAG_USER_PAUSE bit(0)  // a pause triggered within the code that must be cleared by user using the ~ command

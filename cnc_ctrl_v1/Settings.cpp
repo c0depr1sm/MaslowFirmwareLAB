@@ -49,8 +49,9 @@ void settingsLoadFromEEprom(){
     kinematics.recomputeGeometry();
     leftAxle.changeEncoderResolution(&sysSettings.encoderLRMotorStepsCountPerOutputShaftTurn);
     rightAxle.changeEncoderResolution(&sysSettings.encoderLRMotorStepsCountPerOutputShaftTurn);
-    leftAxle.changePitch(&sysSettings.distPerRotLeftChainTolerance);
-    rightAxle.changePitch(&sysSettings.distPerRotRightChainTolerance);
+    // chain pitch tolerances are handled by the Kynematics calculation function. Not anymore recorded into Axle pitch. 
+    leftAxle.changePitch(&sysSettings.distPerRot);
+    rightAxle.changePitch(&sysSettings.distPerRot);
     zAxle.changePitch(&sysSettings.zDistPerRot);
     zAxle.changeEncoderResolution(&sysSettings.encoderZScrewStepsCountPerTurn);
 }
@@ -74,7 +75,7 @@ void settingsReset() {
     sysSettings.sledRotationDiskRadius = 250.0;  // float sledRotationDiskRadius;
     sysSettings.axlePIDControlDetachTimeOutDelay = 2000;   // int axlePIDControlDetachTimeOutDelay;
     sysSettings.originalChainLength = 1650;   // int originalChainLength;
-    sysSettings.encoderLRMotorStepsCountPerOutputShaftTurn = 8113.7; // float encoderLRMotorStepsCountPerOutputShaftTurn;
+    sysSettings.encoderLRMotorStepsCountPerOutputShaftTurn = 8113.73; // float encoderLRMotorStepsCountPerOutputShaftTurn -- Updated by madgrizzle on sept 10 2018
     sysSettings.distPerRot = 63.5;   // float distPerRot;
     sysSettings.targetMaxXYFeedRate = 700;   // int targetMaxXYFeedRate
     sysSettings.zAxleMotorized = true;   // zAxleMotorized;
@@ -104,6 +105,7 @@ void settingsReset() {
     sysSettings.distPerRotLeftChainTolerance = 63.5;    // float distPerRotLeftChainTolerance;
     sysSettings.distPerRotRightChainTolerance = 63.5;    // float distPerRotRightChainTolerance;
     sysSettings.positionErrorLimit = 2.0;  // float positionErrorLimit;
+    sysSettings.topBeamTilt = 0.0; 
     sysSettings.eepromValidData = EEPROMVALIDDATA; // byte eepromValidData;
 }
 
@@ -233,9 +235,11 @@ byte settingsStoreGlobalSetting(const byte& parameter,const float& value){
                       break;
                 case 2:
                       sysSettings.distBetweenLRMotorsOutputShaft = value;
+                      kinematics.recomputeGeometry();
                       break;
                 case 3:
                       sysSettings.lRMotorsYOffsetAboveWorkSurface = value;
+                      kinematics.recomputeGeometry();
                       break;
                 case 4:
                       sysSettings.sledWidth = value;
@@ -279,6 +283,7 @@ byte settingsStoreGlobalSetting(const byte& parameter,const float& value){
         case 13:
               sysSettings.distPerRot = value;
               kinematics.R = (sysSettings.distPerRot)/(2.0 * 3.14159);
+              kinematics.recomputeGeometry();
               if (sys.oldSettingsFlag){
                 bit_false(sys.oldSettingsFlag, NEED_DIST_PER_ROT);
                 if (!sys.oldSettingsFlag){
@@ -398,18 +403,20 @@ byte settingsStoreGlobalSetting(const byte& parameter,const float& value){
               break;
         case 40:
               sysSettings.distPerRotLeftChainTolerance = value;
-              leftAxle.changePitch(&sysSettings.distPerRotLeftChainTolerance);
-              kinematics.RleftChainTolerance = (sysSettings.distPerRotLeftChainTolerance)/(2.0 * 3.14159);
+              kinematics.recomputeGeometry();
               break;
         case 41:
               sysSettings.distPerRotRightChainTolerance = value;
-              rightAxle.changePitch(&sysSettings.distPerRotRightChainTolerance);
-              kinematics.RrightChainTolerance = (sysSettings.distPerRotRightChainTolerance)/(2.0 * 3.14159);
+              kinematics.recomputeGeometry();
               break;
         case 42:
               sysSettings.positionErrorLimit = value;
               break;
-        default:
+        case 43: // waiting to enable beamtilt angle parameter
+              sysSettings.topBeamTilt = value;
+              kinematics.recomputeGeometry();
+              break;
+       default:
               return(STATUS_INVALID_STATEMENT);
     }
     settingsSaveToEEprom();

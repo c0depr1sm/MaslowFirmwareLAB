@@ -41,7 +41,14 @@
             float RleftChainTolerance = 10.1;    // Left sprocket radius including chain tolerance
             float RrightChainTolerance = 10.1;    // Right sprocket radius including chain tolerance
             
-
+            // ref: madgrizzle proposal to let Kynematics handle chain tolerance and motor positions.
+            // here some default values upon initialization
+            float leftMotorX = -1800.0;
+            float leftMotorY = 1200.0;
+            float rightMotorX = 1800.0;
+            float rightMotorY = 1200.0;
+            float leftChainTolerance = 1;
+            float rightChainTolerance = 1;
 
             float halfWidth;                      //Half the machine width
             float halfHeight;                    //Half the machine height
@@ -54,9 +61,7 @@
             //target router bit coordinates.
             float x = 0;
             float y = 0;
-            float _xCordOfMotor;
-            float _yCordOfMotor;
-
+            
             //utility variables
             boolean Mirror;
 
