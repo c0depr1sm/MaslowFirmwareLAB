@@ -49,9 +49,9 @@ void settingsLoadFromEEprom(){
     kinematics.recomputeGeometry();
     leftAxle.changeEncoderResolution(&sysSettings.encoderLRMotorStepsCountPerOutputShaftTurn);
     rightAxle.changeEncoderResolution(&sysSettings.encoderLRMotorStepsCountPerOutputShaftTurn);
-    leftAle.changePitch(&sysSettings.distPerRotLeftChainTolerance);
-    rightAle.changePitch(&sysSettings.distPerRotRightChainTolerance);
-    zAle.changePitch(&sysSettings.zDistPerRot);
+    leftAxle.changePitch(&sysSettings.distPerRotLeftChainTolerance);
+    rightAxle.changePitch(&sysSettings.distPerRotRightChainTolerance);
+    zAxle.changePitch(&sysSettings.zDistPerRot);
     zAxle.changeEncoderResolution(&sysSettings.encoderZScrewStepsCountPerTurn);
 }
 
