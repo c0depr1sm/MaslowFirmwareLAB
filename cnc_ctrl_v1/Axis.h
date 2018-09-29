@@ -62,7 +62,7 @@
             float      *_Kp, *_Ki, *_Kd;
             PID        _pidController;
             float      *_mmPerRotation;
-            float      *_encoderSteps;
+            float      *_encoderStepsCountPerAxleRotation;
             bool       _disableAxleForTesting = false;
             char       _axleName;
     };

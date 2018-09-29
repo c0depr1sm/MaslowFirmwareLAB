@@ -54,7 +54,7 @@ void    Axle::write(const float& targetPosition){
 float  Axle::read(){
     //returns the true axle position
     
-    return (motorGearboxEncoder.encoder.read()/ *_encoderSteps) * *_mmPerRotation;
+    return (motorGearboxEncoder.encoder.read()/ *_encoderStepsCountPerAxleRotation) * *_mmPerRotation;
     
 }
 
@@ -66,7 +66,7 @@ void   Axle::set(const float& newAxlePosition){
     
     //reset everything to the new value
     _pidRotationCountSetPoint  =  newAxlePosition/ *_mmPerRotation;
-    motorGearboxEncoder.encoder.write((newAxlePosition * *_encoderSteps)/ *_mmPerRotation);
+    motorGearboxEncoder.encoder.write((newAxlePosition * *_encoderStepsCountPerAxleRotation)/ *_mmPerRotation);
     
 }
 
@@ -80,7 +80,7 @@ long Axle::steps(){
 void   Axle::setSteps(const long& steps){
     
     //reset everything to the new value
-    _pidRotationCountSetPoint  =  steps/ *_encoderSteps;
+    _pidRotationCountSetPoint  =  steps/ *_encoderStepsCountPerAxleRotation;
     motorGearboxEncoder.encoder.write(steps);
     
 }
@@ -91,7 +91,7 @@ void   Axle::computePID(){
       if (motorGearboxEncoder.motor.attachedPIDControl()){
         // Adds up to 10% error just to simulate servo noise
         double rpm = (-1 * _pidOutput) * random(90, 110) / 100;
-        unsigned long steps = motorGearboxEncoder.encoder.read() + round( rpm * *_encoderSteps * LOOPINTERVAL)/(60 * 1000000);
+        unsigned long steps = motorGearboxEncoder.encoder.read() + round( rpm * *_encoderStepsCountPerAxleRotation * LOOPINTERVAL)/(60 * 1000000);
         motorGearboxEncoder.encoder.write(steps);
       }
     #endif
@@ -100,7 +100,7 @@ void   Axle::computePID(){
         return;
     }
     
-    _pidInput      =  motorGearboxEncoder.encoder.read()/ *_encoderSteps;
+    _pidInput      =  motorGearboxEncoder.encoder.read()/ *_encoderStepsCountPerAxleRotation;
     
     if (_pidController.Compute()){
         // Only write output if the PID calculation was performed
@@ -161,7 +161,7 @@ void   Axle::setPIDAggressiveness(float aggressiveness){
 
 float  Axle::error(){
 
-    float encoderErr = (motorGearboxEncoder.encoder.read()/ *_encoderSteps) - _pidRotationCountSetPoint;
+    float encoderErr = (motorGearboxEncoder.encoder.read()/ *_encoderStepsCountPerAxleRotation) - _pidRotationCountSetPoint;
 
     return encoderErr * *_mmPerRotation;
 }
@@ -184,7 +184,7 @@ void   Axle::changeEncoderResolution(float *newResolution){
     /*
     Reassign the encoder resolution for the axle.
     */
-    _encoderSteps = newResolution;
+    _encoderStepsCountPerAxleRotation = newResolution;
     
     //push to the gearbox for calculating RPM
     motorGearboxEncoder.setEncoderResolution(*newResolution);
