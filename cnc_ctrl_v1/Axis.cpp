@@ -18,7 +18,7 @@
 
 #include "Maslow.h"
 
-// It is true that an Axis is a straitgh line about which a body rotates, but it must not be confused with either the x, y, or z coordinates directions of a coordinate system. 
+// It is true that an Axis is a straitgh line about which a body can rotate, but it must not be confused with either the x, y, or z coordinates directions of a coordinate system. 
 // Hence, The rotation object is renamed to "Axle" who has the property of carying a load and move along a rotation axis.
 // The axle also has a displacement pitch property related to a wheel/sprocket or screw or other. 
 void Axle::setup(const int& pwmPin, const int& directionPin1, const int& directionPin2, const int& encoderPin1, const int& encoderPin2, const char& axleName, const unsigned long& loopInterval)
@@ -29,7 +29,7 @@ void Axle::setup(const int& pwmPin, const int& directionPin1, const int& directi
     _Kp = _Ki = _Kd = &zero;
     
     motorGearboxEncoder.setup(pwmPin, directionPin1, directionPin2, encoderPin1, encoderPin2, loopInterval);
-    _pidController.setup(&_pidInput, &_pidOutput, &_pidSetpoint, _Kp, _Ki, _Kd, &one, REVERSE);
+    _pidController.setup(&_pidInput, &_pidOutput, &_pidRotationCountSetPoint, _Kp, _Ki, _Kd, &one, REVERSE);
     
     //initialize variables
     _axleName     = axleName;
@@ -47,7 +47,7 @@ void   Axle::initializePID(const unsigned long& loopInterval){
 
 void    Axle::write(const float& targetPosition){
     _timeLastMoved = millis();
-    _pidSetpoint   =  targetPosition/ *_mmPerRotation;
+    _pidRotationCountSetPoint   =  targetPosition/ *_mmPerRotation;
     return;
 }
 
@@ -59,13 +59,13 @@ float  Axle::read(){
 }
 
 float  Axle::setpoint(){
-    return _pidSetpoint * *_mmPerRotation;
+    return _pidRotationCountSetPoint * *_mmPerRotation;
 }
 
 void   Axle::set(const float& newAxlePosition){
     
     //reset everything to the new value
-    _pidSetpoint  =  newAxlePosition/ *_mmPerRotation;
+    _pidRotationCountSetPoint  =  newAxlePosition/ *_mmPerRotation;
     motorGearboxEncoder.encoder.write((newAxlePosition * *_encoderSteps)/ *_mmPerRotation);
     
 }
@@ -80,7 +80,7 @@ long Axle::steps(){
 void   Axle::setSteps(const long& steps){
     
     //reset everything to the new value
-    _pidSetpoint  =  steps/ *_encoderSteps;
+    _pidRotationCountSetPoint  =  steps/ *_encoderSteps;
     motorGearboxEncoder.encoder.write(steps);
     
 }
@@ -161,7 +161,7 @@ void   Axle::setPIDAggressiveness(float aggressiveness){
 
 float  Axle::error(){
 
-    float encoderErr = (motorGearboxEncoder.encoder.read()/ *_encoderSteps) - _pidSetpoint;
+    float encoderErr = (motorGearboxEncoder.encoder.read()/ *_encoderSteps) - _pidRotationCountSetPoint;
 
     return encoderErr * *_mmPerRotation;
 }
@@ -227,7 +227,7 @@ void   Axle::detachIfIdle(){
 void   Axle::endMove(const float& finalTarget){
     
     _timeLastMoved = millis();
-    _pidSetpoint    = finalTarget/ *_mmPerRotation;
+    _pidRotationCountSetPoint    = finalTarget/ *_mmPerRotation;
     
 }
 
@@ -239,7 +239,7 @@ void   Axle::stop(){
     */
 
     _timeLastMoved = millis();
-    _pidSetpoint   = read()/ *_mmPerRotation;
+    _pidRotationCountSetPoint   = read()/ *_mmPerRotation;
 
 }
 

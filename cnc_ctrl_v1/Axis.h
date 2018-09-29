@@ -56,7 +56,7 @@
             void       _writeFloat(const unsigned int& addr, const float& x);
             float      _readFloat(const unsigned int& addr);
             unsigned long   _timeLastMoved;
-            volatile double _pidSetpoint;
+            volatile double _pidRotationCountSetPoint;
             volatile double _pidInput; 
             volatile double _pidOutput;
             float      *_Kp, *_Ki, *_Kd;
