@@ -81,7 +81,7 @@ void settingsReset() {
     sysSettings.spindleAutomateType = NONE;  // bool spindleAutomate;
     sysSettings.zScrewMaxRPM = 12.60;  // float zScrewMaxRPM;
     sysSettings.zDistPerRot = 3.17;   // float zDistPerRot;
-    sysSettings.encoderZScrewStepsCountPerTurn = 7560.0; // float zEncoderSteps;
+    sysSettings.encoderZScrewStepsCountPerTurn = 7560.0; // float encoderZScrewStepsCountPerTurn;
     sysSettings.KpPos = 1300.0; // float KpPos;
     sysSettings.KiPos = 0.0;    // float KiPos;
     sysSettings.KdPos = 34.0;   // float KdPos;

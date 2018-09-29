@@ -777,7 +777,8 @@ void  G4(const String& readString){
 void  G10(const String& readString){
     /*The G10() function handles the G10 gcode which re-zeros one or all of the machine's axes.*/
     float initialZPos = zAxle.read();
-    float finalZPos   = sys.mmConversionFactor*extractGcodeValue(readString, 'Z', initialZPos/sys.mmConversionFactor);
+    int   zDirection  = sysSettings.encoderZScrewStepsCountPerTurn<0 ? -1 : 1;
+    float finalZPos   = zDirection * sys.mmConversionFactor*extractGcodeValue(readString, 'Z', initialZPos/sys.mmConversionFactor);
 
     zAxle.set(finalZPos);
     zAxle.endMove(finalZPos);
