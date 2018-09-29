@@ -669,7 +669,7 @@ void G1(const String& readString, int G0orG1){
     //Top the target rate to the maximum XY feedrate,
     sys.targetFeedrate = constrain(tempFeedRate, 1, sysSettings.targetMaxXYFeedRate);   
 
-    //if the zaxle is not attached, then get manual ajustment done before move.
+    //if the z axle PID Control is not attached, then get manual ajustment done before move.
     if(!sysSettings.zAxleMotorized){
         float threshold = .1; //units of mm
         if (abs(initialZPos - finalZPos) > threshold){

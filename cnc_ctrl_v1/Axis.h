@@ -43,7 +43,7 @@
             void   changePitch(float* newPitch);
             float  getPitch();
             void   changeEncoderResolution(float* newResolution);
-            bool   attached();
+            bool   attachedPIDControl();
             MotorGearboxEncoder    motorGearboxEncoder;
             void   setPIDValues(float* Kp, float* Ki, float* Kd, float* propWeight, float* KpV, float* KiV, float* KdV, float* propWeightV);
             String     getPIDString();

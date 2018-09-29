@@ -38,13 +38,13 @@
             void write(int speed, bool force = false);
             int  lastSpeed();
             void additiveWrite(int speed);
-            int  attached();
+            int  attachedPIDControl();
             void  directWrite(int voltage);
         private:
             int _pwmPin;
             int _pin1;
             int _pin2;
-            bool _attachedState = false;
+            bool _isPIDControlAttachedState = false;
             LinSegment _linSegments[4];
             int _lastSpeed  = 0;
             

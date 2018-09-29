@@ -416,7 +416,7 @@ void systemSaveAxesPosition(){
     /*
     Save steps of axes to EEPROM if they are all detached
     */
-    if (!leftAxle.attached() && !rightAxle.attached() && !zAxle.attached()){
+    if (!leftAxle.attachedPIDControl() && !rightAxle.attachedPIDControl() && !zAxle.attachedPIDControl()){
         settingsSaveStepstoEEprom();
     }
 }

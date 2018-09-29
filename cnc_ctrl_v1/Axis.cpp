@@ -88,7 +88,7 @@ void   Axle::setSteps(const long& steps){
 void   Axle::computePID(){
     
     #ifdef FAKE_SERVO
-      if (motorGearboxEncoder.motor.attached()){
+      if (motorGearboxEncoder.motor.attachedPIDControl()){
         // Adds up to 10% error just to simulate servo noise
         double rpm = (-1 * _pidOutput) * random(90, 110) / 100;
         unsigned long steps = motorGearboxEncoder.encoder.read() + round( rpm * *_encoderSteps * LOOPINTERVAL)/(60 * 1000000);
@@ -96,7 +96,7 @@ void   Axle::computePID(){
       }
     #endif
 
-    if (_disableAxleForTesting || !motorGearboxEncoder.motor.attached()){
+    if (_disableAxleForTesting || !motorGearboxEncoder.motor.attachedPIDControl()){
         return;
     }
     
@@ -203,14 +203,14 @@ int    Axle::attach(){
      return 1;
 }
 
-bool   Axle::attached(){
+bool   Axle::attachedPIDControl(){
     /*
     
-    Returns true if the axle is attached, false if it is not.
+    Returns true if the axle's PID Control is activated, false if it is not.
     
     */
     
-    return motorGearboxEncoder.motor.attached();
+    return motorGearboxEncoder.motor.attachedPIDControl();
 }
 
 void   Axle::detachIfIdle(){
