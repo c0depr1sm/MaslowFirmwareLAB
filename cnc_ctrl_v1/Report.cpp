@@ -239,21 +239,21 @@ void reportMaslowSettings() {
   #endif
 }
 
-void  returnError(){
+void  returnAxlesmmPositionErrors(){
     /*
     Prints the machine's positional error and the amount of space available in the 
     gcode buffer
     */
         Serial.print(F("[PE:"));
-        Serial.print(leftAxle.error());
+        Serial.print(leftAxle.getPIDmmPositionError());
         Serial.print(',');
-        Serial.print(rightAxle.error());
+        Serial.print(rightAxle.getPIDmmPositionError());
         Serial.print(',');
         Serial.print(incSerialBuffer.spaceAvailable());
         Serial.println(F("]"));
         if (!sys.stop) {
           if (!(sys.state & STATE_POS_ERR_IGNORE)) {
-            if ((abs(leftAxle.error()) >= sysSettings.positionErrorLimit) || (abs(rightAxle.error()) >= sysSettings.positionErrorLimit)) {
+            if ((abs(leftAxle.getPIDmmPositionError()) >= sysSettings.positionErrorLimit) || (abs(rightAxle.getPIDmmPositionError()) >= sysSettings.positionErrorLimit)) {
                 reportAlarmMessage(ALARM_POSITION_LIMIT_ERROR);
             }
           }
@@ -286,11 +286,11 @@ void  returnPoz(){
         Serial.print(F(","));
         Serial.print(sys.estimatedBitTipYPosition/sys.mmConversionFactor);
         Serial.print(F(","));
-        Serial.print(zAxle.read()/sys.mmConversionFactor);
+        Serial.print(zAxle.getCurrentmmPosition()/sys.mmConversionFactor);
         Serial.println(F(",WPos:0.000,0.000,0.000>"));
         
         
-        returnError();
+        returnAxlesmmPositionErrors();
         
         lastRan = millis();
     }

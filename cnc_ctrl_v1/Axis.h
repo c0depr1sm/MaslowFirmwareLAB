@@ -21,35 +21,35 @@
     class Axle{
         public:
             void   setup(const int& pwmPin, const int& directionPin1, const int& directionPin2, const int& encoderPin1, const int& encoderPin2, const char& axlesName, const unsigned long& loopInterval);
-            void   write(const float& targetPosition);
-            float  read();
-            void   set(const float& newAxlePosition);
-            void   setSteps(const long& steps);
+            void   setTargetmmPosition(const float& targetPosition);
+            float  getCurrentmmPosition();
+            void   setCurrentmmPosition(const float& newAxlePosition);
+            void   setCurrentEncoderCount(const long& stepsCount);
             int    updatePositionFromEncoder();
             void   initializePID(const unsigned long& loopInterval);
-            int    detach();
-            int    attach();
-            void   detachIfIdle();
-            void   endMove(const float& finalTarget);
+            int    detachPWMControl();
+            int    attachPWMControl();
+            void   detachPWMControlIfIdle();
+            void   endMoveAtmmPosition(const float& finalTarget);
             void   stop();
-            float  target();
-            float  error();
-            float  setpoint();
+            // float  target(); Should be removed as this method does not exist
+            float  getPIDmmPositionError();
+            float  getPIDmmPositionsetpoint();
             void   computePID();
             void   disablePositionPID();
             void   enablePositionPID();
             void   setPIDAggressiveness(float aggressiveness);
             void   test();
-            void   changePitch(float* newPitch);
-            float  getPitch();
-            void   changeEncoderResolution(float* newResolution);
-            bool   attachedPIDControl();
+            void   setmmPitch(float* newPitch);
+            float  getmmPitch();
+            void   setEncoderResolution(float* newResolution);
+            bool   attachedPWMControl();
             MotorGearboxEncoder    motorGearboxEncoder;
             void   setPIDValues(float* Kp, float* Ki, float* Kd, float* propWeight, float* KpV, float* KiV, float* KdV, float* propWeightV);
             String     getPIDString();
-            double     pidInput();
-            double     pidOutput();
-            long  steps();
+            double     getPIDmmPositionInput();
+            double     getPIDOutput();
+            long  getCurrentEncoderCount();
             
         private:
             int        _PWMread(int pin);
@@ -57,7 +57,7 @@
             float      _readFloat(const unsigned int& addr);
             unsigned long   _timeLastMoved;
             volatile double _pidRotationCountSetPoint;
-            volatile double _pidInput; 
+            volatile double _pidRotationCountInput; 
             volatile double _pidOutput;
             float      *_Kp, *_Ki, *_Kd;
             PID        _pidController;

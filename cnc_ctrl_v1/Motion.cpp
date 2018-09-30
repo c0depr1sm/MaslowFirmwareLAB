@@ -85,7 +85,7 @@ int   coordinatedMove(const float& xEnd, const float& yEnd, const float& zEnd, f
     
     float  xStartingLocation = sys.estimatedBitTipXPosition;
     float  yStartingLocation = sys.estimatedBitTipYPosition;
-    float  zStartingLocation = zAxle.read();  // It turn out that the Z axle's length position = the Router Bit z axis position. 
+    float  zStartingLocation = zAxle.getCurrentmmPosition();  // It turn out that the Z axle's length position = the Router Bit z axis position. 
     float  zMaxFeedRate      = getZMaxFeedRate();
     
     //find the total distances to move
@@ -115,10 +115,10 @@ int   coordinatedMove(const float& xEnd, const float& yEnd, const float& zEnd, f
     float  zStepSize            = (zDistanceToMoveInMM/finalNumberOfSteps);
     
     //attach the axes
-    leftAxle.attach();
-    rightAxle.attach();
+    leftAxle.attachPWMControl();
+    rightAxle.attachPWMControl();
     if(sysSettings.zAxleMotorized){
-      zAxle.attach();
+      zAxle.attachPWMControl();
     }
     
     float aChainLength;
@@ -147,10 +147,10 @@ int   coordinatedMove(const float& xEnd, const float& yEnd, const float& zEnd, f
             
             //write to each axis
             // This section ~180us
-            leftAxle.write(aChainLength);
-            rightAxle.write(bChainLength);
+            leftAxle.setTargetmmPosition(aChainLength);
+            rightAxle.setTargetmmPosition(bChainLength);
             if(sysSettings.zAxleMotorized){
-              zAxle.write(nextZPosition);
+              zAxle.setTargetmmPosition(nextZPosition);
             }
             
             movementUpdate();
@@ -173,10 +173,10 @@ int   coordinatedMove(const float& xEnd, const float& yEnd, const float& zEnd, f
     #endif
     
     kinematics.inverse(xEnd,yEnd,&aChainLength,&bChainLength);
-    leftAxle.endMove(aChainLength);
-    rightAxle.endMove(bChainLength);
+    leftAxle.endMoveAtmmPosition(aChainLength);
+    rightAxle.endMoveAtmmPosition(bChainLength);
     if(sysSettings.zAxleMotorized){
-      zAxle.endMove(nextZPosition);
+      zAxle.endMoveAtmmPosition(nextZPosition);
     }
     
     //finalize new position estimations
@@ -193,7 +193,7 @@ void  singleAxleMove(Axle* axle, const float& endPos, const float& moveSpeed){
     Takes a pointer to an axle object and rotates that axle up to endPos position at moveSpeed
     */
     
-    float startingPos          = axle->read();
+    float startingPos          = axle->getCurrentmmPosition();
     float moveDist             = endPos - startingPos; //total distance to move
     
     float direction            = moveDist/abs(moveDist); //determine the direction of the move
@@ -208,7 +208,7 @@ void  singleAxleMove(Axle* axle, const float& endPos, const float& moveSpeed){
     long numberOfStepsTaken    = 0;
     
     //attach the axle we want to move
-    axle->attach();
+    axle->attachPWMControl();
     
     float whereAxleShouldBeAtThisStep = startingPos;
     #if misloopDebug > 0
@@ -220,7 +220,7 @@ void  singleAxleMove(Axle* axle, const float& endPos, const float& moveSpeed){
           whereAxleShouldBeAtThisStep += stepSizeMMPerLoopInterval;
           
           //write to axle
-          axle->write(whereAxleShouldBeAtThisStep);
+          axle->setTargetmmPosition(whereAxleShouldBeAtThisStep);
           movementUpdate();
           
           // Run realtime commands
@@ -235,7 +235,7 @@ void  singleAxleMove(Axle* axle, const float& endPos, const float& moveSpeed){
     inMovementLoop = false;
     #endif
     
-    axle->endMove(endPos);
+    axle->endMoveAtmmPosition(endPos);
     
 }
 
@@ -315,8 +315,8 @@ int   arcMove(const float& X1, const float& Y1, const float& X2, const float& Y2
     // float nextZPosition = ...; // z move not yet implemented in arcMove()
 
     //attach the axes
-    leftAxle.attach();
-    rightAxle.attach();
+    leftAxle.attachPWMControl();
+    rightAxle.attachPWMControl();
     
     while(numberOfStepsTaken < abs(finalNumberOfSteps)){
         #if misloopDebug > 0
@@ -335,10 +335,10 @@ int   arcMove(const float& X1, const float& Y1, const float& X2, const float& Y2
             
             kinematics.inverse(nextXPosition,nextYPosition,&aChainLength,&bChainLength);
             
-            leftAxle.write(aChainLength);
-            rightAxle.write(bChainLength); 
+            leftAxle.setTargetmmPosition(aChainLength);
+            rightAxle.setTargetmmPosition(bChainLength); 
             //if(sysSettings.zAxleMotorized){ // not yet  implemented in arcMove()
-            //  zAxle.write(nextZPosition);
+            //  zAxle.setTargetmmPosition(nextZPosition);
             //}
 
             //increment the number of steps taken
@@ -361,10 +361,10 @@ int   arcMove(const float& X1, const float& Y1, const float& X2, const float& Y2
     #endif
     
     kinematics.inverse(X2,Y2,&aChainLength,&bChainLength);
-    leftAxle.endMove(aChainLength);
-    rightAxle.endMove(bChainLength);
+    leftAxle.endMoveAtmmPosition(aChainLength);
+    rightAxle.endMoveAtmmPosition(bChainLength);
     //if(sysSettings.zAxleMotorized){ // z move not yet implemented in arcMove()
-    //  zAxle.endMove(nextZPosition);
+    //  zAxle.endMoveAtmmPosition(nextZPosition);
     //}
         
     //finalize new position estimations
@@ -383,7 +383,7 @@ void  motionDetachIfIdle(){
     
     */
     
-    leftAxle.detachIfIdle();
-    rightAxle.detachIfIdle();
-    zAxle.detachIfIdle();
+    leftAxle.detachPWMControlIfIdle();
+    rightAxle.detachPWMControlIfIdle();
+    zAxle.detachPWMControlIfIdle();
 }

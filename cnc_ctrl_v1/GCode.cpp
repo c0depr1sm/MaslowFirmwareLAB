@@ -162,8 +162,8 @@ byte  executeBcodeLine(const String& gcodeLine){
         Serial.println(F("Tests complete."));
 
         // update our position
-        leftAxle.set(leftAxle.read());
-        rightAxle.set(rightAxle.read());
+        leftAxle.setCurrentmmPosition(leftAxle.getCurrentmmPosition()); // actually relaxes the PID loops
+        rightAxle.setCurrentmmPosition(rightAxle.getCurrentmmPosition());
 
         //clear the flag, re-enable position error limit
         sys.state = (sys.state & (!STATE_POS_ERR_IGNORE));
@@ -175,14 +175,14 @@ byte  executeBcodeLine(const String& gcodeLine){
         float newL = extractGcodeValue(gcodeLine, 'L', 0);
         float newR = extractGcodeValue(gcodeLine, 'R', 0);
 
-        leftAxle.set(newL);
-        rightAxle.set(newR);
+        leftAxle.setCurrentmmPosition(newL);
+        rightAxle.setCurrentmmPosition(newR);
 
         Serial.print(F("Left: "));
-        Serial.print(leftAxle.read());
+        Serial.print(leftAxle.getCurrentmmPosition());
         Serial.println(F("mm"));
         Serial.print(F("Right: "));
-        Serial.print(rightAxle.read());
+        Serial.print(rightAxle.getCurrentmmPosition());
         Serial.println(F("mm"));
 
         return STATUS_OK;
@@ -190,18 +190,18 @@ byte  executeBcodeLine(const String& gcodeLine){
 
     if(gcodeLine.substring(0, 3) == "B08"){
         //Manually recalibrate chain lengths
-        leftAxle.set(sysSettings.originalChainLength);
-        rightAxle.set(sysSettings.originalChainLength);
+        leftAxle.setCurrentmmPosition(sysSettings.originalChainLength);
+        rightAxle.setCurrentmmPosition(sysSettings.originalChainLength);
 
         Serial.print(F("Left: "));
-        Serial.print(leftAxle.read());
+        Serial.print(leftAxle.getCurrentmmPosition());
         Serial.println(F("mm"));
         Serial.print(F("Right: "));
-        Serial.print(rightAxle.read());
+        Serial.print(rightAxle.getCurrentmmPosition());
         Serial.println(F("mm"));
 
         //Estimate the XY position based on the machine geometry and chain lenght extending beyond the sproket top.
-        kinematics.forward(leftAxle.read(), rightAxle.read(), &sys.estimatedBitTipXPosition, &sys.estimatedBitTipYPosition, 0, 0);
+        kinematics.forward(leftAxle.getCurrentmmPosition(), rightAxle.getCurrentmmPosition(), &sys.estimatedBitTipXPosition, &sys.estimatedBitTipYPosition, 0, 0);
 	    
         Serial.println(F("Message: The machine chains have been manually re-calibrated."));
 
@@ -216,10 +216,10 @@ byte  executeBcodeLine(const String& gcodeLine){
 
         if(sys.useRelativeUnits){
             if(abs(lDist) > 0){
-                singleAxleMove(&leftAxle,  leftAxle.read()  + lDist, speed);
+                singleAxleMove(&leftAxle,  leftAxle.getCurrentmmPosition()  + lDist, speed);
             }
             if(abs(rDist) > 0){
-                singleAxleMove(&rightAxle, rightAxle.read() + rDist, speed);
+                singleAxleMove(&rightAxle, rightAxle.getCurrentmmPosition() + rDist, speed);
             }
         }
         else{
@@ -234,10 +234,10 @@ byte  executeBcodeLine(const String& gcodeLine){
         //measure the left axle chain length
         Serial.print(F("[Measure: "));
         if (gcodeLine.indexOf('L') != -1){
-            Serial.print(leftAxle.read());
+            Serial.print(leftAxle.getCurrentmmPosition());
         }
         else{
-            Serial.print(rightAxle.read());
+            Serial.print(rightAxle.getCurrentmmPosition());
         }
         Serial.println(F("]"));
         return STATUS_OK;
@@ -330,7 +330,7 @@ byte  executeBcodeLine(const String& gcodeLine){
         singleAxleMove(&rightAxle, chainLengthAtMiddle, 800);
 
         //Estimate the XY position based on the machine geometry and chain new lenght extending beyond the sproket top.
-        kinematics.forward(leftAxle.read(), rightAxle.read(), &sys.estimatedBitTipXPosition, &sys.estimatedBitTipYPosition, 0, 0);
+        kinematics.forward(leftAxle.getCurrentmmPosition(), rightAxle.getCurrentmmPosition(), &sys.estimatedBitTipXPosition, &sys.estimatedBitTipYPosition, 0, 0);
                 
         return STATUS_OK;
     }
@@ -642,7 +642,7 @@ void G1(const String& readString, int G0orG1){
     //identify the estimated starting coordinates of this straight path coordinated move
     float initialXPos = sys.estimatedBitTipXPosition;
     float initialYPos = sys.estimatedBitTipYPosition;
-    float initialZPos = zAxle.read();
+    float initialZPos = zAxle.getCurrentmmPosition();
     
     float tempFeedRate; // make sure to not change the sys.targetFeedrate with a value until validated and constrained
 
@@ -687,7 +687,7 @@ void G1(const String& readString, int G0orG1){
 
             pause(); //Wait until the z depth is adjusted
 
-            zAxle.set(finalZPos);
+            zAxle.setCurrentmmPosition(finalZPos);
 
             maslowDelay(1000);
         }
@@ -776,13 +776,13 @@ void  G4(const String& readString){
 
 void  G10(const String& readString){
     /*The G10() function handles the G10 gcode which re-zeros one or all of the machine's axes.*/
-    float initialZPos = zAxle.read();
+    float initialZPos = zAxle.getCurrentmmPosition();
     int   zDirection  = sysSettings.encoderZScrewStepsCountPerTurn<0 ? -1 : 1;
     float finalZPos   = zDirection * sys.mmConversionFactor*extractGcodeValue(readString, 'Z', initialZPos/sys.mmConversionFactor);
 
-    zAxle.set(finalZPos);
-    zAxle.endMove(finalZPos);
-    zAxle.attach();
+    zAxle.setCurrentmmPosition(finalZPos);
+    zAxle.endMoveAtmmPosition(finalZPos);
+    zAxle.attachPWMControl();
 }
 
 void  G38(const String& readString) {
@@ -799,7 +799,7 @@ void  G38(const String& readString) {
       float finalZPos;
       float zMaxFeedRate = getZMaxFeedRate();
 
-      float initialZPos = zAxle.read();
+      float initialZPos = zAxle.getCurrentmmPosition();
 
       float tempFeedRate; // make sure to not change the sys.targetFeedrate with a value until validated and constrained
 
@@ -839,7 +839,7 @@ void  G38(const String& readString) {
         */
 
         Axle* axle = &zAxle;
-        float startingPos          = axle->read();
+        float startingPos          = axle->getCurrentmmPosition();
         float endPos               = finalZPos;
         float moveDist             = endPos - initialZPos; //total distance to move
 
@@ -854,8 +854,8 @@ void  G38(const String& readString) {
         long numberOfStepsTaken    = 0;
         float whereAxleShouldBeAtThisStep = startingPos;
 
-        axle->attach();
-        //  zAxle->attach();
+        axle->attachPWMControl();
+        //  zAxle->attachPWMControl();
 
         while (numberOfStepsTaken < finalNumberOfSteps) {
           if (!movementUpdated){
@@ -863,7 +863,7 @@ void  G38(const String& readString) {
               whereAxleShouldBeAtThisStep += stepSizeMMPerLoopInterval * direction;
 
               //write to each axle
-              axle->write(whereAxleShouldBeAtThisStep);
+              axle->setTargetmmPosition(whereAxleShouldBeAtThisStep);
               movementUpdate();
 
               // Run realtime commands
@@ -876,9 +876,9 @@ void  G38(const String& readString) {
 
           //check for Probe touchdown
           if (checkForProbeTouch(ProbePin)) {
-            zAxle.set(0);
-            zAxle.endMove(0);
-            zAxle.attach(); // should it not be detach at the end of the move?
+            zAxle.setCurrentmmPosition(0);
+            zAxle.endMoveAtmmPosition(0);
+            zAxle.attachPWMControl(); // should it not be detach at the end of the move?
             Serial.println(F("Router Bit zero depth position is set"));
             return;
           }
@@ -889,7 +889,7 @@ void  G38(const String& readString) {
             - print error
             - STOP execution
         */
-        axle->endMove(endPos);
+        axle->endMoveAtmmPosition(endPos);
         Serial.println(F("error: probe did not connect\nprogram stopped\nRouter Bit zero depth position not set\n"));
         sys.stop = true;
       } // end if finalZPos != initialZPos

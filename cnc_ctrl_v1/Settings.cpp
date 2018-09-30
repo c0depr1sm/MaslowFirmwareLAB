@@ -47,13 +47,13 @@ void settingsLoadFromEEprom(){
     // Apply settings
     setPWMPrescalers(int(sysSettings.fPWM));
     kinematics.recomputeGeometry();
-    leftAxle.changeEncoderResolution(&sysSettings.encoderLRMotorStepsCountPerOutputShaftTurn);
-    rightAxle.changeEncoderResolution(&sysSettings.encoderLRMotorStepsCountPerOutputShaftTurn);
+    leftAxle.setEncoderResolution(&sysSettings.encoderLRMotorStepsCountPerOutputShaftTurn);
+    rightAxle.setEncoderResolution(&sysSettings.encoderLRMotorStepsCountPerOutputShaftTurn);
     // chain pitch tolerances are handled by the Kynematics calculation function. Not anymore recorded into Axle pitch. 
-    leftAxle.changePitch(&sysSettings.distPerRot);
-    rightAxle.changePitch(&sysSettings.distPerRot);
-    zAxle.changePitch(&sysSettings.zDistPerRot);
-    zAxle.changeEncoderResolution(&sysSettings.encoderZScrewStepsCountPerTurn);
+    leftAxle.setmmPitch(&sysSettings.distPerRot);
+    rightAxle.setmmPitch(&sysSettings.distPerRot);
+    zAxle.setmmPitch(&sysSettings.zDistPerRot);
+    zAxle.setEncoderResolution(&sysSettings.encoderZScrewStepsCountPerTurn);
 }
 
 void settingsReset() {
@@ -152,9 +152,9 @@ void settingsSaveStepstoEEprom(){
     // don't run if old position data has not been incorporated yet
     if (!sys.oldSettingsFlag){
       settingsStepsV1_t sysSteps = {
-        leftAxle.steps(),
-        rightAxle.steps(),
-        zAxle.steps(),
+        leftAxle.getCurrentEncoderCount(),
+        rightAxle.getCurrentEncoderCount(),
+        zAxle.getCurrentEncoderCount(),
         EEPROMVALIDDATA
       };
       EEPROM.put(310, sysSteps);
@@ -172,9 +172,9 @@ void settingsLoadStepsFromEEprom(){
 
     EEPROM.get(310, tempStepsV1);
     if (tempStepsV1.eepromValidData == EEPROMVALIDDATA){
-            leftAxle.setSteps(tempStepsV1.lSteps);
-            rightAxle.setSteps(tempStepsV1.rSteps);
-            zAxle.setSteps(tempStepsV1.zSteps);
+            leftAxle.setCurrentEncoderCount(tempStepsV1.lSteps);
+            rightAxle.setCurrentEncoderCount(tempStepsV1.rSteps);
+            zAxle.setCurrentEncoderCount(tempStepsV1.zSteps);
     }
     else if (EEPROM.read(5) == EEPROMVALIDDATA &&
         EEPROM.read(105) == EEPROMVALIDDATA &&
@@ -205,9 +205,9 @@ void settingsLoadOldSteps(){
       EEPROM.get(9, l);
       EEPROM.get(109, r);
       EEPROM.get(209, z);
-      leftAxle.set(l);
-      rightAxle.set(r);
-      zAxle.set(z);
+      leftAxle.setCurrentmmPosition(l);
+      rightAxle.setCurrentmmPosition(r);
+      zAxle.setCurrentmmPosition(z);
       for (int i = 0; i <= 200; i = i +100){
         for (int j = 5; j <= 13; j++){
           EEPROM.write(i + j, 0);
@@ -270,8 +270,8 @@ byte settingsStoreGlobalSetting(const byte& parameter,const float& value){
               break;
         case 12:
               sysSettings.encoderLRMotorStepsCountPerOutputShaftTurn = value;
-              leftAxle.changeEncoderResolution(&sysSettings.encoderLRMotorStepsCountPerOutputShaftTurn);
-              rightAxle.changeEncoderResolution(&sysSettings.encoderLRMotorStepsCountPerOutputShaftTurn);
+              leftAxle.setEncoderResolution(&sysSettings.encoderLRMotorStepsCountPerOutputShaftTurn);
+              rightAxle.setEncoderResolution(&sysSettings.encoderLRMotorStepsCountPerOutputShaftTurn);
               if (sys.oldSettingsFlag){
                 bit_false(sys.oldSettingsFlag, NEED_ENCODER_STEPS);
                 if (!sys.oldSettingsFlag){
@@ -306,7 +306,7 @@ byte settingsStoreGlobalSetting(const byte& parameter,const float& value){
               break;
         case 19:
               sysSettings.zDistPerRot = value;
-              zAxle.changePitch(&sysSettings.zDistPerRot);
+              zAxle.setmmPitch(&sysSettings.zDistPerRot);
               if (sys.oldSettingsFlag){
                 bit_false(sys.oldSettingsFlag, NEED_Z_DIST_PER_ROT);
                 if (!sys.oldSettingsFlag){
@@ -316,7 +316,7 @@ byte settingsStoreGlobalSetting(const byte& parameter,const float& value){
               break;
         case 20:
               sysSettings.encoderZScrewStepsCountPerTurn = value;
-              zAxle.changeEncoderResolution(&sysSettings.encoderZScrewStepsCountPerTurn);
+              zAxle.setEncoderResolution(&sysSettings.encoderZScrewStepsCountPerTurn);
               if (sys.oldSettingsFlag){
                 bit_false(sys.oldSettingsFlag, NEED_Z_ENCODER_STEPS);
                 if (!sys.oldSettingsFlag){
@@ -392,9 +392,9 @@ byte settingsStoreGlobalSetting(const byte& parameter,const float& value){
               setupAxes();
               settingsLoadStepsFromEEprom();
               // Set initial desired position of the machine to its current position
-              leftAxle.write(leftAxle.read());
-              rightAxle.write(rightAxle.read());
-              zAxle.write(zAxle.read());
+              leftAxle.setTargetmmPosition(leftAxle.getCurrentmmPosition());
+              rightAxle.setTargetmmPosition(rightAxle.getCurrentmmPosition());
+              zAxle.setTargetmmPosition(zAxle.getCurrentmmPosition());
               kinematics.init();
               break;
         case 39:

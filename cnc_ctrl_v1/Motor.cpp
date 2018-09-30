@@ -25,7 +25,7 @@ to be a drop in replacement for a continuous rotation servo.
 
 Motor::Motor(){
 
-  _isPIDControlAttachedState = 0;
+  _isPWMControlAttachedState = 0;
 
 
 }
@@ -36,7 +36,7 @@ int  Motor::setupMotor(const int& pwmPin, const int& pin1, const int& pin2){
   _pwmPin = pwmPin;
   _pin1  = pin1;
   _pin2  = pin2;
-  _isPIDControlAttachedState = 0;
+  _isPWMControlAttachedState = 0;
 
   if (TLE5206 == false) {
   //set pinmodes
@@ -60,12 +60,12 @@ int  Motor::setupMotor(const int& pwmPin, const int& pin1, const int& pin2){
   return 1;
 }
 
-void Motor::attach(){
-    _isPIDControlAttachedState = 1;
+void Motor::attachPWMControl(){
+    _isPWMControlAttachedState = 1;
 }
 
-void Motor::detach(){
-    _isPIDControlAttachedState = 0;
+void Motor::detachPWMControl(){
+    _isPWMControlAttachedState = 0;
 
   if (TLE5206 == false) {
     //stop the motor
@@ -97,7 +97,7 @@ void Motor::write(int speed, bool force){
     /*
     Sets motor speed from input. Speed = 0 is stopped, -255 is full reverse, 255 is full ahead. If force is true the motor PID COntrol attached state will be ignored
     */
-    if (_isPIDControlAttachedState == 1 or force){
+    if (_isPWMControlAttachedState == 1 or force){
         speed = constrain(speed, -255, 255);
         _lastSpeed = speed; //saves speed for use in additive write
         bool forward = (speed > 0);
@@ -179,7 +179,7 @@ void Motor::directWrite(int voltage){
     write(voltage, true);
 }
 
-int  Motor::attachedPIDControl(){
+int  Motor::attachedPWMControl(){
     
-    return _isPIDControlAttachedState;
+    return _isPWMControlAttachedState;
 }

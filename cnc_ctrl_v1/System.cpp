@@ -38,20 +38,20 @@ void  calibrateChainLengths(String gcodeLine){
         Serial.println(F("Measuring out left chain"));
         singleAxleMove(&leftAxle, sysSettings.originalChainLength, (sysSettings.targetMaxXYFeedRate * .9));
 
-        Serial.print(leftAxle.read());
+        Serial.print(leftAxle.getCurrentmmPosition());
         Serial.println(F("mm"));
 
-        leftAxle.detach();
+        leftAxle.detachPWMControl();
     }
     else if(extractGcodeValue(gcodeLine, 'R', 0)){
         //measure out the right chain
         Serial.println(F("Measuring out right chain"));
         singleAxleMove(&rightAxle, sysSettings.originalChainLength, (sysSettings.targetMaxXYFeedRate * .9));
 
-        Serial.print(rightAxle.read());
+        Serial.print(rightAxle.getCurrentmmPosition());
         Serial.println(F("mm"));
 
-        rightAxle.detach();
+        rightAxle.detachPWMControl();
     }
 
 }
@@ -252,7 +252,7 @@ void   setupAxes(){
 
 // Calculate resulting z axle max feed rate based on system setttings
 float getZMaxFeedRate(){
-	float tempRate = sysSettings.zScrewMaxRPM * abs(zAxle.getPitch());
+	float tempRate = sysSettings.zScrewMaxRPM * abs(zAxle.getmmPitch());
 	return tempRate;
 }
 
@@ -416,7 +416,7 @@ void systemSaveAxesPosition(){
     /*
     Save steps of axes to EEPROM if they are all detached
     */
-    if (!leftAxle.attachedPIDControl() && !rightAxle.attachedPIDControl() && !zAxle.attachedPIDControl()){
+    if (!leftAxle.attachedPWMControl() && !rightAxle.attachedPWMControl() && !zAxle.attachedPWMControl()){
         settingsSaveStepstoEEprom();
     }
 }
@@ -425,9 +425,9 @@ void systemReset(){
     /*
     Stops everything and resets the arduino
     */
-    leftAxle.detach();
-    rightAxle.detach();
-    zAxle.detach();
+    leftAxle.detachPWMControl();
+    rightAxle.detachPWMControl();
+    zAxle.detachPWMControl();
     setSpindlePower(false);
     // Reruns the initial setup function and calls stop to re-init state
     sys.stop = true;

@@ -64,9 +64,9 @@ void setup(){
     setupAxes();
     settingsLoadStepsFromEEprom();
     // Set initial desired position of the machine to its current position
-    leftAxle.write(leftAxle.read());
-    rightAxle.write(rightAxle.read());
-    zAxle.write(zAxle.read());
+    leftAxle.setTargetmmPosition(leftAxle.getCurrentmmPosition());
+    rightAxle.setTargetmmPosition(rightAxle.getCurrentmmPosition());
+    zAxle.setTargetmmPosition(zAxle.getCurrentmmPosition());
     readyCommandString.reserve(INCBUFFERLENGTH);           //Allocate memory so that this string doesn't fragment the heap as it grows and shrinks
     gcodeLine.reserve(INCBUFFERLENGTH);
 

@@ -23,11 +23,11 @@
             void setup(const int& pwmPin, const int& directionPin1, const int& directionPin2, const int& encoderPin1, const int& encoderPin2, const unsigned long& loopInterval);
             Encoder    encoder;
             Motor      motor;
-            float      cachedSpeed();
-            void       write(const float& speed);
+            float      getCachedSpeed();
+            void       setTargetSpeed(const float& speed);
             void       computePID();
             void       setName(char *newName);
-            char       name();
+            char       getName();
             void       initializePID(const unsigned long& loopInterval);
             void       setPIDAggressiveness(float aggressiveness);
             void       setPIDValues(float* KpV, float* KiV, float* KdV, float* propWeight);
@@ -50,7 +50,7 @@
             // calculation would have to be done at a much higher level and 
             // passed through each axle for it to have a single pointer to 
             // both main motors
-            float      _encoderStepsToRPMScaleFactor = 7394.9;   //6*10^7 us per minute divided by 8113.7 steps per revolution
+            float      _encoderStepsUsecDurationForOneRPM_ScaleFactor = 7394.9; // usec per step for 1 RPM.   //6*10^7 us per minute divided by 8113.7 steps per revolution
     };
 
     #endif
