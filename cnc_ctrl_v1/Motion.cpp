@@ -99,7 +99,7 @@ int   coordinatedMove(const float& xEnd, const float& yEnd, const float& zEnd, f
     float  stepSizeMMPerLoopInterval  = computeStepSize(moveSpeed);
     float  finalNumberOfSteps   = abs(distanceToMoveInMM/stepSizeMMPerLoopInterval);
     float  delayTime            = LOOPINTERVAL;
-    float  neededZFeedRate            = calculateFeedrate(abs(zDistanceToMoveInMM/finalNumberOfSteps), delayTime);
+    float  neededZFeedRate            = calculateFeedrate(fabs(zDistanceToMoveInMM/finalNumberOfSteps), delayTime);
     
     //throttle back feedrate if it exceeds the z axis max feed rate
     if (neededZFeedRate > zMaxFeedRate){
@@ -176,7 +176,7 @@ int   coordinatedMove(const float& xEnd, const float& yEnd, const float& zEnd, f
     leftAxle.endMoveAtmmPosition(aChainLength);
     rightAxle.endMoveAtmmPosition(bChainLength);
     if(sysSettings.zAxleMotorized){
-      zAxle.endMoveAtmmPosition(nextZPosition);
+      zAxle.endMoveAtmmPosition(zEnd);
     }
     
     //finalize new position estimations
@@ -243,19 +243,21 @@ void  singleAxleMove(Axle* axle, const float& endPos, const float& moveSpeed){
 int sign(double x) { return x<0 ? -1 : 1; }
 
 // why does this return anything
-// moveSpeed (formerly MMPerMin) describes the demanded displacement speed in mm/min
-int   arcMove(const float& X1, const float& Y1, const float& X2, const float& Y2, const float& centerX, const float& centerY, const float& moveSpeed, const float& direction){
+// targetMoveSpeed (formerly MMPerMin) describes the demanded displacement speed in mm/min
+int   arcXYZMove(const float& X1, const float& Y1, const float& Z1, const float& X2, const float& Y2, const float& Z2, const float& centerX, const float& centerY, const float& targetMoveSpeed, const float& direction){
     /*
-    
-    Move the machine through an arc from point (X1, Y1) to point (X2, Y2) along the 
-    arc defined by center (centerX, centerY) at speed up to moveSpeed
-    
-    Does not handle moves along the Z axis. So this can only implement a  subset of G2 and G3.
-    because helix paths are not supported.
+    Implements helix path with G2 and G3.
+    Only works with absolute coordinates. Does not work with relative coordinates
+    Move the machine through an arc from point (X1, Y1, Z1) to point (X2, Y2, Z2) along the 
+    arc defined by center (centerX, centerY) at speed up to targetMoveSpeed
+    The only helix axis supported is the Z axis.
     */
     
+    float  zStartingLocation = Z1;  // It turn out that the Z axle's length position = the Router Bit z axis position. 
+    float  zMaxFeedRate      = getZMaxFeedRate();
+    
     //compute geometry 
-    float pi                     =  3.1415;
+    float pi                     =  3.141592654;
     float radius                 =  sqrt( sq(centerX - X1) + sq(centerY - Y1) ); 
     float circumference          =  2.0*pi*radius;
     
@@ -286,39 +288,62 @@ int   arcMove(const float& X1, const float& Y1, const float& X2, const float& Y2
       // In either case, the gcode cut was essentially a straight line, so 
       // Replace it with a G1 cut to the endpoint
       String gcodeSubstitution = "G1 X";
-      gcodeSubstitution = gcodeSubstitution + String(X2 / sys.mmConversionFactor, 3) + " Y" + String(Y2 / sys.mmConversionFactor, 3) + " ";
+      gcodeSubstitution = gcodeSubstitution + String(X2 / sys.mmConversionFactor, 3) + " Y" + String(Y2 / sys.mmConversionFactor, 3) + " Z" + String(Z2 / sys.mmConversionFactor, 3) + " ";
       Serial.println("Large-radius arc replaced by straight line to improve accuracy: " + gcodeSubstitution);
       G1(gcodeSubstitution, 1);
       return 1;
     }
 
-    float arcLengthMM            =  circumference * (theta / (2*pi) );
+    float arcLengthMM            =  fabs(circumference * (theta / (2*pi) ));
+    float zDistanceToMoveInMM    =  fabs(Z2 - Z1);
     
-    //set up variables for movement
-    long numberOfStepsTaken       =  0;
+    //constrain the maximum feedrate, just in case the caller did not yet limit the rate 
+    float moveSpeed = constrain(targetMoveSpeed, 1, sysSettings.targetMaxXYFeedRate);   
     
+    //estimate distance per loop interval starting with initialy constrained targeted moveSpeed
     float stepSizeMMPerLoopInterval  =  computeStepSize(moveSpeed);
 
     //the argument to abs should only be a variable -- splitting calc into 2 lines
-    long   finalNumberOfSteps     =  arcLengthMM/stepSizeMMPerLoopInterval;
-    //finalNumberOfSteps = abs(finalNumberOfSteps);
+    long   neededNumberOfSteps     = arcLengthMM/stepSizeMMPerLoopInterval;
+    float  delayTime                = LOOPINTERVAL;
     
+    //evaluate the ZFeed rate for this arc travel speed.
+    float  neededZFeedRate          = calculateFeedrate(fabs(zDistanceToMoveInMM/neededNumberOfSteps), delayTime);
+    
+    //throttle back feedrate if it exceeds the z axis max feed rate
+    if (neededZFeedRate > zMaxFeedRate){
+      float  zStepSizeMMPerLoopInterval = computeStepSize(zMaxFeedRate);
+      neededNumberOfSteps        = zDistanceToMoveInMM/zStepSizeMMPerLoopInterval;
+      stepSizeMMPerLoopInterval  = arcLengthMM/neededNumberOfSteps;
+      moveSpeed                  = calculateFeedrate(stepSizeMMPerLoopInterval, delayTime);
+    }
+    
+    // (fraction of distance in x direction)* size of step toward target
+    float  zStepSize            = zDistanceToMoveInMM/neededNumberOfSteps;
+ 
     //Compute the starting position
     float angleNow = startingAngle;
-    float degreeComplete = 0.0;
     
+
     float aChainLength;
     float bChainLength;
-    
-    float nextXPosition = sys.estimatedBitTipXPosition;
-    float nextYPosition = sys.estimatedBitTipYPosition;
-    // float nextZPosition = ...; // z move not yet implemented in arcMove()
+    // set initial position to X1,Y1,Z1 to make sure current estimated position is not away from it.
+    float nextXPosition = X1;
+    float nextYPosition = Y1;
+    float nextZPosition = Z1;
 
     //attach the axes
     leftAxle.attachPWMControl();
     rightAxle.attachPWMControl();
-    
-    while(numberOfStepsTaken < abs(finalNumberOfSteps)){
+    if(sysSettings.zAxleMotorized){
+      zAxle.attachPWMControl();
+    }
+
+    //set up variables for movement
+    long numberOfStepsTaken   =  0;
+    float degreeComplete      = 0.0;
+        
+    while(numberOfStepsTaken < abs(neededNumberOfSteps)){
         #if misloopDebug > 0
         inMovementLoop = true;
         #endif
@@ -326,20 +351,22 @@ int   arcMove(const float& X1, const float& Y1, const float& X2, const float& Y2
         //if last movement was performed start the next one
         if (!movementUpdated){
             
-            degreeComplete = float(numberOfStepsTaken)/float(finalNumberOfSteps);
+            degreeComplete = float(numberOfStepsTaken)/float(neededNumberOfSteps);
             
             angleNow = startingAngle + theta*direction*degreeComplete;
             
             nextXPosition = radius * cos(angleNow) + centerX;
             nextYPosition = radius * sin(angleNow) + centerY;
+            // on first loop iteration anglenow = initial position.
+            // nextZposition was already set at the starting point.
             
             kinematics.inverse(nextXPosition,nextYPosition,&aChainLength,&bChainLength);
             
             leftAxle.setTargetmmPosition(aChainLength);
             rightAxle.setTargetmmPosition(bChainLength); 
-            //if(sysSettings.zAxleMotorized){ // not yet  implemented in arcMove()
-            //  zAxle.setTargetmmPosition(nextZPosition);
-            //}
+            if(sysSettings.zAxleMotorized){ // not yet  implemented in arcMove()
+              zAxle.setTargetmmPosition(nextZPosition);
+            }
 
             //increment the number of steps taken
             movementUpdate();
@@ -354,6 +381,8 @@ int   arcMove(const float& X1, const float& Y1, const float& X2, const float& Y2
             if (sys.stop){return 1;}
 
             numberOfStepsTaken++;
+            // now is time to increase Z
+            nextZPosition += zStepSize;
         }
     }
     #if misloopDebug > 0
@@ -363,9 +392,9 @@ int   arcMove(const float& X1, const float& Y1, const float& X2, const float& Y2
     kinematics.inverse(X2,Y2,&aChainLength,&bChainLength);
     leftAxle.endMoveAtmmPosition(aChainLength);
     rightAxle.endMoveAtmmPosition(bChainLength);
-    //if(sysSettings.zAxleMotorized){ // z move not yet implemented in arcMove()
-    //  zAxle.endMoveAtmmPosition(nextZPosition);
-    //}
+    if(sysSettings.zAxleMotorized){ 
+      zAxle.endMoveAtmmPosition(Z2);
+    }
         
     //finalize new position estimations
     sys.estimatedBitTipXPosition = X2;

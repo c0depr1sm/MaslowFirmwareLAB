@@ -717,10 +717,12 @@ void G2(const String& readString, int G2orG3){
     //identify the estimated starting coordinates of this straight path coordinated move
     float X1 = sys.estimatedBitTipXPosition; 
     float Y1 = sys.estimatedBitTipYPosition;
+    float Z1 = zAxle.getCurrentmmPosition();
 
     //extract and compute the target coordinates of this arc path move
     float X2      = sys.mmConversionFactor*extractGcodeValue(readString, 'X', X1/sys.mmConversionFactor);
     float Y2      = sys.mmConversionFactor*extractGcodeValue(readString, 'Y', Y1/sys.mmConversionFactor);
+    float Z2      = sys.mmConversionFactor*extractGcodeValue(readString, 'Z', Z1/sys.mmConversionFactor);
     float I       = sys.mmConversionFactor*extractGcodeValue(readString, 'I', 0.0);
     float J       = sys.mmConversionFactor*extractGcodeValue(readString, 'J', 0.0);
  
@@ -738,10 +740,10 @@ void G2(const String& readString, int G2orG3){
     sys.targetFeedrate = constrain(tempFeedRate, 1, sysSettings.targetMaxXYFeedRate);    
 
     if (G2orG3 == 2){
-        arcMove(X1, Y1, X2, Y2, centerX, centerY, sys.targetFeedrate, CLOCKWISE);
+        arcXYZMove(X1, Y1, Z1, X2, Y2, Z2, centerX, centerY, sys.targetFeedrate, CLOCKWISE);
     }
     else {
-        arcMove(X1, Y1, X2, Y2, centerX, centerY, sys.targetFeedrate, COUNTERCLOCKWISE);
+        arcXYZMove(X1, Y1, Z1, X2, Y2, Z2, centerX, centerY, sys.targetFeedrate, COUNTERCLOCKWISE);
     }
 }
 
