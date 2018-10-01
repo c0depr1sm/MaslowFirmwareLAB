@@ -61,10 +61,10 @@ void Kinematics::recomputeGeometry(){
     // according to madgrizzle proposal to integrate into kynematics the chain tolerance and motor x,y coordinates
     // but waiting to integrate beamtilt angle... 
     // Why does he multiply the MotorY by -1 ???  Does he define Y axis pointing down? I don't.
-    leftMotorX = cos(sysSettings.topBeamTilt*DEGREE_TO_RADIAN)*sysSettings.distBetweenLRMotorsOutputShaft/-2.0;
-    leftMotorY = (sysSettings.lRMotorsYOffsetAboveWorkSurface+sysSettings.workSurfaceHeight/2.0) - (sin(sysSettings.topBeamTilt*DEGREE_TO_RADIAN)*sysSettings.distBetweenLRMotorsOutputShaft/2.0);
-    rightMotorX = cos(sysSettings.topBeamTilt*DEGREE_TO_RADIAN)*sysSettings.distBetweenLRMotorsOutputShaft/2.0;
-    rightMotorY = (sysSettings.lRMotorsYOffsetAboveWorkSurface+sysSettings.workSurfaceHeight/2.0) + (sin(sysSettings.topBeamTilt*DEGREE_TO_RADIAN)*sysSettings.distBetweenLRMotorsOutputShaft/2.0);
+    leftMotorX = cos(sysSettings.topBeamTilt*DEGREE_TO_RADIAN)*sysSettings.distBetweenLRMotorsGearBoxShafts/-2.0;
+    leftMotorY = (sysSettings.lRMotorsYOffsetAboveWorkSurface+sysSettings.workSurfaceHeight/2.0) - (sin(sysSettings.topBeamTilt*DEGREE_TO_RADIAN)*sysSettings.distBetweenLRMotorsGearBoxShafts/2.0);
+    rightMotorX = cos(sysSettings.topBeamTilt*DEGREE_TO_RADIAN)*sysSettings.distBetweenLRMotorsGearBoxShafts/2.0;
+    rightMotorY = (sysSettings.lRMotorsYOffsetAboveWorkSurface+sysSettings.workSurfaceHeight/2.0) + (sin(sysSettings.topBeamTilt*DEGREE_TO_RADIAN)*sysSettings.distBetweenLRMotorsGearBoxShafts/2.0);
     leftChainTolerance = sysSettings.distPerRot/sysSettings.distPerRotLeftChainTolerance; //doing it this way only to reduce changes to existing code
     rightChainTolerance = sysSettings.distPerRot/sysSettings.distPerRotRightChainTolerance; //doing it this way only to reduce changes to existing code
     
@@ -94,7 +94,7 @@ void  Kinematics::quadrilateralInverse(float xTarget,float yTarget, float* aChai
 
     //coordinate shift to put (0,0) in the center of the plywood from the left sprocket
     y = (halfHeight) + sysSettings.lRMotorsYOffsetAboveWorkSurface  - yTarget;
-    x = (sysSettings.distBetweenLRMotorsOutputShaft/2.0) + xTarget;
+    x = (sysSettings.distBetweenLRMotorsGearBoxShafts/2.0) + xTarget;
 
     //Coordinates definition:
     //         x -->, y |
@@ -103,8 +103,8 @@ void  Kinematics::quadrilateralInverse(float xTarget,float yTarget, float* aChai
     // upper left corner of plywood (270, 270)
 
     byte Tries = 0;                                  //initialize
-    if(x > sysSettings.distBetweenLRMotorsOutputShaft/2.0){                              //the right half of the board mirrors the left half so all computations are done  using left half coordinates.
-      x = sysSettings.distBetweenLRMotorsOutputShaft-x;                                  //Chain lengths are swapped at exit if the x,y is on the right half
+    if(x > sysSettings.distBetweenLRMotorsGearBoxShafts/2.0){                              //the right half of the board mirrors the left half so all computations are done  using left half coordinates.
+      x = sysSettings.distBetweenLRMotorsGearBoxShafts-x;                                  //Chain lengths are swapped at exit if the x,y is on the right half
       Mirror = true;
     }
     else{
@@ -112,7 +112,7 @@ void  Kinematics::quadrilateralInverse(float xTarget,float yTarget, float* aChai
     }
 
     TanGamma = y/x;
-    TanLambda = y/(sysSettings.distBetweenLRMotorsOutputShaft-x);
+    TanLambda = y/(sysSettings.distBetweenLRMotorsGearBoxShafts-x);
     Y1Plus = R * sqrt(1 + TanGamma * TanGamma);
     Y2Plus = R * sqrt(1 + TanLambda * TanLambda);
 
@@ -125,7 +125,7 @@ void  Kinematics::quadrilateralInverse(float xTarget,float yTarget, float* aChai
 
         Crit[0]=  - _moment(Y1Plus, Y2Plus, MySinPhi, SinPsi1, CosPsi1, SinPsi2, CosPsi2);
         Crit[1] = - _YOffsetEqn(Y1Plus, x - h * CosPsi1, SinPsi1);
-        Crit[2] = - _YOffsetEqn(Y2Plus, sysSettings.distBetweenLRMotorsOutputShaft - (x + h * CosPsi2), SinPsi2);
+        Crit[2] = - _YOffsetEqn(Y2Plus, sysSettings.distBetweenLRMotorsGearBoxShafts - (x + h * CosPsi2), SinPsi2);
 
         if (abs(Crit[0]) < KINEMATICSMAXERROR) {
             if (abs(Crit[1]) < KINEMATICSMAXERROR) {
@@ -146,9 +146,9 @@ void  Kinematics::quadrilateralInverse(float xTarget,float yTarget, float* aChai
         Jac[3] = (_YOffsetEqn(Y1Plus, x - h * CosPsi1D, SinPsi1D) + Crit[1])/DELTAPHI;
         Jac[4] = (_YOffsetEqn(Y1Plus + DELTAY, x - h * CosPsi1,SinPsi1) + Crit[1])/DELTAY;
         Jac[5] = 0.0;
-        Jac[6] = (_YOffsetEqn(Y2Plus, sysSettings.distBetweenLRMotorsOutputShaft - (x + h * CosPsi2D), SinPsi2D) + Crit[2])/DELTAPHI;
+        Jac[6] = (_YOffsetEqn(Y2Plus, sysSettings.distBetweenLRMotorsGearBoxShafts - (x + h * CosPsi2D), SinPsi2D) + Crit[2])/DELTAPHI;
         Jac[7] = 0.0;
-        Jac[8] = (_YOffsetEqn(Y2Plus + DELTAY, sysSettings.distBetweenLRMotorsOutputShaft - (x + h * CosPsi2D), SinPsi2) + Crit[2])/DELTAY;
+        Jac[8] = (_YOffsetEqn(Y2Plus + DELTAY, sysSettings.distBetweenLRMotorsGearBoxShafts - (x + h * CosPsi2D), SinPsi2) + Crit[2])/DELTAY;
 
 
         //solve for the next guess
@@ -178,7 +178,7 @@ void  Kinematics::quadrilateralInverse(float xTarget,float yTarget, float* aChai
     Offsety1 = h *  SinPsi1;
     Offsety2 = h * SinPsi2;
     TanGamma = (y - Offsety1 + Y1Plus)/(x - Offsetx1);
-    TanLambda = (y - Offsety2 + Y2Plus)/(sysSettings.distBetweenLRMotorsOutputShaft -(x + Offsetx2));
+    TanLambda = (y - Offsety2 + Y2Plus)/(sysSettings.distBetweenLRMotorsGearBoxShafts -(x + Offsetx2));
     Gamma = atan(TanGamma);
     Lambda =atan(TanLambda);
 
@@ -186,11 +186,11 @@ void  Kinematics::quadrilateralInverse(float xTarget,float yTarget, float* aChai
 
     if(Mirror){
         Chain2 = sqrt((x - Offsetx1)*(x - Offsetx1) + (y + Y1Plus - Offsety1)*(y + Y1Plus - Offsety1)) - R * TanGamma + R * Gamma;   //right chain length
-        Chain1 = sqrt((sysSettings.distBetweenLRMotorsOutputShaft - (x + Offsetx2))*(sysSettings.distBetweenLRMotorsOutputShaft - (x + Offsetx2))+(y + Y2Plus - Offsety2)*(y + Y2Plus - Offsety2)) - R * TanLambda + R * Lambda;   //left chain length
+        Chain1 = sqrt((sysSettings.distBetweenLRMotorsGearBoxShafts - (x + Offsetx2))*(sysSettings.distBetweenLRMotorsGearBoxShafts - (x + Offsetx2))+(y + Y2Plus - Offsety2)*(y + Y2Plus - Offsety2)) - R * TanLambda + R * Lambda;   //left chain length
     }
     else{
         Chain1 = sqrt((x - Offsetx1)*(x - Offsetx1) + (y + Y1Plus - Offsety1)*(y + Y1Plus - Offsety1)) - R * TanGamma + R * Gamma;   //left chain length
-        Chain2 = sqrt((sysSettings.distBetweenLRMotorsOutputShaft - (x + Offsetx2))*(sysSettings.distBetweenLRMotorsOutputShaft - (x + Offsetx2))+(y + Y2Plus - Offsety2)*(y + Y2Plus - Offsety2)) - R * TanLambda + R * Lambda;   //right chain length
+        Chain2 = sqrt((sysSettings.distBetweenLRMotorsGearBoxShafts - (x + Offsetx2))*(sysSettings.distBetweenLRMotorsGearBoxShafts - (x + Offsetx2))+(y + Y2Plus - Offsety2)*(y + Y2Plus - Offsety2)) - R * TanLambda + R * Lambda;   //right chain length
     }
 
     *aChainLength = Chain1;
@@ -382,7 +382,7 @@ float Kinematics::_moment(const float& Y1Plus, const float& Y2Plus, const float&
     Offsety1 = h * MSinPsi1;
     Offsety2 = h * MSinPsi2;
     TanGamma = (y - Offsety1 + Y1Plus)/(x - Offsetx1);
-    TanLambda = (y - Offsety2 + Y2Plus)/(sysSettings.distBetweenLRMotorsOutputShaft -(x + Offsetx2));
+    TanLambda = (y - Offsety2 + Y2Plus)/(sysSettings.distBetweenLRMotorsGearBoxShafts -(x + Offsetx2));
 
     return sysSettings.sledCG*MSinPhi + (h/(TanLambda+TanGamma))*(MSinPsi2 - MSinPsi1 + (TanGamma*MCosPsi1 - TanLambda * MCosPsi2));
 }

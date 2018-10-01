@@ -142,7 +142,7 @@ void reportMaslowSettings() {
   #ifdef REPORT_GUI_MODE
     Serial.print(F("$0=")); Serial.println(sysSettings.workSurfaceWidth, 8);
     Serial.print(F("$1=")); Serial.println(sysSettings.workSurfaceHeight, 8);
-    Serial.print(F("$2=")); Serial.println(sysSettings.distBetweenLRMotorsOutputShaft, 8);
+    Serial.print(F("$2=")); Serial.println(sysSettings.distBetweenLRMotorsGearBoxShafts, 8);
     Serial.print(F("$3=")); Serial.println(sysSettings.lRMotorsYOffsetAboveWorkSurface, 8);
     Serial.print(F("$4=")); Serial.println(sysSettings.sledWidth, 8);
     Serial.print(F("$5=")); Serial.println(sysSettings.sledHeight, 8);
@@ -187,7 +187,7 @@ void reportMaslowSettings() {
   #else
     Serial.print(F("$0=")); Serial.print(sysSettings.workSurfaceWidth);
     Serial.print(F(" (machine width, mm)\r\n$1=")); Serial.print(sysSettings.workSurfaceHeight, 8);
-    Serial.print(F(" (machine height, mm)\r\n$2=")); Serial.print(sysSettings.distBetweenLRMotorsOutputShaft, 8);
+    Serial.print(F(" (machine height, mm)\r\n$2=")); Serial.print(sysSettings.distBetweenLRMotorsGearBoxShafts, 8);
     Serial.print(F(" (motor distance, mm)\r\n$3=")); Serial.print(sysSettings.lRMotorsYOffsetAboveWorkSurface, 8);
     Serial.print(F(" (motor height, mm)\r\n$4=")); Serial.print(sysSettings.sledWidth, 8);
     Serial.print(F(" (sled width, mm)\r\n$5=")); Serial.print(sysSettings.sledHeight, 8);

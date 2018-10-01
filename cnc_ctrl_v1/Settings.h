@@ -41,7 +41,7 @@ enum SpindleAutomationType {
 typedef struct {  // I think this is about ~128 bytes in size if I counted correctly
   float workSurfaceWidth; // Formerly machineWidth  but needed clarification as it involves a specific area for kynematics calculation
   float workSurfaceHeight; // Formerly machineHeight  but needed clarification as it involves a specific area for kynematics calculation
-  float distBetweenLRMotorsOutputShaft; // Formerly distBetweenMotors but needed clarification as it does not concern Z axle motor
+  float distBetweenLRMotorsGearBoxShafts; // Formerly distBetweenMotors but needed clarification as it does not concern Z axle motor
   float lRMotorsYOffsetAboveWorkSurface; // Formerly motorOffsetY but needed clarification as it does not concern Z axle motor
   float sledWidth;
   float sledHeight;
