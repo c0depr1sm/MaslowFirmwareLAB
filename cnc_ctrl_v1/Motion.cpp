@@ -253,8 +253,8 @@ int   arcXYZMove(const float& X1, const float& Y1, const float& Z1, const float&
     The only helix axis supported is the Z axis.
     */
     
-    float  zStartingLocation = Z1;  // It turn out that the Z axle's length position = the Router Bit z axis position. 
-    float  zMaxFeedRate      = getZMaxFeedRate();
+    float  zStartingLocation    = Z1;  // It turn out that the Z axle's length position = the Router Bit z axis position. 
+    float  zMaxFeedRate         = getZMaxFeedRate();
     
     //compute geometry 
     float pi                     =  3.141592654;
@@ -295,7 +295,7 @@ int   arcXYZMove(const float& X1, const float& Y1, const float& Z1, const float&
     }
 
     float arcLengthMM            =  fabs(circumference * (theta / (2*pi) ));
-    float zDistanceToMoveInMM    =  fabs(Z2 - Z1);
+    float zDistanceToMoveInMM    =  Z2 - Z1;
     
     //constrain the maximum feedrate, just in case the caller did not yet limit the rate 
     float moveSpeed = constrain(targetMoveSpeed, 1, sysSettings.targetMaxXYFeedRate);   
