@@ -313,7 +313,7 @@ int   arcXYZMove(const float& X1, const float& Y1, const float& Z1, const float&
     //throttle back feedrate if it exceeds the z axis max feed rate
     if (neededZFeedRate > zMaxFeedRate){
       float  zStepSizeMMPerLoopInterval = computeStepSize(zMaxFeedRate);
-      neededNumberOfSteps        = zDistanceToMoveInMM/zStepSizeMMPerLoopInterval;
+      neededNumberOfSteps        = abs(zDistanceToMoveInMM/zStepSizeMMPerLoopInterval);
       stepSizeMMPerLoopInterval  = arcLengthMM/neededNumberOfSteps;
       moveSpeed                  = calculateFeedrate(stepSizeMMPerLoopInterval, delayTime);
     }
