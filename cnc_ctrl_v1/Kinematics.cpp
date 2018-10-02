@@ -59,8 +59,6 @@ void Kinematics::recomputeGeometry(){
     halfHeight = sysSettings.workSurfaceHeight / 2.0;
 
     // according to madgrizzle proposal to integrate into kynematics the chain tolerance and motor x,y coordinates
-    // but waiting to integrate beamtilt angle... 
-    // Why does he multiply the MotorY by -1 ???  Does he define Y axis pointing down? I don't.
     leftMotorX = cos(sysSettings.topBeamTilt*DEGREE_TO_RADIAN)*sysSettings.distBetweenLRMotorsGearBoxShafts/-2.0;
     leftMotorY = (sysSettings.lRMotorsYOffsetAboveWorkSurface+sysSettings.workSurfaceHeight/2.0) - (sin(sysSettings.topBeamTilt*DEGREE_TO_RADIAN)*sysSettings.distBetweenLRMotorsGearBoxShafts/2.0);
     rightMotorX = cos(sysSettings.topBeamTilt*DEGREE_TO_RADIAN)*sysSettings.distBetweenLRMotorsGearBoxShafts/2.0;
@@ -217,7 +215,7 @@ void  Kinematics::triangularInverse(float xTarget,float yTarget, float* aChainLe
     float Chain2AroundSprocket = 0;
 
     //Calculate motor axes length to the bit
-    float leftMotorDistance = sqrt(pow((-1*leftMotorX - xTarget),2)+pow((leftMotorY - yTarget),2)); // updated to reflect new madgrizzle proposal of using X,Y coordinates of motors
+    float leftMotorDistance = sqrt(pow((leftMotorX - xTarget),2)+pow((leftMotorY - yTarget),2)); // updated to reflect new madgrizzle proposal of using X,Y coordinates of motors
     float rightMotorDistance = sqrt(pow((rightMotorX - xTarget),2)+pow((rightMotorY - yTarget),2));
 
     //Calculate the chain angles from horizontal, based on if the chain connects to the sled from the top or bottom of the sprocket
