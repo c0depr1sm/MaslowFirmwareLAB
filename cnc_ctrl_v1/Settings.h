@@ -52,7 +52,7 @@ typedef struct {  // I think this is about ~128 bytes in size if I counted corre
   unsigned int maxChainReachBeyondSprocketTop; // Formerly chainLength but the starting point and the fact that it is a machine property more than a chain position makes it clearer 
   unsigned int originalChainLength;
   float encoderLRMotorStepsCountPerOutputShaftTurn; // Formerly encoderSteps but pointing out this is machine property measured at the output shaft on LR motors makes it clearer 
-  float distPerRot;
+  float lRDistPerRot;
   unsigned int targetMaxXYFeedRate; // Formerly maxFeed but needed clarification as it does not apply to Z axis;
   bool zAxleMotorized; //Formerly called zAxisAttached, renamed to avoid confusion with Axis.attachedPWMControl() method.
   SpindleAutomationType spindleAutomateType;

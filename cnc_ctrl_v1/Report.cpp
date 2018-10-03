@@ -153,7 +153,7 @@ void reportMaslowSettings() {
     Serial.print(F("$10=")); Serial.println(sysSettings.maxChainReachBeyondSprocketTop);
     Serial.print(F("$11=")); Serial.println(sysSettings.originalChainLength);
     Serial.print(F("$12=")); Serial.println(sysSettings.encoderLRMotorStepsCountPerOutputShaftTurn, 8);
-    Serial.print(F("$13=")); Serial.println(sysSettings.distPerRot, 8);
+    Serial.print(F("$13=")); Serial.println(sysSettings.lRDistPerRot, 8);
     Serial.print(F("$15=")); Serial.println(sysSettings.targetMaxXYFeedRate);
     Serial.print(F("$16=")); Serial.println(sysSettings.zAxleMotorized);
     Serial.print(F("$17=")); Serial.println(sysSettings.spindleAutomate);
@@ -198,7 +198,7 @@ void reportMaslowSettings() {
     Serial.print(F(" (axle idle time before PID control detach, ms)\r\n$10=")); Serial.print(sysSettings.maxChainReachBeyondSprocketTop);
     Serial.print(F(" (full length of chain, mm)\r\n$11=")); Serial.print(sysSettings.originalChainLength);
     Serial.print(F(" (calibration chain length, mm)\r\n$12=")); Serial.print(sysSettings.encoderLRMotorStepsCountPerOutputShaftTurn, 8);
-    Serial.print(F(" (main steps per revolution)\r\n$13=")); Serial.print(sysSettings.distPerRot, 8);
+    Serial.print(F(" (main steps per revolution)\r\n$13=")); Serial.print(sysSettings.lRDistPerRot, 8);
     Serial.print(F(" (distance / rotation, mm)\r\n$15=")); Serial.print(sysSettings.targetMaxXYFeedRate);
     Serial.print(F(" (max feed, mm/min)\r\n$16=")); Serial.print(sysSettings.zAxleMotorized);
     Serial.print(F(" (Motorized Z Axle, 1 = Yes)\r\n$17=")); Serial.print(sysSettings.spindleAutomateType);

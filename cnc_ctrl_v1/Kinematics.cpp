@@ -63,8 +63,8 @@ void Kinematics::recomputeGeometry(){
     leftMotorY = (sysSettings.lRMotorsYOffsetAboveWorkSurface+sysSettings.workSurfaceHeight/2.0) - (sin(sysSettings.topBeamTilt*DEGREE_TO_RADIAN)*sysSettings.distBetweenLRMotorsGearBoxShafts/2.0);
     rightMotorX = cos(sysSettings.topBeamTilt*DEGREE_TO_RADIAN)*sysSettings.distBetweenLRMotorsGearBoxShafts/2.0;
     rightMotorY = (sysSettings.lRMotorsYOffsetAboveWorkSurface+sysSettings.workSurfaceHeight/2.0) + (sin(sysSettings.topBeamTilt*DEGREE_TO_RADIAN)*sysSettings.distBetweenLRMotorsGearBoxShafts/2.0);
-    leftChainTolerance = sysSettings.distPerRot/sysSettings.distPerRotLeftChainTolerance; //doing it this way only to reduce changes to existing code
-    rightChainTolerance = sysSettings.distPerRot/sysSettings.distPerRotRightChainTolerance; //doing it this way only to reduce changes to existing code
+    leftChainTolerance = sysSettings.lRDistPerRot/sysSettings.distPerRotLeftChainTolerance; //doing it this way only to reduce changes to existing code
+    rightChainTolerance = sysSettings.lRDistPerRot/sysSettings.distPerRotRightChainTolerance; //doing it this way only to reduce changes to existing code
     
 }
 

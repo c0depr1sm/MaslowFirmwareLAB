@@ -50,8 +50,8 @@ void settingsLoadFromEEprom(){
     leftAxle.setEncoderResolution(&sysSettings.encoderLRMotorStepsCountPerOutputShaftTurn);
     rightAxle.setEncoderResolution(&sysSettings.encoderLRMotorStepsCountPerOutputShaftTurn);
     // chain pitch tolerances are handled by the Kynematics calculation function. Not anymore recorded into Axle pitch. 
-    leftAxle.setmmPitch(&sysSettings.distPerRot);
-    rightAxle.setmmPitch(&sysSettings.distPerRot);
+    leftAxle.setmmPitch(&sysSettings.lRDistPerRot);
+    rightAxle.setmmPitch(&sysSettings.lRDistPerRot);
     zAxle.setmmPitch(&sysSettings.zDistPerRot);
     zAxle.setEncoderResolution(&sysSettings.encoderZScrewStepsCountPerTurn);
 }
@@ -76,7 +76,7 @@ void settingsReset() {
     sysSettings.axlePIDControlDetachTimeOutDelay = 2000;   // int axlePIDControlDetachTimeOutDelay;
     sysSettings.originalChainLength = 1650;   // int originalChainLength;
     sysSettings.encoderLRMotorStepsCountPerOutputShaftTurn = 8113.73; // float encoderLRMotorStepsCountPerOutputShaftTurn -- Updated by madgrizzle on sept 10 2018
-    sysSettings.distPerRot = 63.5;   // float distPerRot;
+    sysSettings.lRDistPerRot = 63.5;   // float distPerRot;
     sysSettings.targetMaxXYFeedRate = 700;   // int targetMaxXYFeedRate
     sysSettings.zAxleMotorized = true;   // zAxleMotorized;
     sysSettings.spindleAutomateType = NONE;  // bool spindleAutomate;
@@ -281,8 +281,8 @@ byte settingsStoreGlobalSetting(const byte& parameter,const float& value){
               kinematics.init();
               break;
         case 13:
-              sysSettings.distPerRot = value;
-              kinematics.R = (sysSettings.distPerRot)/(2.0 * 3.14159);
+              sysSettings.lRDistPerRot = value;
+              kinematics.R = (sysSettings.lRDistPerRot)/(2.0 * 3.14159);
               kinematics.recomputeGeometry();
               if (sys.oldSettingsFlag){
                 bit_false(sys.oldSettingsFlag, NEED_DIST_PER_ROT);
