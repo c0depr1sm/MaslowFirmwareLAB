@@ -74,6 +74,16 @@ void settingsReset() {
     sysSettings.kinematicsType = 1;      // byte kinematicsType;
     sysSettings.sledRotationDiskRadius = 250.0;  // float sledRotationDiskRadius;
     sysSettings.axlePIDControlDetachTimeOutDelay = 2000;   // int axlePIDControlDetachTimeOutDelay;
+    sysSettings.chainLength = 3360;   // int maximum length of chain;
+/*
+ blurfl commit da17048 on october 1st 2018 
+ *	add missing setting to defaults
+ *  settingsReset() does not include a default value for chainLength. Without a value for chainLength,  kinematics fails with:
+ * ```
+ *  "Message: Unable to find valid machine position for chain lengths "
+ * ```
+ *  GC responds by sending it's own setting value ($10), but the kinematics error requires the user to recalibrate the chains.
+ */ 
     sysSettings.originalChainLength = 1650;   // int originalChainLength;
     sysSettings.encoderLRMotorStepsCountPerOutputShaftTurn = 8113.73; // float encoderLRMotorStepsCountPerOutputShaftTurn -- Updated by madgrizzle on sept 10 2018
     sysSettings.lRDistPerRot = 63.5;   // float distPerRot;
