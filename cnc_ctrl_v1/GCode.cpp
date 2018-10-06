@@ -371,10 +371,10 @@ void  executeGcodeLine(const String& gcodeLine){
             G10(gcodeLine);
             break;
         case 20:
-            setMeasurementUnitConversionFactor(INCHES_TO_MLLIMETERS);
+            sys.mmConversionFactor = INCHES_TO_MLLIMETERS;
             break;
         case 21:
-            setMeasurementUnitConversionFactor(MILLIMETERS);
+            sys.mmConversionFactor = MILLIMETERS;
             break;
         case 40:
             break; //the G40 command turns off cutter compensation which is already off so it is safe to ignore
@@ -393,7 +393,7 @@ void  executeGcodeLine(const String& gcodeLine){
             Serial.println(F(" unsupported and ignored."));
     }
 
-}
+} 
 
 void  executeMcodeLine(const String& gcodeLine){
     /*
@@ -906,6 +906,3 @@ void  G38(const String& readString) {
   }
 }
 
-void  setMeasurementUnitConversionFactor(float newConversionFactor){
-    sys.mmConversionFactor = newConversionFactor;
-}
