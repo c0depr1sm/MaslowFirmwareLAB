@@ -71,11 +71,11 @@ void movementUpdate(){
 
 
 // why does this return anything
-// moveSpeed (formerly MMPerMin) describes the demanded displacement speed in mm/min
-int   coordinatedMove(const float& xEnd, const float& yEnd, const float& zEnd, float moveSpeed){
+// targetMoveSpeed (formerly MMPerMin) describes the demanded displacement speed in mm/min
+// Limits checks: move speed is limited to XY and Z max rates definned in settings. 
+int   coordinatedMove(const float& xEnd, const float& yEnd, const float& zEnd, float targetMoveSpeed){
     
-    /*The move() function moves the tool in a straight line to the position (xEnd, yEnd) at 
-    the speed moveSpeed. 
+    /*The move() function moves the tool in a straight line to the position (xEnd, yEnd) at the speed moveSpeed. 
     * The move is not necessarily occuring at a depth where cutting occurs. So the movespeed is not necessarily a feedrate.
     * Movements are correlated so that regardless of the distances moved in each 
     direction, the tool moves to the target in a straight line. 
@@ -87,6 +87,7 @@ int   coordinatedMove(const float& xEnd, const float& yEnd, const float& zEnd, f
     float  yStartingLocation = sys.estimatedBitTipYPosition;
     float  zStartingLocation = zAxle.getCurrentmmPosition();  // It turn out that the Z axle's length position = the Router Bit z axis position. 
     float  zMaxFeedRate      = getZMaxFeedRate();
+    float  moveSpeed         = constrain(targetMoveSpeed, 1, sysSettings.targetMaxXYFeedRate);   //constrain the maximum feedrate, just in case the caller did not yet limit the rate 
     
     //find the total distances to move
     float  distanceToMoveInMM         = sqrt(  sq(xEnd - xStartingLocation)  +  sq(yEnd - yStartingLocation)  + sq(zEnd - zStartingLocation));
@@ -95,7 +96,6 @@ int   coordinatedMove(const float& xEnd, const float& yEnd, const float& zEnd, f
     float  zDistanceToMoveInMM        = zEnd - zStartingLocation;
     
     //compute feed details
-    moveSpeed = constrain(moveSpeed, 1, sysSettings.targetMaxXYFeedRate);   //constrain the maximum feedrate, just in case the caller did not yet limit the rate 
     float  stepSizeMMPerLoopInterval  = computeStepSize(moveSpeed);
     float  finalNumberOfSteps   = abs(distanceToMoveInMM/stepSizeMMPerLoopInterval);
     float  delayTime            = LOOPINTERVAL;
@@ -106,7 +106,7 @@ int   coordinatedMove(const float& xEnd, const float& yEnd, const float& zEnd, f
       float  zStepSizeMMPerLoopInterval = computeStepSize(zMaxFeedRate);
       finalNumberOfSteps        = abs(zDistanceToMoveInMM/zStepSizeMMPerLoopInterval);
       stepSizeMMPerLoopInterval = (distanceToMoveInMM/finalNumberOfSteps);
-      moveSpeed                  = calculateFeedrate(stepSizeMMPerLoopInterval, delayTime);
+      moveSpeed                  = calculateFeedrate(stepSizeMMPerLoopInterval, delayTime); // this resulting move speed is not used in the remainder of the move function
     }
     
     // (fraction of distance in x direction)* size of step toward target
@@ -188,6 +188,7 @@ int   coordinatedMove(const float& xEnd, const float& yEnd, const float& zEnd, f
     
 }
 // moveSpeed (formerly MMPerMin) describes the demanded displacement speed in mm/min
+// Limits checks: moveSpeed is not limited. It is really what it says. 
 void  singleAxleMove(Axle* axle, const float& endPos, const float& moveSpeed){
     /*
     Takes a pointer to an axle object and rotates that axle up to endPos position at moveSpeed
@@ -244,6 +245,7 @@ int sign(double x) { return x<0 ? -1 : 1; }
 
 // why does this return anything
 // targetMoveSpeed (formerly MMPerMin) describes the demanded displacement speed in mm/min
+// Limits checks: targetMoveSpeed is limited to XY and Z max rates definned in settings. 
 int   arcXYZMove(const float& X1, const float& Y1, const float& Z1, const float& X2, const float& Y2, const float& Z2, const float& centerX, const float& centerY, const float& targetMoveSpeed, const float& direction){
     /*
     Implements helix path with G2 and G3.
