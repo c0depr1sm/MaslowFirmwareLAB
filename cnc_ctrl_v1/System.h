@@ -57,17 +57,18 @@ typedef struct {
   byte pause;                 // Pause flag.
   float estimatedBitTipXPosition; // bit tip XY cartesian position estimation
   float estimatedBitTipYPosition; // Cached because calculating position is intensive
-  //float steps[3];             // Encoder position of axes... deleted as it is unused
+  //Gcode decoding states
+  float mmConversionFactor; //Formerly misnamed inchesToMMConversion. Used to track whether to convert from inches, can probably be done in a way that doesn't require RAM
   bool  useRelativeUnits;     //
-  unsigned long lastSerialRcvd; // The millis of the last rcvd serial command, apparently not used
+  float targetFeedrate;       //Formerly feedRate, really designates the current move target feedrate of the machine in mm/min
   int   lastGCommand;         //Stores the value of the last command run eg: G01 -> 1
   int   lastTool;             //Stores the value of the last tool number eg: T4 -> 4
   int   nextTool;             //Stores the value of the next tool number eg: T4 -> 4
-  float mmConversionFactor; //Formerly misnamed inchesToMMConversion. Used to track whether to convert from inches, can probably be done in a way that doesn't require RAM
-  float targetFeedrate;       //Formerly feedRate, really designates the current move target feedrate of the machine in mm/min
   // THE FOLLOWING IS USED FOR IMPORTING SETTINGS FROM FIRMWARE v1.00 AND EARLIER 
   // It can be deleted at some point
   byte oldSettingsFlag;
+  //float steps[3];             // Encoder position of axes... deleted as it is unused
+  //unsigned long lastSerialRcvd; // The millis of the last rcvd serial command, deleted as not used
 } system_t;
 extern system_t sys;
 extern Axle leftAxle;
