@@ -667,7 +667,7 @@ void G1(const String& readString, int G0orG1){
     //keep the last used feedrate if none specified in the Gcode line 
     tempFeedRate = sys.mmConversionFactor*extractGcodeValue(readString, 'F', sys.targetFeedrate/sys.mmConversionFactor);
     //Top the target rate to the maximum XY feedrate,
-    sys.targetFeedrate = constrain(tempFeedRate, 1, sysSettings.targetMaxXYFeedRate);   
+    sys.targetFeedrate = constrain(tempFeedRate, 1, sysSettings.maxXYFeedRate);   
 
     //if the z axle PID Control is not attached, then get manual ajustment done before move.
     if(!sysSettings.zAxleMotorized){
@@ -700,7 +700,7 @@ void G1(const String& readString, int G0orG1){
     }
     else{
         //if this is a rapid move
-        coordinatedMove(finalXPos, finalYPos, finalZPos, sysSettings.targetMaxXYFeedRate); //move the same as a regular move, but seek fastest feed rate
+        coordinatedMove(finalXPos, finalYPos, finalZPos, sysSettings.maxXYFeedRate); //move the same as a regular move, but seek fastest feed rate
     }
 }
 
@@ -737,7 +737,7 @@ void G2(const String& readString, int G2orG3){
     //keep the last used feedrate if none specified in the Gcode line 
     tempFeedRate = sys.mmConversionFactor*extractGcodeValue(readString, 'F', sys.targetFeedrate/sys.mmConversionFactor);
     //Top the target rate to the maximum XY feedrate,
-    sys.targetFeedrate = constrain(tempFeedRate, 1, sysSettings.targetMaxXYFeedRate);    
+    sys.targetFeedrate = constrain(tempFeedRate, 1, sysSettings.maxXYFeedRate);    
 
     if (G2orG3 == 2){
         arcXYZMove(X1, Y1, Z1, X2, Y2, Z2, centerX, centerY, sys.targetFeedrate, CLOCKWISE);

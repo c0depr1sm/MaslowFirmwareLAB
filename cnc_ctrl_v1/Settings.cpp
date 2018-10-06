@@ -87,7 +87,7 @@ void settingsReset() {
     sysSettings.originalChainLength = 1650;   // int originalChainLength;
     sysSettings.encoderLRMotorStepsCountPerOutputShaftTurn = 8113.73; // float encoderLRMotorStepsCountPerOutputShaftTurn -- Updated by madgrizzle on sept 10 2018
     sysSettings.lRDistPerRot = 63.5;   // float distPerRot;
-    sysSettings.targetMaxXYFeedRate = 700;   // int targetMaxXYFeedRate
+    sysSettings.maxXYFeedRate = 700;   // int targetMaxXYFeedRate
     sysSettings.zAxleMotorized = true;   // zAxleMotorized;
     sysSettings.spindleAutomateType = NONE;  // bool spindleAutomate;
     sysSettings.zScrewMaxRPM = 12.60;  // float zScrewMaxRPM;
@@ -303,7 +303,7 @@ byte settingsStoreGlobalSetting(const byte& parameter,const float& value){
               kinematics.init();
               break;
         case 15:
-              sysSettings.targetMaxXYFeedRate = value;
+              sysSettings.maxXYFeedRate = value;
               break;
         case 16:
               sysSettings.zAxleMotorized = value;

@@ -87,7 +87,7 @@ int   coordinatedMove(const float& xEnd, const float& yEnd, const float& zEnd, f
     float  yStartingLocation = sys.estimatedBitTipYPosition;
     float  zStartingLocation = zAxle.getCurrentmmPosition();  // It turn out that the Z axle's length position = the Router Bit z axis position. 
     float  zMaxFeedRate      = getZMaxFeedRate();
-    float  moveSpeed         = constrain(targetMoveSpeed, 1, sysSettings.targetMaxXYFeedRate);   //constrain the maximum feedrate, just in case the caller did not yet limit the rate 
+    float  moveSpeed         = constrain(targetMoveSpeed, 1, sysSettings.maxXYFeedRate);   //constrain the maximum feedrate, just in case the caller did not yet limit the rate 
     
     //find the total distances to move
     float  distanceToMoveInMM         = sqrt(  sq(xEnd - xStartingLocation)  +  sq(yEnd - yStartingLocation)  + sq(zEnd - zStartingLocation));
@@ -300,7 +300,7 @@ int   arcXYZMove(const float& X1, const float& Y1, const float& Z1, const float&
     float zDistanceToMoveInMM    =  Z2 - Z1;
     
     //constrain the maximum feedrate, just in case the caller did not yet limit the rate 
-    float moveSpeed = constrain(targetMoveSpeed, 1, sysSettings.targetMaxXYFeedRate);   
+    float moveSpeed = constrain(targetMoveSpeed, 1, sysSettings.maxXYFeedRate);   
     
     //estimate distance per loop interval starting with initialy constrained targeted moveSpeed
     float stepSizeMMPerLoopInterval  =  computeStepSize(moveSpeed);
