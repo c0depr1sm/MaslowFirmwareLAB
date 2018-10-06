@@ -292,7 +292,7 @@ byte settingsStoreGlobalSetting(const byte& parameter,const float& value){
               break;
         case 13:
               sysSettings.lRDistPerRot = value;
-              kinematics.R = (sysSettings.lRDistPerRot)/(2.0 * 3.14159);
+              kinematics.sprocketEffectiveRadius = (sysSettings.lRDistPerRot)/(2.0 * 3.14159);
               kinematics.recomputeGeometry();
               if (sys.oldSettingsFlag){
                 bit_false(sys.oldSettingsFlag, NEED_DIST_PER_ROT);

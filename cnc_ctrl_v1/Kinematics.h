@@ -37,9 +37,9 @@
             void  forward(const float& chainALength, const float& chainBLength, float* xPos, float* yPos, float xGuess, float yGuess);
             //geometry
             float h; //distance between sled attach point and bit
-            float R             = 10.1;                                //sprocket radius
-            float RleftChainTolerance = 10.1;    // Left sprocket radius including chain tolerance
-            float RrightChainTolerance = 10.1;    // Right sprocket radius including chain tolerance
+            float sprocketEffectiveRadius = 10.1;                                //sprocket radius
+            //float RleftChainTolerance     = 10.1;    // Left sprocket radius including chain tolerance --unused
+            //float RrightChainTolerance    = 10.1;    // Right sprocket radius including chain tolerance --unused
             
             // ref: madgrizzle proposal to let Kynematics handle chain tolerance and motor positions.
             // here some default values upon initialization

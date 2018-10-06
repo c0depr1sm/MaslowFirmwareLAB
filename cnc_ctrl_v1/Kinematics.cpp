@@ -111,8 +111,8 @@ void  Kinematics::quadrilateralInverse(float xTarget,float yTarget, float* aChai
 
     TanGamma = y/x;
     TanLambda = y/(sysSettings.distBetweenLRMotorsGearBoxShafts-x);
-    Y1Plus = R * sqrt(1 + TanGamma * TanGamma);
-    Y2Plus = R * sqrt(1 + TanLambda * TanLambda);
+    Y1Plus = sprocketEffectiveRadius * sqrt(1 + TanGamma * TanGamma);
+    Y2Plus = sprocketEffectiveRadius * sqrt(1 + TanLambda * TanLambda);
 
 
     while (Tries <= KINEMATICSMAXINVERSE) {
@@ -156,10 +156,10 @@ void  Kinematics::quadrilateralInverse(float xTarget,float yTarget, float* aChai
 
         Phi = Phi + Solution[0];
         Y1Plus = Y1Plus + Solution[1];                         //don't allow the anchor points to be inside a sprocket
-        Y1Plus = (Y1Plus < R) ? R : Y1Plus;
+        Y1Plus = (Y1Plus < sprocketEffectiveRadius) ? sprocketEffectiveRadius : Y1Plus;
 
         Y2Plus = Y2Plus + Solution[2];                         //don't allow the anchor points to be inside a sprocke
-        Y2Plus = (Y2Plus < R) ? R : Y2Plus;
+        Y2Plus = (Y2Plus < sprocketEffectiveRadius) ? sprocketEffectiveRadius : Y2Plus;
 
         Psi1 = Theta - Phi;
         Psi2 = Theta + Phi;
@@ -183,12 +183,12 @@ void  Kinematics::quadrilateralInverse(float xTarget,float yTarget, float* aChai
     //compute the chain lengths
 
     if(Mirror){
-        Chain2 = sqrt((x - Offsetx1)*(x - Offsetx1) + (y + Y1Plus - Offsety1)*(y + Y1Plus - Offsety1)) - R * TanGamma + R * Gamma;   //right chain length
-        Chain1 = sqrt((sysSettings.distBetweenLRMotorsGearBoxShafts - (x + Offsetx2))*(sysSettings.distBetweenLRMotorsGearBoxShafts - (x + Offsetx2))+(y + Y2Plus - Offsety2)*(y + Y2Plus - Offsety2)) - R * TanLambda + R * Lambda;   //left chain length
+        Chain2 = sqrt((x - Offsetx1)*(x - Offsetx1) + (y + Y1Plus - Offsety1)*(y + Y1Plus - Offsety1)) - sprocketEffectiveRadius * TanGamma + sprocketEffectiveRadius * Gamma;   //right chain length
+        Chain1 = sqrt((sysSettings.distBetweenLRMotorsGearBoxShafts - (x + Offsetx2))*(sysSettings.distBetweenLRMotorsGearBoxShafts - (x + Offsetx2))+(y + Y2Plus - Offsety2)*(y + Y2Plus - Offsety2)) - sprocketEffectiveRadius * TanLambda + sprocketEffectiveRadius * Lambda;   //left chain length
     }
     else{
-        Chain1 = sqrt((x - Offsetx1)*(x - Offsetx1) + (y + Y1Plus - Offsety1)*(y + Y1Plus - Offsety1)) - R * TanGamma + R * Gamma;   //left chain length
-        Chain2 = sqrt((sysSettings.distBetweenLRMotorsGearBoxShafts - (x + Offsetx2))*(sysSettings.distBetweenLRMotorsGearBoxShafts - (x + Offsetx2))+(y + Y2Plus - Offsety2)*(y + Y2Plus - Offsety2)) - R * TanLambda + R * Lambda;   //right chain length
+        Chain1 = sqrt((x - Offsetx1)*(x - Offsetx1) + (y + Y1Plus - Offsety1)*(y + Y1Plus - Offsety1)) - sprocketEffectiveRadius * TanGamma + sprocketEffectiveRadius * Gamma;   //left chain length
+        Chain2 = sqrt((sysSettings.distBetweenLRMotorsGearBoxShafts - (x + Offsetx2))*(sysSettings.distBetweenLRMotorsGearBoxShafts - (x + Offsetx2))+(y + Y2Plus - Offsety2)*(y + Y2Plus - Offsety2)) - sprocketEffectiveRadius * TanLambda + sprocketEffectiveRadius * Lambda;   //right chain length
     }
 
     *aChainLength = Chain1;
@@ -222,23 +222,23 @@ void  Kinematics::triangularInverse(float xTarget,float yTarget, float* aChainLe
     if(sysSettings.chainOverSprocket == 1){
 		// Thanks to madgrizle pointing out that 
 		//            this part is the chain not touching the sprocket + this part is the chain wrapped around the sprocket(held at tooth pitch distance).
-        Chain1Angle = asin((leftMotorY - yTarget)/leftMotorDistance) + asin(R/leftMotorDistance); // removing chain tolerance and , updated to reflect new way of using X,Y coordinates of motors
-        Chain2Angle = asin((rightMotorY - yTarget)/rightMotorDistance) + asin(R/rightMotorDistance);
+        Chain1Angle = asin((leftMotorY - yTarget)/leftMotorDistance) + asin(sprocketEffectiveRadius/leftMotorDistance); // removing chain tolerance and , updated to reflect new way of using X,Y coordinates of motors
+        Chain2Angle = asin((rightMotorY - yTarget)/rightMotorDistance) + asin(sprocketEffectiveRadius/rightMotorDistance);
 
-        Chain1AroundSprocket = R * Chain1Angle;
-        Chain2AroundSprocket = R * Chain2Angle;
+        Chain1AroundSprocket = sprocketEffectiveRadius * Chain1Angle;
+        Chain2AroundSprocket = sprocketEffectiveRadius * Chain2Angle;
     }
     else{
-        Chain1Angle = asin((leftMotorY - yTarget)/leftMotorDistance) - asin(R/leftMotorDistance); // removing chain tolerance and , updated to reflect new way of using X,Y coordinates of motors
-        Chain2Angle = asin((rightMotorY - yTarget)/rightMotorDistance) - asin(R/rightMotorDistance);
+        Chain1Angle = asin((leftMotorY - yTarget)/leftMotorDistance) - asin(sprocketEffectiveRadius/leftMotorDistance); // removing chain tolerance and , updated to reflect new way of using X,Y coordinates of motors
+        Chain2Angle = asin((rightMotorY - yTarget)/rightMotorDistance) - asin(sprocketEffectiveRadius/rightMotorDistance);
 
-        Chain1AroundSprocket = R * (3.14159 - Chain1Angle);
-        Chain2AroundSprocket = R * (3.14159 - Chain2Angle);
+        Chain1AroundSprocket = sprocketEffectiveRadius * (3.14159 - Chain1Angle);
+        Chain2AroundSprocket = sprocketEffectiveRadius * (3.14159 - Chain2Angle);
     }
 
     //Calculate the straight chain length from the sprocket to the bit
-    float Chain1Straight = sqrt(pow(leftMotorDistance,2)-pow(R,2)); // will apply chain tolerance after sag correction... because Ground control computes a correction without chain tolerance? (ask madgrizzle 
-    float Chain2Straight = sqrt(pow(rightMotorDistance,2)-pow(R,2));
+    float Chain1Straight = sqrt(pow(leftMotorDistance,2)-pow(sprocketEffectiveRadius,2)); // will apply chain tolerance after sag correction... because Ground control computes a correction without chain tolerance? (ask madgrizzle 
+    float Chain2Straight = sqrt(pow(rightMotorDistance,2)-pow(sprocketEffectiveRadius,2));
 
     //Correct the straight chain lengths to account for chain sag
     Chain1Straight *= (1 + ((sysSettings.chainSagCorrectionFactor / 1000000000000) * pow(cos(Chain1Angle),2) * pow(Chain1Straight,2) * pow((tan(Chain2Angle) * cos(Chain1Angle)) + sin(Chain1Angle),2)));
@@ -429,6 +429,6 @@ void Kinematics::_MyTrig(){
 
 float Kinematics::_YOffsetEqn(const float& YPlus, const float& Denominator, const float& Psi){
     float Temp;
-    Temp = ((sqrt(YPlus * YPlus - R * R)/R) - (y + YPlus - h * sin(Psi))/Denominator);
+    Temp = ((sqrt(YPlus * YPlus - sprocketEffectiveRadius * sprocketEffectiveRadius)/sprocketEffectiveRadius) - (y + YPlus - h * sin(Psi))/Denominator);
     return Temp;
 }
