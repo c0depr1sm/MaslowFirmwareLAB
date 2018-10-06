@@ -28,19 +28,15 @@
 
     class Kinematics{
         public:
+            //setup functions
             Kinematics();
             void init  ();
-            void  inverse   (float xTarget,float yTarget, float* aChainLength, float* bChainLength);
-            void  quadrilateralInverse   (float xTarget,float yTarget, float* aChainLength, float* bChainLength);
-            void  triangularInverse   (float xTarget,float yTarget, float* aChainLength, float* bChainLength);
             void  recomputeGeometry();
+            //control functions
+            void  inverse   (float xTarget,float yTarget, float* aChainLength, float* bChainLength);
             void  forward(const float& chainALength, const float& chainBLength, float* xPos, float* yPos, float xGuess, float yGuess);
-            //geometry
-            float h; //distance between sled attach point and bit
+            //set geometry
             float sprocketEffectiveRadius = 10.1;                                //sprocket radius
-            //float RleftChainTolerance     = 10.1;    // Left sprocket radius including chain tolerance --unused
-            //float RrightChainTolerance    = 10.1;    // Right sprocket radius including chain tolerance --unused
-            
             // ref: madgrizzle proposal to let Kynematics handle chain tolerance and motor positions.
             // here some default values upon initialization
             float leftMotorX = -1800.0;
@@ -52,20 +48,22 @@
 
             float halfWidth;                      //Half the machine width
             float halfHeight;                    //Half the machine height
-        private:
+            //float RleftChainTolerance     = 10.1;    // Left sprocket radius including chain tolerance --unused
+            //float RrightChainTolerance    = 10.1;    // Right sprocket radius including chain tolerance --unused
+         private:
+            void  quadrilateralInverse   (float xTarget,float yTarget, float* aChainLength, float* bChainLength);
+            void  triangularInverse   (float xTarget,float yTarget, float* aChainLength, float* bChainLength);
+            // common items
+            void _verifyValidTarget(float* xTarget,float* yTarget);
+             // quadrilateral specific
+            float _h; //distance between sled attach point and bit
             float _moment(const float& Y1Plus, const float& Y2Plus, const float& MSinPhi, const float& MSinPsi1, const float& MCosPsi1, const float& MSinPsi2, const float& MCosPsi2);
             float _YOffsetEqn(const float& YPlus, const float& Denominator, const float& Psi);
             void  _MatSolv();
             void  _MyTrig();
-            void _verifyValidTarget(float* xTarget,float* yTarget);
-            //target router bit coordinates.
-            float x = 0;
-            float y = 0;
-            
-            //utility variables
-            boolean Mirror;
-
-            //Criterion Computation Variables
+            float _x = 0; //target router bit coordinates.
+            float _y = 0;
+             //Criterion Computation Variables
             float Phi = -0.2;
             float TanGamma; 
             float TanLambda;
@@ -91,18 +89,18 @@
             float CosPsi2D;
             float MySinPhi;
             float MySinPhiDelta;
-
+            boolean Mirror;
             //intermediate output
             float Lambda;
             float Gamma;
-
-            // Motor axes length to the bit for triangular kinematics
-            float leftMotorDistance; //left motor's gearbox output shaft distance to sled
-            float rightMotorDistance; //right motor's gearbox output shaft distance to sled
-
             // output = chain lengths measured from 12 o'clock
             float Chain1; //left chain length 
             float Chain2; //right chain length
+
+            // Motor axes length to the bit for triangular kinematics
+            // float leftMotorDistance; //left motor's gearbox output shaft distance to sled --local variables used instead
+            // float rightMotorDistance; //right motor's gearbox output shaft distance to sled --local variables used instead
+
     };
 
     #endif
