@@ -255,7 +255,7 @@ int   arcXYZMove(const float& X1, const float& Y1, const float& Z1, const float&
     The only helix axis supported is the Z axis.
     */
     
-    float  zStartingLocation    = Z1;  // It turn out that the Z axle's length position = the Router Bit z axis position. 
+    // We assume that the Z axle's length position = the Router Bit tip z axis position. 
     float  zMaxFeedRate         = getZMaxFeedRate();
     
     //compute geometry 
