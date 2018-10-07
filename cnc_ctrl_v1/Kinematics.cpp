@@ -58,7 +58,7 @@ void Kinematics::recomputeGeometry(){
     halfWidth = sysSettings.workSurfaceWidth / 2.0;
     halfHeight = sysSettings.workSurfaceHeight / 2.0;
     //add this sprocketEffectiveRadius initialisation value to make sure the sysSettings are used. C0depr1sm 2018-10-06
-    sprocketEffectiveRadius = (sysSettings.lRDistPerRot)/(2.0 * 3.14159);
+    sprocketEffectiveRadius = (sysSettings.lRDistPerRot)/(2.0 * M_PI); //replaced numerical with value defined in avr-lib.c (see http://www.nongnu.org/avr-libc/user-manual/group__avr__math.html)
     
     // according to madgrizzle proposal to integrate into kynematics the chain tolerance and motor x,y coordinates
     leftMotorX = cos(sysSettings.topBeamTilt*DEGREE_TO_RADIAN)*sysSettings.distBetweenLRMotorsGearBoxShafts/-2.0;
@@ -234,8 +234,8 @@ void  Kinematics::triangularInverse(float xTarget,float yTarget, float* aChainLe
         Chain1Angle = asin((leftMotorY - yTarget)/leftMotorDistance) - asin(sprocketEffectiveRadius/leftMotorDistance); // removing chain tolerance and , updated to reflect new way of using X,Y coordinates of motors
         Chain2Angle = asin((rightMotorY - yTarget)/rightMotorDistance) - asin(sprocketEffectiveRadius/rightMotorDistance);
 
-        Chain1AroundSprocket = sprocketEffectiveRadius * (3.14159 - Chain1Angle);
-        Chain2AroundSprocket = sprocketEffectiveRadius * (3.14159 - Chain2Angle);
+        Chain1AroundSprocket = sprocketEffectiveRadius * (M_PI - Chain1Angle); //replaced numerical with value defined in avr-lib.c (see http://www.nongnu.org/avr-libc/user-manual/group__avr__math.html)
+        Chain2AroundSprocket = sprocketEffectiveRadius * (M_PI - Chain2Angle); //replaced numerical with value defined in avr-lib.c (see http://www.nongnu.org/avr-libc/user-manual/group__avr__math.html)
     }
 
     //Calculate the straight chain length from the sprocket to the bit

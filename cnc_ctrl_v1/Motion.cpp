@@ -259,9 +259,9 @@ int   arcXYZMove(const float& X1, const float& Y1, const float& Z1, const float&
     float  zMaxFeedRate         = getZMaxFeedRate();
     
     //compute geometry 
-    float pi                     =  3.141592654;
+    // float pi                     =  3.141592654; - replaced by the use if math.h constant M_PI = 3.14159265358979323846 
     float radius                 =  sqrt( sq(centerX - X1) + sq(centerY - Y1) ); 
-    float circumference          =  2.0*pi*radius;
+    float circumference          =  2.0*M_PI*radius;
     
     float startingAngle          =  atan2(Y1 - centerY, X1 - centerX);
     float endingAngle            =  atan2(Y2 - centerY, X2 - centerX);
@@ -275,13 +275,13 @@ int   arcXYZMove(const float& X1, const float& Y1, const float& Z1, const float&
     float theta                  =  endingAngle - startingAngle;
     if (direction == COUNTERCLOCKWISE){
         if (theta <= 0){
-            theta += 2*pi;
+            theta += 2*M_PI;
         }
     }
     else {
         //CLOCKWISE
         if (theta >= 0){
-            theta -= 2*pi;
+            theta -= 2*M_PI;
         }
     }
     if ((sign(theta) != sign(direction)) || ((abs(chordHeight) < .01) && (abs(theta) < 0.5)) || (radius > 25400)) {
@@ -296,7 +296,7 @@ int   arcXYZMove(const float& X1, const float& Y1, const float& Z1, const float&
       return 1;
     }
 
-    float arcLengthMM            =  fabs(circumference * (theta / (2*pi) ));
+    float arcLengthMM            =  fabs(circumference * (theta / (2*M_PI) ));
     float zDistanceToMoveInMM    =  Z2 - Z1;
     
     //constrain the maximum feedrate, just in case the caller did not yet limit the rate 
