@@ -696,11 +696,11 @@ void G1(const String& readString, int G0orG1){
 
     if (G0orG1 == 1){
         //if this is a regular move
-        coordinatedMove(finalXPos, finalYPos, finalZPos, sys.targetFeedrate); //The XY move is performed
+        straightLineXYZMove(finalXPos, finalYPos, finalZPos, sys.targetFeedrate); //The XY move is performed
     }
     else{
         //if this is a rapid move
-        coordinatedMove(finalXPos, finalYPos, finalZPos, sysSettings.maxXYFeedRate); //move the same as a regular move, but seek fastest feed rate
+        straightLineXYZMove(finalXPos, finalYPos, finalZPos, sysSettings.maxXYFeedRate); //move the same as a regular move, but seek fastest feed rate
     }
 }
 
