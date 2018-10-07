@@ -289,11 +289,13 @@ int   arcXYZMove(const float& X1, const float& Y1, const float& Z1, const float&
       //  or the chord height of the arc between the starting and ending points
       // In either case, the gcode cut was essentially a straight line, so 
       // Replace it with a G1 cut to the endpoint
-      String gcodeSubstitution = "G1 X";
-      gcodeSubstitution = gcodeSubstitution + String(X2 / sys.mmConversionFactor, 3) + " Y" + String(Y2 / sys.mmConversionFactor, 3) + " Z" + String(Z2 / sys.mmConversionFactor, 3) + " ";
-      Serial.println("Large-radius arc replaced by straight line to improve accuracy: " + gcodeSubstitution);
-      //This call to Gcode is not respecting the hierarchy on the firmware. It could instead become a call to coordinatedMove() in the same Motion.cpp group of functions **C0depr1sm
-      G1(gcodeSubstitution, 1);
+      // String gcodeSubstitution = "G1 X";
+      // gcodeSubstitution = gcodeSubstitution + String(X2 / sys.mmConversionFactor, 3) + " Y" + String(Y2 / sys.mmConversionFactor, 3) + " Z" + String(Z2 / sys.mmConversionFactor, 3) + " ";
+      // Serial.println("Large-radius arc replaced by straight line to improve accuracy: " + gcodeSubstitution);
+      // This call to Gcode G1 is not respecting the hierarchy on the firmware. It could instead become a call to coordinatedMove() in the same Motion.cpp group of functions **C0depr1sm
+      // G1(gcodeSubstitution, 1);
+      Serial.println("Large-radius arc replaced by straight line to improve accuracy: ");
+      coordinatedMove(X2, Y2, Z2, targetMoveSpeed);
       return 1;
     }
 
