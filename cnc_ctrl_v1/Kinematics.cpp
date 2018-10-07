@@ -216,7 +216,7 @@ void  Kinematics::triangularInverse(float xTarget,float yTarget, float* aChainLe
     float Chain1AroundSprocket = 0;
     float Chain2AroundSprocket = 0;
 
-    //Calculate motor axes length to the bit
+    //Calculate motor axles chain length to the router bit
     float leftMotorDistance = sqrt(pow((leftMotorX - xTarget),2)+pow((leftMotorY - yTarget),2)); // updated to reflect new madgrizzle proposal of using X,Y coordinates of motors
     float rightMotorDistance = sqrt(pow((rightMotorX - xTarget),2)+pow((rightMotorY - yTarget),2));
 

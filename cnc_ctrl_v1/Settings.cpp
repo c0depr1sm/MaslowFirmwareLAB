@@ -158,7 +158,7 @@ void settingsSaveStepstoEEprom(){
     Saves position to EEPROM, is called frequently by execSystemRealtime
 
     Steps are saved in address 310 -> 339.  Room for expansion for additional
-    axes in the future.
+    axles in the future.
     */
     // don't run if old position data has not been incorporated yet
     if (!sys.oldSettingsFlag){
@@ -177,7 +177,7 @@ void settingsLoadStepsFromEEprom(){
     Loads position to EEPROM, is called on startup.
 
     Steps are saved in address 310 -> 339.  Room for expansion for additional
-    axes in the future.
+    axles in the future.
     */
     settingsStepsV1_t tempStepsV1;
 
@@ -401,7 +401,7 @@ byte settingsStoreGlobalSetting(const byte& parameter,const float& value){
         case 38:
               settingsSaveStepstoEEprom();
               sysSettings.chainOverSprocket = value;
-              setupAxes();
+              setupAxles();
               settingsLoadStepsFromEEprom();
               // Set initial desired position of the machine to its current position
               leftAxle.setTargetmmPosition(leftAxle.getCurrentmmPosition());

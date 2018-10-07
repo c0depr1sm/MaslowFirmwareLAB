@@ -44,7 +44,7 @@ settings_t sysSettings;
 // Global realtime executor bitflag variable for setting various alarms.
 byte systemRtExecAlarm;  
 
-// Define axes, it might be tighter to define these within the sys struct
+// Define axles, it might be tighter to define these within the sys struct
 Axle leftAxle;
 Axle rightAxle;
 Axle zAxle;
@@ -65,7 +65,7 @@ void setup(){
     //load settings from non-volatile memory
     settingsLoadFromEEprom();
     //configure motion control
-    setupAxes(); //connect according to the shield connected to the arduino controller
+    setupAxles(); //connect according to the shield connected to the arduino controller
     settingsLoadStepsFromEEprom(); // load current position last memorized
     leftAxle.setTargetmmPosition(leftAxle.getCurrentmmPosition()); //for each axle reset target position to the current position
     rightAxle.setTargetmmPosition(rightAxle.getCurrentmmPosition());

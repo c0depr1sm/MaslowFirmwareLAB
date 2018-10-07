@@ -56,7 +56,7 @@ void  calibrateChainLengths(String gcodeLine){
 
 }
 
-void   setupAxes(){
+void   setupAxles(){
     /*
     Detect the version of the Arduino shield connected, and use the appropriate pins
     This function runs before the serial port is open so the version is not printed here
@@ -406,14 +406,15 @@ void maslowDelay(unsigned long waitTimeMs) {
 void execSystemRealtime(){
     readSerialCommands();
     returnPoz();
-    systemSaveAxesPosition();
+    systemSaveAxlesPosition();
     motionDetachIfIdle();
     // check systemRtExecAlarm flag and do stuff
 }
 
-void systemSaveAxesPosition(){
+void systemSaveAxlesPosition(){
     /*
-    Save steps of axes to EEPROM if they are all detached
+    *  Save steps of each axle's encoder to EEPROM.
+    *  But only if they are all detached (to make sure they don't move.)
     */
     if (!leftAxle.attachedPWMControl() && !rightAxle.attachedPWMControl() && !zAxle.attachedPWMControl()){
         settingsSaveStepstoEEprom();

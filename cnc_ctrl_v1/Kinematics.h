@@ -97,10 +97,6 @@
             float Chain1; //left chain length 
             float Chain2; //right chain length
 
-            // Motor axes length to the bit for triangular kinematics
-            // float leftMotorDistance; //left motor's gearbox output shaft distance to sled --local variables used instead
-            // float rightMotorDistance; //right motor's gearbox output shaft distance to sled --local variables used instead
-
     };
 
     #endif

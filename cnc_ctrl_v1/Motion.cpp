@@ -114,7 +114,7 @@ int   coordinatedMove(const float& xEnd, const float& yEnd, const float& zEnd, f
     float  yStepSize            = (yDistanceToMoveInMM/finalNumberOfSteps);
     float  zStepSize            = (zDistanceToMoveInMM/finalNumberOfSteps);
     
-    //attach the axes
+    //attach the axles
     leftAxle.attachPWMControl();
     rightAxle.attachPWMControl();
     if(sysSettings.zAxleMotorized){
@@ -335,7 +335,7 @@ int   arcXYZMove(const float& X1, const float& Y1, const float& Z1, const float&
     float nextYPosition = Y1;
     float nextZPosition = Z1;
 
-    //attach the axes
+    //attach the axles
     leftAxle.attachPWMControl();
     rightAxle.attachPWMControl();
     if(sysSettings.zAxleMotorized){

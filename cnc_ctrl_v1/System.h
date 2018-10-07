@@ -68,9 +68,8 @@ typedef struct {
   // THE FOLLOWING IS USED FOR IMPORTING SETTINGS FROM FIRMWARE v1.00 AND EARLIER 
   // It can be deleted at some point
   byte oldSettingsFlag;
-  //float steps[3];             // Encoder position of axes... deleted as it is unused
-  //unsigned long lastSerialRcvd; // The millis of the last rcvd serial command, deleted as not used
 } system_t;
+
 extern system_t sys;
 extern Axle leftAxle;
 extern Axle rightAxle;
@@ -83,13 +82,13 @@ extern int LaserPowerPin;
 extern int ProbePin;
 
 void  calibrateChainLengths(String);
-void  setupAxes();
+void  setupAxles();
 float getZMaxFeedRate();
 int   getShieldPCBVersion();
 void pause();
 void maslowDelay(unsigned long);
 void execSystemRealtime();
-void systemSaveAxesPosition();
+void systemSaveAxlesPosition();
 void systemReset();
 byte systemExecuteCmdstring(String&);
 void setPWMPrescalers(int prescalerChoice);
