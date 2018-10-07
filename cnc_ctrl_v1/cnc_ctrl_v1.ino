@@ -54,10 +54,12 @@ Axle zAxle;
 Kinematics kinematics;
 
 void setup(){
+    //hardware detect
+    sys.shieldPcbVersion = getShieldPCBVersion();
     //initialize communication and report an initial wake-up sign
     Serial.begin(57600);
     Serial.print(F("PCB v1."));
-    Serial.print(getPCBVersion());
+    Serial.print(sys.shieldPcbVersion);
     if (TLE5206 == true) { Serial.print(F(" TLE5206 ")); }
     Serial.println(F(" Detected"));
     //load settings from non-volatile memory
@@ -79,7 +81,9 @@ void setup(){
     Timer1.attachInterrupt(runsOnATimer);
     #endif
     
+    //do we need this since Ground Control is the Gcode sender for the Maslow firmware??? **C0depr1sm
     Serial.println(F("Grbl v1.00"));  // Why GRBL?  Apparently because some programs are silly and look for this as an initialization command
+    
     Serial.println(F("ready"));
     reportStatusMessage(STATUS_OK);
 

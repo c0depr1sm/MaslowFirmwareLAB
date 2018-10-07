@@ -52,6 +52,7 @@ Copyright 2014-2017 Bar Smith*/
 // Storage for global system states
 // Some of this could be more appropriately moved to the gcode parser
 typedef struct {
+  int shieldPcbVersion;       // Hardware version currently installed
   bool stop;                  // Stop flag.
   byte state;                 // State tracking flag
   byte pause;                 // Pause flag.
@@ -84,7 +85,7 @@ extern int ProbePin;
 void  calibrateChainLengths(String);
 void  setupAxes();
 float getZMaxFeedRate();
-int   getPCBVersion();
+int   getShieldPCBVersion();
 void pause();
 void maslowDelay(unsigned long);
 void execSystemRealtime();

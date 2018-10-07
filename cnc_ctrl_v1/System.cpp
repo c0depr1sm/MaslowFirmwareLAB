@@ -91,9 +91,9 @@ void   setupAxes(){
     int aux9;
 
     //read the pins which indicate the PCB version
-    int pcbVersion = getPCBVersion();
+    //int pcbVersion = getShieldPCBVersion(); now sys.shieldPcbVersion initialed upon arduino setup()
 
-    if(pcbVersion == 0){
+    if(sys.shieldPcbVersion == 0){
         //Beta PCB v1.0 Detected
         //MP1 - Right Motor
         encoder1A = 18; // INPUT
@@ -124,7 +124,7 @@ void   setupAxes(){
         aux5 = 0;        // warning! this is the serial TX line on the Mega2560
         aux6 = 1;        // warning! this is the serial RX line on the Mega2560
     }
-    else if(pcbVersion == 1){
+    else if(sys.shieldPcbVersion == 1){
         //PCB v1.1 Detected
         //MP1 - Right Motor
         encoder1A = 20; // INPUT
@@ -155,7 +155,7 @@ void   setupAxes(){
         aux5 = A7;
         aux6 = A6;
     }
-    else if(pcbVersion == 2){
+    else if(sys.shieldPcbVersion == 2){
         //PCB v1.2 Detected
 
         //MP1 - Right Motor
@@ -187,7 +187,7 @@ void   setupAxes(){
         aux5 = A7;
         aux6 = A6;
     }
-    else if(pcbVersion == 3){ // TLE5206
+    else if(sys.shieldPcbVersion == 3){ // TLE5206
         //TLE5206 PCB v1.3 Detected
         //MP1 - Right Motor
         encoder1A = 20; // INPUT
@@ -244,7 +244,7 @@ void   setupAxes(){
     //  "warning: variable ‘xxxxx’ set but not used [-Wunused-but-set-variable]"
     //  for AUX pins defined but not connected
     configAuxLow(aux1, aux2, aux3, aux4, aux5, aux6);
-    if(pcbVersion == 3){ // TLE5206
+    if(sys.shieldPcbVersion == 3){ // TLE5206
       configAuxHigh(aux7, aux8, aux9);
     }
 }
@@ -267,7 +267,7 @@ void configAuxLow(int aux1, int aux2, int aux3, int aux4, int aux5, int aux6) {
 void configAuxHigh(int aux7, int aux8, int aux9) {
 }
 
-int getPCBVersion(){ //this really detect the Shield PCB version, not the mega version...
+int getShieldPCBVersion(){ //this really detect the Shield PCB version, not the mega version...
     pinMode(VERS1,INPUT_PULLUP);
     pinMode(VERS2,INPUT_PULLUP);
     pinMode(VERS3,INPUT_PULLUP);
