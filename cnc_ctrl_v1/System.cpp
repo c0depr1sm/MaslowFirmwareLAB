@@ -58,13 +58,9 @@ void  calibrateChainLengths(String gcodeLine){
 
 void   setupAxes(){
     /*
-
     Detect the version of the Arduino shield connected, and use the appropriate pins
-
     This function runs before the serial port is open so the version is not printed here
-
     */
-
     
     int encoder1A;
     int encoder1B;
@@ -225,17 +221,20 @@ void   setupAxes(){
         aux8 = 46;
         aux9 = 47;
     }
-
+    //connect axle obects to encoder counter inputs and motor drive output pins
     if(sysSettings.chainOverSprocket == 1){
         leftAxle.setup (enC, in6, in5, encoder3B, encoder3A, 'L', LOOPINTERVAL);
         rightAxle.setup(enA, in1, in2, encoder1A, encoder1B, 'R', LOOPINTERVAL);
     }
     else{
+		//swapping direction pins on motor effectively reverses the chain direction when chain exists to the sled under the sprocket
         leftAxle.setup (enC, in5, in6, encoder3A, encoder3B, 'L', LOOPINTERVAL);
         rightAxle.setup(enA, in2, in1, encoder1B, encoder1A, 'R', LOOPINTERVAL);
     }
 
     zAxle.setup    (enB, in3, in4, encoder2B, encoder2A, 'Z', LOOPINTERVAL);
+
+    //set position and speed PID values for each axle object
     leftAxle.setPIDValues(&sysSettings.KpPos, &sysSettings.KiPos, &sysSettings.KdPos, &sysSettings.propWeightPos, &sysSettings.KpV, &sysSettings.KiV, &sysSettings.KdV, &sysSettings.propWeightV);
     rightAxle.setPIDValues(&sysSettings.KpPos, &sysSettings.KiPos, &sysSettings.KdPos, &sysSettings.propWeightPos, &sysSettings.KpV, &sysSettings.KiV, &sysSettings.KdV, &sysSettings.propWeightV);
     zAxle.setPIDValues(&sysSettings.zKpPos, &sysSettings.zKiPos, &sysSettings.zKdPos, &sysSettings.zPropWeightPos, &sysSettings.zKpV, &sysSettings.zKiV, &sysSettings.zKdV, &sysSettings.zPropWeightV);
@@ -268,7 +267,7 @@ void configAuxLow(int aux1, int aux2, int aux3, int aux4, int aux5, int aux6) {
 void configAuxHigh(int aux7, int aux8, int aux9) {
 }
 
-int getPCBVersion(){
+int getPCBVersion(){ //this really detect the Shield PCB version, not the mega version...
     pinMode(VERS1,INPUT_PULLUP);
     pinMode(VERS2,INPUT_PULLUP);
     pinMode(VERS3,INPUT_PULLUP);

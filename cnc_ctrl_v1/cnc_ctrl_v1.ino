@@ -54,19 +54,22 @@ Axle zAxle;
 Kinematics kinematics;
 
 void setup(){
+    //initialize communication and report an initial wake-up sign
     Serial.begin(57600);
     Serial.print(F("PCB v1."));
     Serial.print(getPCBVersion());
     if (TLE5206 == true) { Serial.print(F(" TLE5206 ")); }
     Serial.println(F(" Detected"));
-    sys.mmConversionFactor = 1; // Default is to use milimeter: This is actually a Gcode value to milimeter conversion factor set to 1 (was inchesToMMConversion)
+    //load settings from non-volatile memory
     settingsLoadFromEEprom();
-    setupAxes();
-    settingsLoadStepsFromEEprom();
-    // Set initial desired position of the machine to its current position
-    leftAxle.setTargetmmPosition(leftAxle.getCurrentmmPosition());
+    //configure motion control
+    setupAxes(); //connect according to the shield connected to the arduino controller
+    settingsLoadStepsFromEEprom(); // load current position last memorized
+    leftAxle.setTargetmmPosition(leftAxle.getCurrentmmPosition()); //for each axle reset target position to the current position
     rightAxle.setTargetmmPosition(rightAxle.getCurrentmmPosition());
     zAxle.setTargetmmPosition(zAxle.getCurrentmmPosition());
+    //Gcode interpreter setup
+    sys.mmConversionFactor = MILLIMETERS; // Default is to use milimeter: This is actually a Gcode value to milimeter conversion factor set to 1 (was inchesToMMConversion)
     readyCommandString.reserve(INCBUFFERLENGTH);           //Allocate memory so that this string doesn't fragment the heap as it grows and shrinks
     gcodeLine.reserve(INCBUFFERLENGTH);
 

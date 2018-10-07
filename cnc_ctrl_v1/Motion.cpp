@@ -292,6 +292,7 @@ int   arcXYZMove(const float& X1, const float& Y1, const float& Z1, const float&
       String gcodeSubstitution = "G1 X";
       gcodeSubstitution = gcodeSubstitution + String(X2 / sys.mmConversionFactor, 3) + " Y" + String(Y2 / sys.mmConversionFactor, 3) + " Z" + String(Z2 / sys.mmConversionFactor, 3) + " ";
       Serial.println("Large-radius arc replaced by straight line to improve accuracy: " + gcodeSubstitution);
+      //This call to Gcode is not respecting the hierarchy on the firmware. It could instead become a call to coordinatedMove() in the same Motion.cpp group of functions **C0depr1sm
       G1(gcodeSubstitution, 1);
       return 1;
     }
