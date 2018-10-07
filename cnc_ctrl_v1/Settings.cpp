@@ -50,6 +50,7 @@ void settingsLoadFromEEprom(){
     leftAxle.setEncoderResolution(&sysSettings.encoderLRMotorStepsCountPerOutputShaftTurn);
     rightAxle.setEncoderResolution(&sysSettings.encoderLRMotorStepsCountPerOutputShaftTurn);
     // chain pitch tolerances are handled by the Kynematics calculation function. Not anymore recorded into Axle pitch. 
+    //The Kinematics also gets lRDistPerRot information through sprocketEffectiveRadius. These are linked and should be tracked together.
     leftAxle.setmmPitch(&sysSettings.lRDistPerRot);
     rightAxle.setmmPitch(&sysSettings.lRDistPerRot);
     zAxle.setmmPitch(&sysSettings.zDistPerRot);
@@ -292,7 +293,8 @@ byte settingsStoreGlobalSetting(const byte& parameter,const float& value){
               break;
         case 13:
               sysSettings.lRDistPerRot = value;
-              kinematics.sprocketEffectiveRadius = (sysSettings.lRDistPerRot)/(2.0 * 3.14159);
+              // now merged in to kinematics.recomputeGeometry() 
+              // kinematics.sprocketEffectiveRadius = (sysSettings.lRDistPerRot)/(2.0 * 3.14159);
               kinematics.recomputeGeometry();
               if (sys.oldSettingsFlag){
                 bit_false(sys.oldSettingsFlag, NEED_DIST_PER_ROT);
@@ -422,7 +424,7 @@ byte settingsStoreGlobalSetting(const byte& parameter,const float& value){
         case 42:
               sysSettings.positionErrorLimit = value;
               break;
-        case 43: // waiting to enable beamtilt angle parameter
+        case 43:
               sysSettings.topBeamTilt = value;
               kinematics.recomputeGeometry();
               break;

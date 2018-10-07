@@ -57,7 +57,9 @@ void Kinematics::recomputeGeometry(){
   
     halfWidth = sysSettings.workSurfaceWidth / 2.0;
     halfHeight = sysSettings.workSurfaceHeight / 2.0;
-
+    //add this sprocketEffectiveRadius initialisation value to make sure the sysSettings are used. C0depr1sm 2018-10-06
+    sprocketEffectiveRadius = (sysSettings.lRDistPerRot)/(2.0 * 3.14159);
+    
     // according to madgrizzle proposal to integrate into kynematics the chain tolerance and motor x,y coordinates
     leftMotorX = cos(sysSettings.topBeamTilt*DEGREE_TO_RADIAN)*sysSettings.distBetweenLRMotorsGearBoxShafts/-2.0;
     leftMotorY = (sysSettings.lRMotorsYOffsetAboveWorkSurface+sysSettings.workSurfaceHeight/2.0) - (sin(sysSettings.topBeamTilt*DEGREE_TO_RADIAN)*sysSettings.distBetweenLRMotorsGearBoxShafts/2.0);

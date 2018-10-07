@@ -81,7 +81,7 @@ typedef struct {  // I think this is about ~128 bytes in size if I counted corre
   float distPerRotLeftChainTolerance; // repurposed
   float distPerRotRightChainTolerance; // repurposed
   float positionErrorLimit;
-  float topBeamTilt;  // madgrizzle proposal to add for Holey Calibration . Note: angle is positive counter clockwise, 0 deg = pointing to the right on the X axis.
+  float topBeamTilt;  // (deg), positive counterclockwise // madgrizzle proposal to add for Holey Calibration . Note: angle is positive counter clockwise, 0 deg = pointing to the right on the X axis.
   byte eepromValidData;  // This should always be last, that way if an error
                          // happens in writing, it will not be written and we
 } settings_t;            // will know to reset the settings

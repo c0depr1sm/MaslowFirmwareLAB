@@ -30,11 +30,11 @@
         public:
             //setup functions
             Kinematics();
-            void init  ();
-            void  recomputeGeometry();
+            void init();
+            void recomputeGeometry();
             //control functions
-            void  inverse   (float xTarget,float yTarget, float* aChainLength, float* bChainLength);
-            void  forward(const float& chainALength, const float& chainBLength, float* xPos, float* yPos, float xGuess, float yGuess);
+            void inverse   (float xTarget,float yTarget, float* aChainLength, float* bChainLength);
+            void forward(const float& chainALength, const float& chainBLength, float* xPos, float* yPos, float xGuess, float yGuess);
             //set geometry
             float sprocketEffectiveRadius = 10.1;                                //sprocket radius
             // ref: madgrizzle proposal to let Kynematics handle chain tolerance and motor positions.
