@@ -95,10 +95,10 @@ void runsOnATimer(){
         movementFail = true;
     }
     #endif
-    movementUpdated = false;
     leftAxle.computePID();
     rightAxle.computePID();
     zAxle.computePID();
+    movementUpdated = false; // once each Axle was updated, then we can get the next position update
 }
 
 void loop(){

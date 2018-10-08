@@ -42,7 +42,7 @@ void Axle::setup(const int& pwmPin, const int& directionPin1, const int& directi
 void   Axle::initializePID(const unsigned long& loopInterval){
     _pidController.SetMode(AUTOMATIC);
     _pidController.SetOutputLimits(-20, 20);
-    _pidController.SetSampleTime( loopInterval / 1000);
+    _pidController.SetSampleTime( loopInterval / 1000); // LOOPINTERVAL is usec but SetSampleTime expects msec
 }
 
 void    Axle::setTargetmmPosition(const float& targetPosition){

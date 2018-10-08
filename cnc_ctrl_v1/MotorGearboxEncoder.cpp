@@ -56,7 +56,7 @@ void   MotorGearboxEncoder::initializePID(const unsigned long& loopInterval){
     //setup positive PID controller
     _PIDController.SetMode(AUTOMATIC);
     _PIDController.SetOutputLimits(-255, 255);
-    _PIDController.SetSampleTime(loopInterval / 1000);
+    _PIDController.SetSampleTime(loopInterval / 1000); // LOOPINTERVAL is usec but SetSampleTime expects msec
 }
 
 void  MotorGearboxEncoder::computePID(){
