@@ -102,11 +102,11 @@ void   Axle::computePID(){
     
     _pidRotationCountInput      =  motorGearboxEncoder.encoder.getCurrentCount()/ *_encoderStepsCountPerAxleRotation;
     
-    if (_pidController.Compute()){
-        // Only write output if the PID calculation was performed
-        motorGearboxEncoder.setTargetSpeed(_pidOutput);
-    }
-    
+   // the PID.Compute() function was modified to always return true because the Axle.ComputePID() is called in the timer loop.
+   // So we clean up here... ** C0depr1sm
+    _pidController.Compute();
+    motorGearboxEncoder.setTargetSpeed(_pidOutput);
+
     motorGearboxEncoder.computePID();
     
 }
