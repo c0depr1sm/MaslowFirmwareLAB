@@ -211,10 +211,10 @@ void  Kinematics::triangularInverse(float xTarget,float yTarget, float* aChainLe
     _verifyValidTarget(&xTarget, &yTarget);
 
     //Set up variables
-    float Chain1Angle = 0;
-    float Chain2Angle = 0;
-    float Chain1AroundSprocket = 0;
-    float Chain2AroundSprocket = 0;
+    float leftChainAngle = 0;
+    float rightChainAngle = 0;
+    float leftChainAroundSprocket = 0;
+    float rightChainAroundSprocket = 0;
 
     //Calculate motor axles chain length to the router bit
     float leftMotorDistance = sqrt(pow((leftMotorX - xTarget),2)+pow((leftMotorY - yTarget),2)); // updated to reflect new madgrizzle proposal of using X,Y coordinates of motors
@@ -224,38 +224,38 @@ void  Kinematics::triangularInverse(float xTarget,float yTarget, float* aChainLe
     if(sysSettings.chainOverSprocket == 1){
 		// Thanks to madgrizle pointing out that 
 		//            this part is the chain not touching the sprocket + this part is the chain wrapped around the sprocket(held at tooth pitch distance).
-        Chain1Angle = asin((leftMotorY - yTarget)/leftMotorDistance) + asin(sprocketEffectiveRadius/leftMotorDistance); // removing chain tolerance and , updated to reflect new way of using X,Y coordinates of motors
-        Chain2Angle = asin((rightMotorY - yTarget)/rightMotorDistance) + asin(sprocketEffectiveRadius/rightMotorDistance);
+        leftChainAngle  = asin((leftMotorY  - yTarget)/leftMotorDistance)  + asin(sprocketEffectiveRadius/leftMotorDistance); // removing chain tolerance and , updated to reflect new way of using X,Y coordinates of motors
+        rightChainAngle = asin((rightMotorY - yTarget)/rightMotorDistance) + asin(sprocketEffectiveRadius/rightMotorDistance);
 
-        Chain1AroundSprocket = sprocketEffectiveRadius * Chain1Angle;
-        Chain2AroundSprocket = sprocketEffectiveRadius * Chain2Angle;
+        leftChainAroundSprocket  = sprocketEffectiveRadius * leftChainAngle;
+        rightChainAroundSprocket = sprocketEffectiveRadius * rightChainAngle;
     }
     else{
-        Chain1Angle = asin((leftMotorY - yTarget)/leftMotorDistance) - asin(sprocketEffectiveRadius/leftMotorDistance); // removing chain tolerance and , updated to reflect new way of using X,Y coordinates of motors
-        Chain2Angle = asin((rightMotorY - yTarget)/rightMotorDistance) - asin(sprocketEffectiveRadius/rightMotorDistance);
+        leftChainAngle  = asin((leftMotorY  - yTarget)/leftMotorDistance)  - asin(sprocketEffectiveRadius/leftMotorDistance); // removing chain tolerance and , updated to reflect new way of using X,Y coordinates of motors
+        rightChainAngle = asin((rightMotorY - yTarget)/rightMotorDistance) - asin(sprocketEffectiveRadius/rightMotorDistance);
 
-        Chain1AroundSprocket = sprocketEffectiveRadius * (M_PI - Chain1Angle); //replaced numerical with value defined in avr-lib.c (see http://www.nongnu.org/avr-libc/user-manual/group__avr__math.html)
-        Chain2AroundSprocket = sprocketEffectiveRadius * (M_PI - Chain2Angle); //replaced numerical with value defined in avr-lib.c (see http://www.nongnu.org/avr-libc/user-manual/group__avr__math.html)
+        leftChainAroundSprocket  = sprocketEffectiveRadius * (M_PI - leftChainAngle); //replaced numerical with value defined in avr-lib.c (see http://www.nongnu.org/avr-libc/user-manual/group__avr__math.html)
+        rightChainAroundSprocket = sprocketEffectiveRadius * (M_PI - rightChainAngle); //replaced numerical with value defined in avr-lib.c (see http://www.nongnu.org/avr-libc/user-manual/group__avr__math.html)
     }
 
     //Calculate the straight chain length from the sprocket to the bit
-    float Chain1Straight = sqrt(pow(leftMotorDistance,2)-pow(sprocketEffectiveRadius,2)); // will apply chain tolerance after sag correction... because Ground control computes a correction without chain tolerance? (ask madgrizzle 
-    float Chain2Straight = sqrt(pow(rightMotorDistance,2)-pow(sprocketEffectiveRadius,2));
+    float leftChainStraightSection = sqrt(pow(leftMotorDistance,2)-pow(sprocketEffectiveRadius,2)); // will apply chain tolerance after sag correction... because Ground control computes a correction without chain tolerance? (ask madgrizzle 
+    float rightChainStraightSection = sqrt(pow(rightMotorDistance,2)-pow(sprocketEffectiveRadius,2));
 
     //Correct the straight chain lengths to account for chain sag
-    Chain1Straight *= (1 + ((sysSettings.chainSagCorrectionFactor / 1000000000000) * pow(cos(Chain1Angle),2) * pow(Chain1Straight,2) * pow((tan(Chain2Angle) * cos(Chain1Angle)) + sin(Chain1Angle),2)));
-    Chain2Straight *= (1 + ((sysSettings.chainSagCorrectionFactor / 1000000000000) * pow(cos(Chain2Angle),2) * pow(Chain2Straight,2) * pow((tan(Chain1Angle) * cos(Chain2Angle)) + sin(Chain2Angle),2)));
+    leftChainStraightSection  *= (1 + ((sysSettings.chainSagCorrectionFactor / 1000000000000) * pow(cos(leftChainAngle),2)  * pow(leftChainStraightSection,2)  * pow((tan(rightChainAngle) * cos(leftChainAngle))  + sin(leftChainAngle),2)));
+    rightChainStraightSection *= (1 + ((sysSettings.chainSagCorrectionFactor / 1000000000000) * pow(cos(rightChainAngle),2) * pow(rightChainStraightSection,2) * pow((tan(leftChainAngle)  * cos(rightChainAngle)) + sin(rightChainAngle),2)));
 
     //Calculate total chain lengths accounting for sprocket geometry and chain sag
-    float Chain1Extent = Chain1AroundSprocket + Chain1Straight * leftChainTolerance;  // madgrizzle point out: "added the chain tolerance here.. this should be <=  1"
-    float Chain2Extent = Chain2AroundSprocket + Chain2Straight * rightChainTolerance;
+    float leftChainReachBeyondSprocketTop = leftChainAroundSprocket + leftChainStraightSection * leftChainTolerance;  // madgrizzle point out: "added the chain tolerance here.. this should be <=  1"
+    float rightChainReachBeyondSprocketTop = rightChainAroundSprocket + rightChainStraightSection * rightChainTolerance;
 
     //Subtract of the virtual length which is added to the chain by the rotation mechanism
-    Chain1Extent = Chain1Extent - sysSettings.sledRotationDiskRadius;
-    Chain2Extent = Chain2Extent - sysSettings.sledRotationDiskRadius;
+    leftChainReachBeyondSprocketTop = leftChainReachBeyondSprocketTop - sysSettings.sledRotationDiskRadius;
+    rightChainReachBeyondSprocketTop = rightChainReachBeyondSprocketTop - sysSettings.sledRotationDiskRadius;
     
-    *aChainLength = Chain1Extent;
-    *bChainLength = Chain2Extent;
+    *aChainLength = leftChainReachBeyondSprocketTop;
+    *bChainLength = rightChainReachBeyondSprocketTop;
 }
 
 void  Kinematics::forward(const float& chainALength, const float& chainBLength, float* xPos, float* yPos, float xGuess, float yGuess){

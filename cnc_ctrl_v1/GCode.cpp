@@ -108,7 +108,7 @@ float extractGcodeValue(const String& readString, char target, const float& defa
 
     numberAsFloat   =  numberAsString.toFloat();
 
-    if (begin == -1){ //if the character was not found, return error
+    if (begin == -1){ //if the character was not found, return default
         return defaultReturn;
     }
 
