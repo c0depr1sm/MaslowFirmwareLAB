@@ -23,7 +23,7 @@ bool TLE5206;
 
 // extern values using AUX pins defined in  configAuxLow() and configAuxHigh()
 int SpindlePowerControlPin;  // output for controlling spindle power
-int ProbePin;                // use this input for zeroing zAxis with G38.2 gcode
+int ProbePin;                // use this input for detecting knowwn Router Bit depth position with G38.2 gcode
 int LaserPowerPin;           // Use this output to turn on and off a laser diode
 
 
@@ -36,35 +36,31 @@ void  calibrateChainLengths(String gcodeLine){
     if (extractGcodeValue(gcodeLine, 'L', 0)){
         //measure out the left chain
         Serial.println(F("Measuring out left chain"));
-        singleAxisMove(&leftAxis, sysSettings.originalChainLength, (sysSettings.maxFeed * .9));
+        singleAxleMove(&leftAxle, sysSettings.originalChainLength, (sysSettings.maxXYFeedRate * .9));
 
-        Serial.print(leftAxis.read());
+        Serial.print(leftAxle.getCurrentmmPosition());
         Serial.println(F("mm"));
 
-        leftAxis.detach();
+        leftAxle.detachPWMControl();
     }
     else if(extractGcodeValue(gcodeLine, 'R', 0)){
         //measure out the right chain
         Serial.println(F("Measuring out right chain"));
-        singleAxisMove(&rightAxis, sysSettings.originalChainLength, (sysSettings.maxFeed * .9));
+        singleAxleMove(&rightAxle, sysSettings.originalChainLength, (sysSettings.maxXYFeedRate * .9));
 
-        Serial.print(rightAxis.read());
+        Serial.print(rightAxle.getCurrentmmPosition());
         Serial.println(F("mm"));
 
-        rightAxis.detach();
+        rightAxle.detachPWMControl();
     }
 
 }
 
-void   setupAxes(){
+void   setupAxles(){
     /*
-
     Detect the version of the Arduino shield connected, and use the appropriate pins
-
     This function runs before the serial port is open so the version is not printed here
-
     */
-
     
     int encoder1A;
     int encoder1B;
@@ -95,9 +91,9 @@ void   setupAxes(){
     int aux9;
 
     //read the pins which indicate the PCB version
-    int pcbVersion = getPCBVersion();
+    //int pcbVersion = getShieldPCBVersion(); now sys.shieldPcbVersion initialed upon arduino setup()
 
-    if(pcbVersion == 0){
+    if(sys.shieldPcbVersion == 0){
         //Beta PCB v1.0 Detected
         //MP1 - Right Motor
         encoder1A = 18; // INPUT
@@ -106,7 +102,7 @@ void   setupAxes(){
         in2 = 8;        // OUTPUT
         enA = 6;        // PWM
 
-        //MP2 - Z-axis
+        //MP2 - Z-axle
         encoder2A = 2;  // INPUT
         encoder2B = 3;  // INPUT
         in3 = 11;       // OUTPUT
@@ -128,7 +124,7 @@ void   setupAxes(){
         aux5 = 0;        // warning! this is the serial TX line on the Mega2560
         aux6 = 1;        // warning! this is the serial RX line on the Mega2560
     }
-    else if(pcbVersion == 1){
+    else if(sys.shieldPcbVersion == 1){
         //PCB v1.1 Detected
         //MP1 - Right Motor
         encoder1A = 20; // INPUT
@@ -137,7 +133,7 @@ void   setupAxes(){
         in2 = 4;        // OUTPUT
         enA = 5;        // PWM
 
-        //MP2 - Z-axis
+        //MP2 - Z-axle
         encoder2A = 19; // INPUT
         encoder2B = 18; // INPUT
         in3 = 9;        // OUTPUT
@@ -159,7 +155,7 @@ void   setupAxes(){
         aux5 = A7;
         aux6 = A6;
     }
-    else if(pcbVersion == 2){
+    else if(sys.shieldPcbVersion == 2){
         //PCB v1.2 Detected
 
         //MP1 - Right Motor
@@ -169,7 +165,7 @@ void   setupAxes(){
         in2 = 6;         // OUTPUT
         enA = 5;         // PWM
 
-        //MP2 - Z-axis
+        //MP2 - Z-axle
         encoder2A = 19;  // INPUT
         encoder2B = 18;  // INPUT
         in3 = 7;         // OUTPUT
@@ -191,7 +187,7 @@ void   setupAxes(){
         aux5 = A7;
         aux6 = A6;
     }
-    else if(pcbVersion == 3){ // TLE5206
+    else if(sys.shieldPcbVersion == 3){ // TLE5206
         //TLE5206 PCB v1.3 Detected
         //MP1 - Right Motor
         encoder1A = 20; // INPUT
@@ -200,7 +196,7 @@ void   setupAxes(){
         in2 = 4;        // OUTPUT
         enA = 5;        // errorFlag
 
-        //MP2 - Z-axis
+        //MP2 - Z-axle
         encoder2A = 19; // INPUT
         encoder2B = 18; // INPUT
         in3 = 7;        // OUTPUT
@@ -225,35 +221,44 @@ void   setupAxes(){
         aux8 = 46;
         aux9 = 47;
     }
-
+    //connect axle obects to encoder counter inputs and motor drive output pins
     if(sysSettings.chainOverSprocket == 1){
-        leftAxis.setup (enC, in6, in5, encoder3B, encoder3A, 'L', LOOPINTERVAL);
-        rightAxis.setup(enA, in1, in2, encoder1A, encoder1B, 'R', LOOPINTERVAL);
+        leftAxle.setup (enC, in6, in5, encoder3B, encoder3A, 'L', LOOPINTERVAL);
+        rightAxle.setup(enA, in1, in2, encoder1A, encoder1B, 'R', LOOPINTERVAL);
     }
     else{
-        leftAxis.setup (enC, in5, in6, encoder3A, encoder3B, 'L', LOOPINTERVAL);
-        rightAxis.setup(enA, in2, in1, encoder1B, encoder1A, 'R', LOOPINTERVAL);
+		//swapping direction pins on motor effectively reverses the chain direction when chain exists to the sled under the sprocket
+        leftAxle.setup (enC, in5, in6, encoder3A, encoder3B, 'L', LOOPINTERVAL);
+        rightAxle.setup(enA, in2, in1, encoder1B, encoder1A, 'R', LOOPINTERVAL);
     }
 
-    zAxis.setup    (enB, in3, in4, encoder2B, encoder2A, 'Z', LOOPINTERVAL);
-    leftAxis.setPIDValues(&sysSettings.KpPos, &sysSettings.KiPos, &sysSettings.KdPos, &sysSettings.propWeightPos, &sysSettings.KpV, &sysSettings.KiV, &sysSettings.KdV, &sysSettings.propWeightV);
-    rightAxis.setPIDValues(&sysSettings.KpPos, &sysSettings.KiPos, &sysSettings.KdPos, &sysSettings.propWeightPos, &sysSettings.KpV, &sysSettings.KiV, &sysSettings.KdV, &sysSettings.propWeightV);
-    zAxis.setPIDValues(&sysSettings.zKpPos, &sysSettings.zKiPos, &sysSettings.zKdPos, &sysSettings.zPropWeightPos, &sysSettings.zKpV, &sysSettings.zKiV, &sysSettings.zKdV, &sysSettings.zPropWeightV);
+    zAxle.setup    (enB, in3, in4, encoder2B, encoder2A, 'Z', LOOPINTERVAL);
+
+    //set position and speed PID values for each axle object
+    leftAxle.setPIDValues(&sysSettings.KpPos, &sysSettings.KiPos, &sysSettings.KdPos, &sysSettings.propWeightPos, &sysSettings.KpV, &sysSettings.KiV, &sysSettings.KdV, &sysSettings.propWeightV);
+    rightAxle.setPIDValues(&sysSettings.KpPos, &sysSettings.KiPos, &sysSettings.KdPos, &sysSettings.propWeightPos, &sysSettings.KpV, &sysSettings.KiV, &sysSettings.KdV, &sysSettings.propWeightV);
+    zAxle.setPIDValues(&sysSettings.zKpPos, &sysSettings.zKiPos, &sysSettings.zKdPos, &sysSettings.zPropWeightPos, &sysSettings.zKpV, &sysSettings.zKiV, &sysSettings.zKdV, &sysSettings.zPropWeightV);
 
     // implement the AUXx values that are 'used'. This accomplishes setting their values at runtime.
     // Using a separate function is a compiler work-around to avoid
     //  "warning: variable ‘xxxxx’ set but not used [-Wunused-but-set-variable]"
     //  for AUX pins defined but not connected
     configAuxLow(aux1, aux2, aux3, aux4, aux5, aux6);
-    if(pcbVersion == 3){ // TLE5206
+    if(sys.shieldPcbVersion == 3){ // TLE5206
       configAuxHigh(aux7, aux8, aux9);
     }
+}
+
+// Calculate resulting z axle max feed rate based on system setttings
+float getZMaxFeedRate(){
+	float tempRate = sysSettings.zScrewMaxRPM * abs(zAxle.getmmPitch());
+	return tempRate;
 }
 
 // Assign AUX pins to extern variables used by functions like Spindle and Probe
 void configAuxLow(int aux1, int aux2, int aux3, int aux4, int aux5, int aux6) {
   SpindlePowerControlPin = aux1;   // output for controlling spindle power
-  ProbePin = aux4;                 // use this input for zeroing zAxis with G38.2 gcode
+  ProbePin = aux4;                 // use this input for detecting a Router Bit known depth position with G38.2 gcode
   LaserPowerPin = aux2;            // output for controlling a laser diode
   pinMode(LaserPowerPin, OUTPUT);
   digitalWrite(LaserPowerPin, LOW);
@@ -262,7 +267,7 @@ void configAuxLow(int aux1, int aux2, int aux3, int aux4, int aux5, int aux6) {
 void configAuxHigh(int aux7, int aux8, int aux9) {
 }
 
-int getPCBVersion(){
+int getShieldPCBVersion(){ //this really detect the Shield PCB version, not the mega version...
     pinMode(VERS1,INPUT_PULLUP);
     pinMode(VERS2,INPUT_PULLUP);
     pinMode(VERS3,INPUT_PULLUP);
@@ -401,16 +406,17 @@ void maslowDelay(unsigned long waitTimeMs) {
 void execSystemRealtime(){
     readSerialCommands();
     returnPoz();
-    systemSaveAxesPosition();
+    systemSaveAxlesPosition();
     motionDetachIfIdle();
     // check systemRtExecAlarm flag and do stuff
 }
 
-void systemSaveAxesPosition(){
+void systemSaveAxlesPosition(){
     /*
-    Save steps of axes to EEPROM if they are all detached
+    *  Save steps of each axle's encoder to EEPROM.
+    *  But only if they are all detached (to make sure they don't move.)
     */
-    if (!leftAxis.attached() && !rightAxis.attached() && !zAxis.attached()){
+    if (!leftAxle.attachedPWMControl() && !rightAxle.attachedPWMControl() && !zAxle.attachedPWMControl()){
         settingsSaveStepstoEEprom();
     }
 }
@@ -419,9 +425,9 @@ void systemReset(){
     /*
     Stops everything and resets the arduino
     */
-    leftAxis.detach();
-    rightAxis.detach();
-    zAxis.detach();
+    leftAxle.detachPWMControl();
+    rightAxle.detachPWMControl();
+    zAxle.detachPWMControl();
     setSpindlePower(false);
     // Reruns the initial setup function and calls stop to re-init state
     sys.stop = true;
@@ -478,7 +484,7 @@ byte systemExecuteCmdstring(String& cmdString){
               //     }
               //   } // Otherwise, no effect.
               //   break;
-            }
+            } 
             break;
           //case 'J' : break;  // Jogging methods
               // TODO: Here jogging can be placed for execution as a seperate subprogram. It does not need to be

@@ -43,7 +43,7 @@ void MotorGearboxEncoder::setup(const int& pwmPin, const int& directionPin1, con
     
 }
 
-void  MotorGearboxEncoder::write(const float& speed){
+void  MotorGearboxEncoder::setTargetSpeed(const float& speed){
     /*
     Command the motor to turn at the given speed. Should be RPM is PWM right now.
     */
@@ -56,7 +56,7 @@ void   MotorGearboxEncoder::initializePID(const unsigned long& loopInterval){
     //setup positive PID controller
     _PIDController.SetMode(AUTOMATIC);
     _PIDController.SetOutputLimits(-255, 255);
-    _PIDController.SetSampleTime(loopInterval / 1000);
+    _PIDController.SetSampleTime(loopInterval / 1000); // LOOPINTERVAL is usec but SetSampleTime expects msec
 }
 
 void  MotorGearboxEncoder::computePID(){
@@ -125,7 +125,7 @@ void MotorGearboxEncoder::setEncoderResolution(float resolution){
     
     */
     
-    _encoderStepsToRPMScaleFactor = 60000000.0/resolution; //6*10^7 us per minute divided by 8113.7 steps per revolution
+    _encoderStepsUsecDurationForOneRPM_ScaleFactor = 60000000.0/resolution; //usec per step for 1RMP -> 6*10^7 us per minute divided by 8113.7 steps per revolution
     
 }
 
@@ -138,7 +138,7 @@ float MotorGearboxEncoder::computeSpeed(){
     
     */
     
-    float currentPosition = encoder.read();
+    float currentPosition = encoder.getCurrentCount();
     float currentMicros = micros();
     
     float distMoved   =  currentPosition - _lastPosition;
@@ -153,7 +153,7 @@ float MotorGearboxEncoder::computeSpeed(){
         
         unsigned long timeElapsed =  currentMicros - _lastTimeStamp;
         //Compute the speed in RPM
-        _RPM = (_encoderStepsToRPMScaleFactor*distMoved)/float(timeElapsed);
+        _RPM = (_encoderStepsUsecDurationForOneRPM_ScaleFactor*distMoved)/float(timeElapsed);
     
     }
     else {
@@ -171,7 +171,7 @@ float MotorGearboxEncoder::computeSpeed(){
 
         _RPM = 0 ;
         if (elapsedTime != 0){
-          _RPM = _encoderStepsToRPMScaleFactor / elapsedTime;
+          _RPM = _encoderStepsUsecDurationForOneRPM_ScaleFactor / elapsedTime;
         }
     }
     _RPM = _RPM * -1.0;
@@ -183,7 +183,7 @@ float MotorGearboxEncoder::computeSpeed(){
     return _RPM;
 }
 
-float MotorGearboxEncoder::cachedSpeed(){
+float MotorGearboxEncoder::getCachedSpeed(){
     /*
     Returns the last result of computeSpeed
     */
@@ -197,7 +197,7 @@ void MotorGearboxEncoder::setName(char *newName){
     _motorName = newName;
 }
 
-char MotorGearboxEncoder::name(){
+char MotorGearboxEncoder::getName(){
     /*
     Get the name for the object
     */

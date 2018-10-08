@@ -44,29 +44,34 @@ settings_t sysSettings;
 // Global realtime executor bitflag variable for setting various alarms.
 byte systemRtExecAlarm;  
 
-// Define axes, it might be tighter to define these within the sys struct
-Axis leftAxis;
-Axis rightAxis;
-Axis zAxis;
+// Define axles, it might be tighter to define these within the sys struct
+Axle leftAxle;
+Axle rightAxle;
+Axle zAxle;
 
 // Define kinematics, is it necessary for this to be a class?  Is this really
 // going to be reused?
 Kinematics kinematics;
 
 void setup(){
+    //hardware detect
+    sys.shieldPcbVersion = getShieldPCBVersion();
+    //initialize communication and report an initial wake-up sign
     Serial.begin(57600);
     Serial.print(F("PCB v1."));
-    Serial.print(getPCBVersion());
+    Serial.print(sys.shieldPcbVersion);
     if (TLE5206 == true) { Serial.print(F(" TLE5206 ")); }
     Serial.println(F(" Detected"));
-    sys.inchesToMMConversion = 1;
+    //load settings from non-volatile memory
     settingsLoadFromEEprom();
-    setupAxes();
-    settingsLoadStepsFromEEprom();
-    // Set initial desired position of the machine to its current position
-    leftAxis.write(leftAxis.read());
-    rightAxis.write(rightAxis.read());
-    zAxis.write(zAxis.read());
+    //configure motion control
+    setupAxles(); //connect according to the shield connected to the arduino controller
+    settingsLoadStepsFromEEprom(); // load current position last memorized
+    leftAxle.setTargetmmPosition(leftAxle.getCurrentmmPosition()); //for each axle reset target position to the current position
+    rightAxle.setTargetmmPosition(rightAxle.getCurrentmmPosition());
+    zAxle.setTargetmmPosition(zAxle.getCurrentmmPosition());
+    //Gcode interpreter setup
+    sys.mmConversionFactor = MILLIMETERS; // Default is to use milimeter: This is actually a Gcode value to milimeter conversion factor set to 1 (was inchesToMMConversion)
     readyCommandString.reserve(INCBUFFERLENGTH);           //Allocate memory so that this string doesn't fragment the heap as it grows and shrinks
     gcodeLine.reserve(INCBUFFERLENGTH);
 
@@ -76,7 +81,9 @@ void setup(){
     Timer1.attachInterrupt(runsOnATimer);
     #endif
     
+    //do we need this since Ground Control is the Gcode sender for the Maslow firmware??? **C0depr1sm
     Serial.println(F("Grbl v1.00"));  // Why GRBL?  Apparently because some programs are silly and look for this as an initialization command
+    
     Serial.println(F("ready"));
     reportStatusMessage(STATUS_OK);
 
@@ -88,10 +95,10 @@ void runsOnATimer(){
         movementFail = true;
     }
     #endif
-    movementUpdated = false;
-    leftAxis.computePID();
-    rightAxis.computePID();
-    zAxis.computePID();
+    leftAxle.computePID();
+    rightAxle.computePID();
+    zAxle.computePID();
+    movementUpdated = false; // once each Axle was updated, then we can get the next position update
 }
 
 void loop(){

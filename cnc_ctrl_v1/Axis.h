@@ -15,56 +15,58 @@
     
     Copyright 2014-2017 Bar Smith*/ 
     
-    #ifndef Axis_h
-    #define Axis_h
+    #ifndef Axle_h
+    #define Axle_h
 
-    class Axis{
+    class Axle{
         public:
-            void   setup(const int& pwmPin, const int& directionPin1, const int& directionPin2, const int& encoderPin1, const int& encoderPin2, const char& axisName, const unsigned long& loopInterval);
-            void   write(const float& targetPosition);
-            float  read();
-            void   set(const float& newAxisPosition);
-            void   setSteps(const long& steps);
-            int    updatePositionFromEncoder();
+            MotorGearboxEncoder    motorGearboxEncoder;
+            // setup functions
+            void   setup(const int& pwmPin, const int& directionPin1, const int& directionPin2, const int& encoderPin1, const int& encoderPin2, const char& axlesName, const unsigned long& loopInterval);
+            void   setPIDValues(float* Kp, float* Ki, float* Kd, float* propWeight, float* KpV, float* KiV, float* KdV, float* propWeightV);
             void   initializePID(const unsigned long& loopInterval);
-            int    detach();
-            int    attach();
-            void   detachIfIdle();
-            void   endMove(const float& finalTarget);
+            void   setPIDAggressiveness(float aggressiveness);
+            void   setEncoderResolution(float* newResolution);
+            void   setCurrentEncoderCount(const long& stepsCount);
+            void   setmmPitch(float* newPitch);
+            void   setCurrentmmPosition(const float& newAxlePosition);
+            int    updatePositionFromEncoder();
+            // control functions
+            void   setTargetmmPosition(const float& targetPosition);
+            float  getCurrentmmPosition();
+            void   endMoveAtmmPosition(const float& finalTarget);
             void   stop();
-            float  target();
-            float  error();
-            float  setpoint();
+            int    attachPWMControl();
+            int    detachPWMControl();
+            void   detachPWMControlIfIdle();
             void   computePID();
             void   disablePositionPID();
             void   enablePositionPID();
-            void   setPIDAggressiveness(float aggressiveness);
+            //inspection functions
+            float  getPIDmmPositionError();
+            float  getPIDmmPositionsetpoint();
+            String getPIDString();
+            double getPIDmmPositionInput();
+            double getPIDOutput();
+            long   getCurrentEncoderCount();
+            float  getmmPitch();
+            bool   attachedPWMControl();
             void   test();
-            void   changePitch(float* newPitch);
-            float  getPitch();
-            void   changeEncoderResolution(float* newResolution);
-            bool   attached();
-            MotorGearboxEncoder    motorGearboxEncoder;
-            void   setPIDValues(float* Kp, float* Ki, float* Kd, float* propWeight, float* KpV, float* KiV, float* KdV, float* propWeightV);
-            String     getPIDString();
-            double     pidInput();
-            double     pidOutput();
-            long  steps();
             
         private:
             int        _PWMread(int pin);
             void       _writeFloat(const unsigned int& addr, const float& x);
             float      _readFloat(const unsigned int& addr);
             unsigned long   _timeLastMoved;
-            volatile double _pidSetpoint;
-            volatile double _pidInput; 
+            volatile double _pidRotationCountSetPoint;
+            volatile double _pidRotationCountInput; 
             volatile double _pidOutput;
             float      *_Kp, *_Ki, *_Kd;
             PID        _pidController;
             float      *_mmPerRotation;
-            float      *_encoderSteps;
-            bool       _disableAxisForTesting = false;
-            char       _axisName;
+            float      *_encoderStepsCountPerAxleRotation;
+            bool       _disableAxleForTesting = false;
+            char       _axleName;
     };
 
     #endif

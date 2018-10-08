@@ -23,8 +23,9 @@ Copyright 2014-2017 Bar Smith*/
 #define BACKWARD         -1
 #define CLOCKWISE        -1
 #define COUNTERCLOCKWISE  1
-#define MILLIMETERS 1
-#define INCHES      25.4
+#define MILLIMETERS       1
+#define INCHES_TO_MLLIMETERS      25.4
+#define DEGREE_TO_RADIAN  0.0174532925199433 // the trigonometric functions like COS use RADIAN units. but the firmware handles DEGREE parameters for the machine
 
 // Define various pause bits
 #define PAUSE_FLAG_USER_PAUSE bit(0)  // a pause triggered within the code that must be cleared by user using the ~ command
@@ -51,27 +52,28 @@ Copyright 2014-2017 Bar Smith*/
 // Storage for global system states
 // Some of this could be more appropriately moved to the gcode parser
 typedef struct {
+  int shieldPcbVersion;       // Hardware version currently installed
   bool stop;                  // Stop flag.
   byte state;                 // State tracking flag
   byte pause;                 // Pause flag.
-  float xPosition;            // Cartessian position of XY axes
-  float yPosition;            // Cached because calculating position is intensive
-  float steps[3];             // Encoder position of axes
+  float estimatedBitTipXPosition; // bit tip XY cartesian position estimation
+  float estimatedBitTipYPosition; // Cached because calculating position is intensive
+  //Gcode decoding states
+  float mmConversionFactor; //Formerly misnamed inchesToMMConversion. Used to track whether to convert from inches, can probably be done in a way that doesn't require RAM
   bool  useRelativeUnits;     //
-  unsigned long lastSerialRcvd; // The millis of the last rcvd serial command, used by watchdo
+  float targetFeedrate;       //Formerly feedRate, really designates the current move target feedrate of the machine in mm/min
   int   lastGCommand;         //Stores the value of the last command run eg: G01 -> 1
   int   lastTool;             //Stores the value of the last tool number eg: T4 -> 4
   int   nextTool;             //Stores the value of the next tool number eg: T4 -> 4
-  float inchesToMMConversion; //Used to track whether to convert from inches, can probably be done in a way that doesn't require RAM
-  float feedrate;             //The feedrate of the machine in mm/min
   // THE FOLLOWING IS USED FOR IMPORTING SETTINGS FROM FIRMWARE v1.00 AND EARLIER 
   // It can be deleted at some point
   byte oldSettingsFlag;
 } system_t;
+
 extern system_t sys;
-extern Axis leftAxis;
-extern Axis rightAxis;
-extern Axis zAxis;
+extern Axle leftAxle;
+extern Axle rightAxle;
+extern Axle zAxle;
 extern RingBuffer incSerialBuffer;
 extern Kinematics kinematics;
 extern byte systemRtExecAlarm;
@@ -80,12 +82,13 @@ extern int LaserPowerPin;
 extern int ProbePin;
 
 void  calibrateChainLengths(String);
-void  setupAxes();
-int   getPCBVersion();
+void  setupAxles();
+float getZMaxFeedRate();
+int   getShieldPCBVersion();
 void pause();
 void maslowDelay(unsigned long);
 void execSystemRealtime();
-void systemSaveAxesPosition();
+void systemSaveAxlesPosition();
 void systemReset();
 byte systemExecuteCmdstring(String&);
 void setPWMPrescalers(int prescalerChoice);

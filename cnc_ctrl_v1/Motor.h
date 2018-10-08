@@ -18,7 +18,7 @@
     #ifndef Motor_h
     #define Motor_h
 
-    struct LinSegment{
+    struct LinSegment{ // this is unused and should be removed
         float slope  = 1;
         float intercept = 0;
         //The bounds are strict, so if the bounds are 0,1 .9 would work
@@ -32,20 +32,20 @@
     class Motor{
         public:
             Motor();
-            void attach();
+            void attachPWMControl();
             int  setupMotor(const int& pwmPin, const int& pin1, const int& pin2);
-            void detach();
+            void detachPWMControl();
             void write(int speed, bool force = false);
             int  lastSpeed();
-            void additiveWrite(int speed);
-            int  attached();
+            void additiveWrite(int speed); //This is in fact integrating the PID command. 
+            int  attachedPWMControl();
             void  directWrite(int voltage);
         private:
             int _pwmPin;
             int _pin1;
             int _pin2;
-            bool _attachedState = false;
-            LinSegment _linSegments[4];
+            bool _isPWMControlAttachedState = false;
+            LinSegment _linSegments[4]; // this is unused
             int _lastSpeed  = 0;
             
     };

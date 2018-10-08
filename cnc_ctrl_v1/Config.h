@@ -33,7 +33,7 @@
                            // simulator. Normally, you would not define this directly, but
                            // use PlatformIO to build the simavr environment.
 
-#define LOOPINTERVAL 10000 // What is the frequency of the PID loop in microseconds
+#define LOOPINTERVAL 10000 // The update period of the PID loop in microseconds
 
 // Define version detect pins
 #define VERS1 22

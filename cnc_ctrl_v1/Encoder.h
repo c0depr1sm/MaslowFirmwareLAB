@@ -101,7 +101,7 @@ public:
 
 
 #ifdef ENCODER_USE_INTERRUPTS
-	inline int32_t read() {
+	inline int32_t getCurrentCount() {
 		if (interrupts_in_use < 2) {
 			noInterrupts();
 			update(&encoder);
@@ -134,17 +134,17 @@ public:
 		interrupts();
 		return ret;
 	}
-	inline void write(int32_t p) {
+	inline void setCurrentCount(int32_t p) {
 		noInterrupts();
 		encoder.position = p;
 		interrupts();
 	}
 #else
-	inline int32_t read() {
+	inline int32_t getCurrentCount() {
 		update(&encoder);
 		return encoder.position;
 	}
-	inline void write(int32_t p) {
+	inline void setCurrentCount(int32_t p) {
 		encoder.position = p;
 	}
 #endif

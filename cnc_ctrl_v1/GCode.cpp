@@ -108,7 +108,7 @@ float extractGcodeValue(const String& readString, char target, const float& defa
 
     numberAsFloat   =  numberAsString.toFloat();
 
-    if (begin == -1){ //if the character was not found, return error
+    if (begin == -1){ //if the character was not found, return default
         return defaultReturn;
     }
 
@@ -149,21 +149,21 @@ byte  executeBcodeLine(const String& gcodeLine){
     if(gcodeLine.substring(0, 3) == "B04"){
         //set flag to ignore position error limit during the tests
         sys.state = (sys.state | STATE_POS_ERR_IGNORE);
-        //Test each of the axis
+        //Test each of the axles
         maslowDelay(500);
         if(sys.stop){return STATUS_OK;}
-        leftAxis.test();
+        leftAxle.test();
         maslowDelay(500);
         if(sys.stop){return STATUS_OK;}
-        rightAxis.test();
+        rightAxle.test();
         maslowDelay(500);
         if(sys.stop){return STATUS_OK;}
-        zAxis.test();
+        zAxle.test();
         Serial.println(F("Tests complete."));
 
         // update our position
-        leftAxis.set(leftAxis.read());
-        rightAxis.set(rightAxis.read());
+        leftAxle.setCurrentmmPosition(leftAxle.getCurrentmmPosition()); // actually relaxes the PID loops
+        rightAxle.setCurrentmmPosition(rightAxle.getCurrentmmPosition());
 
         //clear the flag, re-enable position error limit
         sys.state = (sys.state & (!STATE_POS_ERR_IGNORE));
@@ -175,14 +175,14 @@ byte  executeBcodeLine(const String& gcodeLine){
         float newL = extractGcodeValue(gcodeLine, 'L', 0);
         float newR = extractGcodeValue(gcodeLine, 'R', 0);
 
-        leftAxis.set(newL);
-        rightAxis.set(newR);
+        leftAxle.setCurrentmmPosition(newL);
+        rightAxle.setCurrentmmPosition(newR);
 
         Serial.print(F("Left: "));
-        Serial.print(leftAxis.read());
+        Serial.print(leftAxle.getCurrentmmPosition());
         Serial.println(F("mm"));
         Serial.print(F("Right: "));
-        Serial.print(rightAxis.read());
+        Serial.print(rightAxle.getCurrentmmPosition());
         Serial.println(F("mm"));
 
         return STATUS_OK;
@@ -190,53 +190,54 @@ byte  executeBcodeLine(const String& gcodeLine){
 
     if(gcodeLine.substring(0, 3) == "B08"){
         //Manually recalibrate chain lengths
-        leftAxis.set(sysSettings.originalChainLength);
-        rightAxis.set(sysSettings.originalChainLength);
+        leftAxle.setCurrentmmPosition(sysSettings.originalChainLength);
+        rightAxle.setCurrentmmPosition(sysSettings.originalChainLength);
 
         Serial.print(F("Left: "));
-        Serial.print(leftAxis.read());
+        Serial.print(leftAxle.getCurrentmmPosition());
         Serial.println(F("mm"));
         Serial.print(F("Right: "));
-        Serial.print(rightAxis.read());
+        Serial.print(rightAxle.getCurrentmmPosition());
         Serial.println(F("mm"));
 
-        kinematics.forward(leftAxis.read(), rightAxis.read(), &sys.xPosition, &sys.yPosition, 0, 0);
-
+        //Estimate the XY position based on the machine geometry and chain lenght extending beyond the sproket top.
+        kinematics.forward(leftAxle.getCurrentmmPosition(), rightAxle.getCurrentmmPosition(), &sys.estimatedBitTipXPosition, &sys.estimatedBitTipYPosition, 0, 0);
+	    
         Serial.println(F("Message: The machine chains have been manually re-calibrated."));
 
         return STATUS_OK;
     }
 
     if(gcodeLine.substring(0, 3) == "B09"){
-        //Directly command each axis to move to a given distance
+        //Directly command each axle to move to a given distance
         float lDist = extractGcodeValue(gcodeLine, 'L', 0);
         float rDist = extractGcodeValue(gcodeLine, 'R', 0);
         float speed = extractGcodeValue(gcodeLine, 'F', 800);
 
         if(sys.useRelativeUnits){
             if(abs(lDist) > 0){
-                singleAxisMove(&leftAxis,  leftAxis.read()  + lDist, speed);
+                singleAxleMove(&leftAxle,  leftAxle.getCurrentmmPosition()  + lDist, speed);
             }
             if(abs(rDist) > 0){
-                singleAxisMove(&rightAxis, rightAxis.read() + rDist, speed);
+                singleAxleMove(&rightAxle, rightAxle.getCurrentmmPosition() + rDist, speed);
             }
         }
         else{
-            singleAxisMove(&leftAxis,  lDist, speed);
-            singleAxisMove(&rightAxis, rDist, speed);
+            singleAxleMove(&leftAxle,  lDist, speed);
+            singleAxleMove(&rightAxle, rDist, speed);
         }
 
         return STATUS_OK;
     }
 
     if(gcodeLine.substring(0, 3) == "B10"){
-        //measure the left axis chain length
+        //measure the left axle chain length
         Serial.print(F("[Measure: "));
         if (gcodeLine.indexOf('L') != -1){
-            Serial.print(leftAxis.read());
+            Serial.print(leftAxle.getCurrentmmPosition());
         }
         else{
-            Serial.print(rightAxis.read());
+            Serial.print(rightAxle.getCurrentmmPosition());
         }
         Serial.println(F("]"));
         return STATUS_OK;
@@ -254,10 +255,10 @@ byte  executeBcodeLine(const String& gcodeLine){
         sys.state = (sys.state | STATE_POS_ERR_IGNORE);
         while (millis() - begin < ms){
             if (gcodeLine.indexOf('L') != -1){
-                leftAxis.motorGearboxEncoder.motor.directWrite(speed);
+                leftAxle.motorGearboxEncoder.motor.directWrite(speed);
             }
             else{
-                rightAxis.motorGearboxEncoder.motor.directWrite(speed);
+                rightAxle.motorGearboxEncoder.motor.directWrite(speed);
             }
             
             i++;
@@ -277,10 +278,10 @@ byte  executeBcodeLine(const String& gcodeLine){
         float  steps      = extractGcodeValue(gcodeLine, 'I', 1);
         float  version    = extractGcodeValue(gcodeLine, 'V', 1);
 
-        Axis* axis = &rightAxis;
-        if (left > 0) axis = &leftAxis;
-        if (useZ > 0) axis = &zAxis;
-        PIDTestVelocity(axis, start, stop, steps, version);
+        Axle* axle = &rightAxle;
+        if (left > 0) axle = &leftAxle;
+        if (useZ > 0) axle = &zAxle;
+        PIDTestVelocity(axle, start, stop, steps, version);
         return STATUS_OK;
     }
 
@@ -294,10 +295,10 @@ byte  executeBcodeLine(const String& gcodeLine){
         float  stepTime   = extractGcodeValue(gcodeLine, 'T', 2000);
         float  version    = extractGcodeValue(gcodeLine, 'V', 1);
 
-        Axis* axis = &rightAxis;
-        if (left > 0) axis = &leftAxis;
-        if (useZ > 0) axis = &zAxis;
-        PIDTestPosition(axis, start, stop, steps, stepTime, version);
+        Axle* axle = &rightAxle;
+        if (left > 0) axle = &leftAxle;
+        if (useZ > 0) axle = &zAxle;
+        PIDTestPosition(axle, start, stop, steps, stepTime, version);
         return STATUS_OK;
     }
 
@@ -308,10 +309,10 @@ byte  executeBcodeLine(const String& gcodeLine){
         float  start      = extractGcodeValue(gcodeLine, 'S', 1);
         float  stop       = extractGcodeValue(gcodeLine, 'F', 1);
 
-        Axis* axis = &rightAxis;
-        if (left > 0) axis = &leftAxis;
-        if (useZ > 0) axis = &zAxis;
-        voltageTest(axis, start, stop);
+        Axle* axle = &rightAxle;
+        if (left > 0) axle = &leftAxle;
+        if (useZ > 0) axle = &zAxle;
+        voltageTest(axle, start, stop);
         return STATUS_OK;
     }
 
@@ -323,14 +324,14 @@ byte  executeBcodeLine(const String& gcodeLine){
         kinematics.inverse(0,0,&chainLengthAtMiddle,&chainLengthAtMiddle);
 
         //Adjust left chain length
-        singleAxisMove(&leftAxis,  chainLengthAtMiddle, 800);
+        singleAxleMove(&leftAxle,  chainLengthAtMiddle, 800);
 
         //Adjust right chain length
-        singleAxisMove(&rightAxis, chainLengthAtMiddle, 800);
+        singleAxleMove(&rightAxle, chainLengthAtMiddle, 800);
 
-        //Reload the position
-        kinematics.forward(leftAxis.read(), rightAxis.read(), &sys.xPosition, &sys.yPosition, 0, 0);
-
+        //Estimate the XY position based on the machine geometry and chain new lenght extending beyond the sproket top.
+        kinematics.forward(leftAxle.getCurrentmmPosition(), rightAxle.getCurrentmmPosition(), &sys.estimatedBitTipXPosition, &sys.estimatedBitTipYPosition, 0, 0);
+                
         return STATUS_OK;
     }
     return STATUS_INVALID_STATEMENT;
@@ -370,10 +371,10 @@ void  executeGcodeLine(const String& gcodeLine){
             G10(gcodeLine);
             break;
         case 20:
-            setInchesToMillimetersConversion(INCHES);
+            sys.mmConversionFactor = INCHES_TO_MLLIMETERS;
             break;
         case 21:
-            setInchesToMillimetersConversion(MILLIMETERS);
+            sys.mmConversionFactor = MILLIMETERS;
             break;
         case 40:
             break; //the G40 command turns off cutter compensation which is already off so it is safe to ignore
@@ -392,7 +393,7 @@ void  executeGcodeLine(const String& gcodeLine){
             Serial.println(F(" unsupported and ignored."));
     }
 
-}
+} 
 
 void  executeMcodeLine(const String& gcodeLine){
     /*
@@ -634,54 +635,59 @@ void G1(const String& readString, int G0orG1){
     /*G1() is the function which is called to process the string if it begins with
     'G01' or 'G00'*/
 
-    float xgoto;
-    float ygoto;
-    float zgoto;
+    float finalXPos;
+    float finalYPos;
+    float finalZPos;
 
-    float currentXPos = sys.xPosition;
-    float currentYPos = sys.yPosition;
+    //identify the estimated starting coordinates of this straight path coordinated move
+    float initialXPos = sys.estimatedBitTipXPosition;
+    float initialYPos = sys.estimatedBitTipYPosition;
+    float initialZPos = zAxle.getCurrentmmPosition();
+    
+    float tempFeedRate; // make sure to not change the sys.targetFeedrate with a value until validated and constrained
 
-    float currentZPos = zAxis.read();
-
-    xgoto      = sys.inchesToMMConversion*extractGcodeValue(readString, 'X', currentXPos/sys.inchesToMMConversion);
-    ygoto      = sys.inchesToMMConversion*extractGcodeValue(readString, 'Y', currentYPos/sys.inchesToMMConversion);
-    zgoto      = sys.inchesToMMConversion*extractGcodeValue(readString, 'Z', currentZPos/sys.inchesToMMConversion);
-    sys.feedrate   = sys.inchesToMMConversion*extractGcodeValue(readString, 'F', sys.feedrate/sys.inchesToMMConversion);
+    //extract and compute the target coordinates of this straight path move
+    finalXPos      = sys.mmConversionFactor*extractGcodeValue(readString, 'X', initialXPos/sys.mmConversionFactor);
+    finalYPos      = sys.mmConversionFactor*extractGcodeValue(readString, 'Y', initialYPos/sys.mmConversionFactor);
+    finalZPos      = sys.mmConversionFactor*extractGcodeValue(readString, 'Z', initialZPos/sys.mmConversionFactor);
 
     if (sys.useRelativeUnits){ //if we are using a relative coordinate system
 
         if(readString.indexOf('X') >= 0){ //if there is an X command
-            xgoto = currentXPos + xgoto;
+            finalXPos = initialXPos + finalXPos;
         }
         if(readString.indexOf('Y') >= 0){ //if y has moved
-            ygoto = currentYPos + ygoto;
+            finalYPos = initialYPos + finalYPos;
         }
         if(readString.indexOf('Z') >= 0){ //if y has moved
-            zgoto = currentZPos + zgoto;
+            finalZPos = initialZPos + finalZPos;
         }
     }
 
-    sys.feedrate = constrain(sys.feedrate, 1, sysSettings.maxFeed);   //constrain the maximum feedrate, 35ipm = 900 mmpm
+    //keep the last used feedrate if none specified in the Gcode line 
+    tempFeedRate = sys.mmConversionFactor*extractGcodeValue(readString, 'F', sys.targetFeedrate/sys.mmConversionFactor);
+    //Top the target rate to the maximum XY feedrate,
+    sys.targetFeedrate = constrain(tempFeedRate, 1, sysSettings.maxXYFeedRate);   
 
-    //if the zaxis is attached
-    if(!sysSettings.zAxisAttached){
+    //if the z axle PID Control is not attached, then get manual ajustment done before move.
+    if(!sysSettings.zAxleMotorized){
         float threshold = .1; //units of mm
-        if (abs(currentZPos - zgoto) > threshold){
-            Serial.print(F("Message: Please adjust Z-Axis to a depth of "));
-            if (zgoto > 0){
+        if (abs(initialZPos - finalZPos) > threshold){
+            Serial.print(F("Message: Please adjust Router Bit to a depth of "));
+            if (finalZPos > 0){
                 Serial.print(F("+"));
             }
-            Serial.print(zgoto/sys.inchesToMMConversion);
-            if (sys.inchesToMMConversion == INCHES){
+            Serial.print(finalZPos/sys.mmConversionFactor);
+            if (sys.mmConversionFactor == INCHES_TO_MLLIMETERS){
                 Serial.println(F(" in"));
             }
             else{
                 Serial.println(F(" mm"));
             }
 
-            pause(); //Wait until the z-axis is adjusted
+            pause(); //Wait until the z depth is adjusted
 
-            zAxis.set(zgoto);
+            zAxle.setCurrentmmPosition(finalZPos);
 
             maslowDelay(1000);
         }
@@ -690,11 +696,11 @@ void G1(const String& readString, int G0orG1){
 
     if (G0orG1 == 1){
         //if this is a regular move
-        coordinatedMove(xgoto, ygoto, zgoto, sys.feedrate); //The XY move is performed
+        straightLineXYZMove(finalXPos, finalYPos, finalZPos, sys.targetFeedrate); //The XY move is performed
     }
     else{
         //if this is a rapid move
-        coordinatedMove(xgoto, ygoto, zgoto, sysSettings.maxFeed); //move the same as a regular move, but go fast
+        straightLineXYZMove(finalXPos, finalYPos, finalZPos, sysSettings.maxXYFeedRate); //move the same as a regular move, but seek fastest feed rate
     }
 }
 
@@ -706,26 +712,38 @@ void G2(const String& readString, int G2orG3){
 
     */
 
+    //is it supposed to handle relative units? Apparently, unlike B09 G38 or G0 and G1,  it does not.
 
-    float X1 = sys.xPosition; //does this work if units are inches? (It seems to)
-    float Y1 = sys.yPosition;
+    //identify the estimated starting coordinates of this straight path coordinated move
+    float X1 = sys.estimatedBitTipXPosition; 
+    float Y1 = sys.estimatedBitTipYPosition;
+    float Z1 = zAxle.getCurrentmmPosition();
 
-    float X2      = sys.inchesToMMConversion*extractGcodeValue(readString, 'X', X1/sys.inchesToMMConversion);
-    float Y2      = sys.inchesToMMConversion*extractGcodeValue(readString, 'Y', Y1/sys.inchesToMMConversion);
-    float I       = sys.inchesToMMConversion*extractGcodeValue(readString, 'I', 0.0);
-    float J       = sys.inchesToMMConversion*extractGcodeValue(readString, 'J', 0.0);
-    sys.feedrate      = sys.inchesToMMConversion*extractGcodeValue(readString, 'F', sys.feedrate/sys.inchesToMMConversion);
+    //extract and compute the target coordinates of this arc path move
+    float X2      = sys.mmConversionFactor*extractGcodeValue(readString, 'X', X1/sys.mmConversionFactor);
+    float Y2      = sys.mmConversionFactor*extractGcodeValue(readString, 'Y', Y1/sys.mmConversionFactor);
+    float Z2      = sys.mmConversionFactor*extractGcodeValue(readString, 'Z', Z1/sys.mmConversionFactor);
+    float I       = sys.mmConversionFactor*extractGcodeValue(readString, 'I', 0.0);
+    float J       = sys.mmConversionFactor*extractGcodeValue(readString, 'J', 0.0);
+ 
+    //is it supposed to handle relative units? Apparently, unlike B09 G38 or G0 and G1,  it does not.
 
+    //compute the circle center coordinates of this arc path move
     float centerX = X1 + I;
     float centerY = Y1 + J;
 
-    sys.feedrate = constrain(sys.feedrate, 1, sysSettings.maxFeed);   //constrain the maximum feedrate, 35ipm = 900 mmpm
+    //make sure to not change the sys.targetFeedrate with a value until validated and constrained
+    float tempFeedRate; 
+    //keep the last used feedrate if none specified in the Gcode line 
+    tempFeedRate = sys.mmConversionFactor*extractGcodeValue(readString, 'F', sys.targetFeedrate/sys.mmConversionFactor);
+    //Top the target rate to the maximum XY feedrate,
+    sys.targetFeedrate = constrain(tempFeedRate, 1, sysSettings.maxXYFeedRate);    
 
     if (G2orG3 == 2){
-        arc(X1, Y1, X2, Y2, centerX, centerY, sys.feedrate, CLOCKWISE);
+        arcXYZMove(X1, Y1, Z1, X2, Y2, Z2, centerX, centerY, sys.targetFeedrate, CLOCKWISE);
     }
     else {
-        arc(X1, Y1, X2, Y2, centerX, centerY, sys.feedrate, COUNTERCLOCKWISE);
+        arcXYZMove(X1, Y1, Z1, X2, Y2, Z2, centerX, centerY, sys.targetFeedrate, COUNTERCLOCKWISE);
     }
 }
 
@@ -760,87 +778,94 @@ void  G4(const String& readString){
 
 void  G10(const String& readString){
     /*The G10() function handles the G10 gcode which re-zeros one or all of the machine's axes.*/
-    float currentZPos = zAxis.read();
-    float zgoto      = sys.inchesToMMConversion*extractGcodeValue(readString, 'Z', currentZPos/sys.inchesToMMConversion);
+    float initialZPos = zAxle.getCurrentmmPosition();
+    int   zDirection  = sysSettings.encoderZScrewStepsCountPerTurn<0 ? -1 : 1;
+    float finalZPos   = zDirection * sys.mmConversionFactor*extractGcodeValue(readString, 'Z', initialZPos/sys.mmConversionFactor);
 
-    zAxis.set(zgoto);
-    zAxis.endMove(zgoto);
-    zAxis.attach();
+    zAxle.setCurrentmmPosition(finalZPos);
+    zAxle.endMoveAtmmPosition(finalZPos);
+    zAxle.attachPWMControl();
 }
 
 void  G38(const String& readString) {
-  //if the zaxis is attached
-  if (sysSettings.zAxisAttached) {
+  //if the zaxle is motorized
+  if (sysSettings.zAxleMotorized) {
     /*
-       The G38() function handles the G38 gcode which zeros the machine's z axis.
+       The G38() function handles the G38 gcode which identify the zero depth Router Bit position.
        Currently ignores X and Y options
     */
     if (readString.substring(3, 5) == ".2") {
-      Serial.println(F("probing for z axis zero"));
-      float zgoto;
+      // in a more complete implementation, the touche point is associated to a known position, not to zero.
+      // This allows for probing apparatus thickness or deepness property to be taken into account.
+      Serial.println(F("probing for Router Bit known depth position"));
+      float finalZPos;
+      float zMaxFeedRate = getZMaxFeedRate();
 
+      float initialZPos = zAxle.getCurrentmmPosition();
 
-      float currentZPos = zAxis.read();
+      float tempFeedRate; // make sure to not change the sys.targetFeedrate with a value until validated and constrained
 
-      zgoto      = sys.inchesToMMConversion * extractGcodeValue(readString, 'Z', currentZPos / sys.inchesToMMConversion);
-      sys.feedrate   = sys.inchesToMMConversion * extractGcodeValue(readString, 'F', sys.feedrate / sys.inchesToMMConversion);
-      sys.feedrate = constrain(sys.feedrate, 1, sysSettings.maxZRPM * abs(zAxis.getPitch()));
-
+      //extract and compute the target Z limit coordinate of this plunge move
+      finalZPos = sys.mmConversionFactor * extractGcodeValue(readString, 'Z', initialZPos / sys.mmConversionFactor);
       if (sys.useRelativeUnits) { //if we are using a relative coordinate system
         if (readString.indexOf('Z') >= 0) { //if z has moved
-          zgoto = currentZPos + zgoto;
+          finalZPos = initialZPos + finalZPos;
         }
       }
 
-      Serial.print(F("max depth "));
-      Serial.print(zgoto);
-      Serial.println(F(" mm."));
-      Serial.print(F("feedrate "));
-      Serial.print(sys.feedrate);
-      Serial.println(F(" mm per min."));
+      //keep the last used feedrate if none specified in the Gcode line 
+      tempFeedRate = sys.mmConversionFactor*extractGcodeValue(readString, 'F', sys.targetFeedrate/sys.mmConversionFactor);
+      //Top the target rate to the maximum Z feedrate,
+      sys.targetFeedrate = constrain(tempFeedRate, 1, zMaxFeedRate);
 
+      Serial.print(F("max depth "));
+      Serial.print(finalZPos);
+      Serial.println(F(" mm."));
+      Serial.print(F("target feedrate "));
+      Serial.print(sys.targetFeedrate);
+      Serial.println(F(" mm per min."));
 
       //set Probe to input with pullup
       pinMode(ProbePin, INPUT_PULLUP);
       digitalWrite(ProbePin, HIGH);
 
-      if (zgoto != currentZPos / sys.inchesToMMConversion) {
+      if (finalZPos != initialZPos) { // inapropriate unit conversion of currentZPos was removed.
         //        now move z to the Z destination;
         //        Currently ignores X and Y options
-        //          we need a version of singleAxisMove that quits if the AUXn input changes (goes LOW)
-        //          which will act the same as the stop found in singleAxisMove (need both?)
-        //        singleAxisMove(&zAxis, zgoto, feedrate);
+        //          we need a version of singleAxleMove that quits if the AUXn input changes (goes LOW)
+        //          which will act the same as the stop found in singleAxleMove (need both?)
+        //        singleAxleMove(&zAxle, finalZPos, zFeedrate);
 
         /*
-           Takes a pointer to an axis object and mo ves that axis to endPos at speed MMPerMin
+           Takes a pointer to an axle object and rotates that axle to endPos distance at speed MMPerMin
         */
 
-        Axis* axis = &zAxis;
-        float startingPos          = axis->read();
-        float endPos               = zgoto;
-        float moveDist             = endPos - currentZPos; //total distance to move
+        Axle* axle = &zAxle;
+        float startingPos          = axle->getCurrentmmPosition();
+        float endPos               = finalZPos;
+        float moveDist             = endPos - initialZPos; //total distance to move
 
         float direction            = moveDist / abs(moveDist); //determine the direction of the move
 
-        float stepSizeMM           = 0.01;                    //step size in mm
+        float stepSizeMMPerLoopInterval           = 0.01;                    //step size in mm for each PID Control LOOP INTERVAL
 
         //the argument to abs should only be a variable -- splitting calc into 2 lines
-        long finalNumberOfSteps    = moveDist / stepSizeMM;    //number of steps taken in move
+        long finalNumberOfSteps    = moveDist / stepSizeMMPerLoopInterval;    //number of steps taken in move
         finalNumberOfSteps = abs(finalNumberOfSteps);
 
         long numberOfStepsTaken    = 0;
-        float whereAxisShouldBeAtThisStep = startingPos;
+        float whereAxleShouldBeAtThisStep = startingPos;
 
-        axis->attach();
-        //  zAxis->attach();
+        axle->attachPWMControl();
+        //  zAxle->attachPWMControl();
 
         while (numberOfStepsTaken < finalNumberOfSteps) {
           if (!movementUpdated){
               //find the target point for this step
-              whereAxisShouldBeAtThisStep += stepSizeMM * direction;
+              whereAxleShouldBeAtThisStep += stepSizeMMPerLoopInterval * direction;
 
-              //write to each axis
-              axis->write(whereAxisShouldBeAtThisStep);
+              //write to each axle
+              axle->setTargetmmPosition(whereAxleShouldBeAtThisStep);
               movementUpdate();
 
               // Run realtime commands
@@ -853,10 +878,10 @@ void  G38(const String& readString) {
 
           //check for Probe touchdown
           if (checkForProbeTouch(ProbePin)) {
-            zAxis.set(0);
-            zAxis.endMove(0);
-            zAxis.attach();
-            Serial.println(F("z axis zeroed"));
+            zAxle.setCurrentmmPosition(0);
+            zAxle.endMoveAtmmPosition(0);
+            zAxle.attachPWMControl(); // should it not be detach at the end of the move?
+            Serial.println(F("Router Bit zero depth position is set"));
             return;
           }
         }
@@ -866,10 +891,10 @@ void  G38(const String& readString) {
             - print error
             - STOP execution
         */
-        axis->endMove(endPos);
-        Serial.println(F("error: probe did not connect\nprogram stopped\nz axis not set\n"));
+        axle->endMoveAtmmPosition(endPos);
+        Serial.println(F("error: probe did not connect\nprogram stopped\nRouter Bit zero depth position not set\n"));
         sys.stop = true;
-      } // end if zgoto != currentZPos / sys.inchesToMMConversion
+      } // end if finalZPos != initialZPos
 
     } else {
       Serial.print(F("G38"));
@@ -877,10 +902,7 @@ void  G38(const String& readString) {
       Serial.println(F(" is invalid. Only G38.2 recognized."));
     }
   } else {
-    Serial.println(F("G38.2 gcode only valid with z-axis attached"));
+    Serial.println(F("G38.2 gcode only available when z-axle is motorized"));
   }
 }
 
-void  setInchesToMillimetersConversion(float newConversionFactor){
-    sys.inchesToMMConversion = newConversionFactor;
-}

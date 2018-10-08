@@ -78,7 +78,7 @@ void  reportStatusMessage(byte);
 void  reportFeedbackMessage(byte);
 void  reportMaslowSettings();
 void  reportAlarmMessage(byte);
-void  returnError();
+void  returnAxlesmmPositionErrors();
 void  returnPoz();
 void  reportMaslowHelp();
 

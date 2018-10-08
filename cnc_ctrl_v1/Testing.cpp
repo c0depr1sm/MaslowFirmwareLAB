@@ -16,11 +16,11 @@
 
 #include "Maslow.h"
 
-void PIDTestVelocity(Axis* axis, const float start, const float stop, const float steps, const float version){
-    // Moves the defined Axis at series of speed steps for PID tuning
+void PIDTestVelocity(Axle* axle, const float start, const float stop, const float steps, const float version){
+    // Moves the defined Axle at series of speed steps for PID tuning
     // Start Log
     Serial.println(F("--PID Velocity Test Start--"));
-    Serial.println(axis->motorGearboxEncoder.getPIDString());
+    Serial.println(axle->motorGearboxEncoder.getPIDString());
     if (version == 2) {
       Serial.println(F("setpoint,input,output"));
     }
@@ -32,10 +32,10 @@ void PIDTestVelocity(Axis* axis, const float start, const float stop, const floa
     float reportedSpeed;
     float span = stop - start;
     float speed;
-    
+   
     // Start the steps
-    axis->disablePositionPID();
-    axis->attach();
+    axle->disablePositionPID();
+    axle->attachPWMControl();
     for(int i = 0; i < steps; i++){
         // 1 step = start, 2 step = start & finish, 3 = start, start + 1/2 span...
         speed = start;
@@ -43,14 +43,14 @@ void PIDTestVelocity(Axis* axis, const float start, const float stop, const floa
             speed = start + (span * (i/(steps-1)));
         }
         startTime = micros();
-        axis->motorGearboxEncoder.write(speed);
+        axle->motorGearboxEncoder.setTargetSpeed(speed);
         while (startTime + 2000000 > current){
           if (current - print > LOOPINTERVAL){
             if (version == 2) {
-              Serial.println(axis->motorGearboxEncoder.pidState());
+              Serial.println(axle->motorGearboxEncoder.pidState());
             }
             else {
-              reportedSpeed= axis->motorGearboxEncoder.cachedSpeed();
+              reportedSpeed= axle->motorGearboxEncoder.getCachedSpeed();
               error =  reportedSpeed - speed;
               print = current;
               Serial.println(error);
@@ -59,33 +59,36 @@ void PIDTestVelocity(Axis* axis, const float start, const float stop, const floa
           current = micros();
         }
     }
-    axis->motorGearboxEncoder.write(0);
+    axle->motorGearboxEncoder.setTargetSpeed(0);
     
-    // Print end of log, and update axis for use again
+    // Print end of log, and update axle for use again
     Serial.println(F("--PID Velocity Test Stop--\n"));
-    axis->write(axis->read());
-    axis->detach();
-    axis->enablePositionPID();
-    kinematics.forward(leftAxis.read(), rightAxis.read(), &sys.xPosition, &sys.yPosition, 0.0, 0.0);
+    axle->setTargetmmPosition(axle->getCurrentmmPosition());
+    axle->detachPWMControl();
+    axle->enablePositionPID();
+
+    //Estimate the XY position based on the machine geometry and chain lenght extending beyond the sproket top.
+    kinematics.forward(leftAxle.getCurrentmmPosition(), rightAxle.getCurrentmmPosition(), &sys.estimatedBitTipXPosition, &sys.estimatedBitTipYPosition, 0, 0);
+
 }
 
-void positionPIDOutput (Axis* axis, float setpoint, float startingPoint){
+void positionPIDOutput (Axle* axle, float setpoint, float startingPoint){
   Serial.print((setpoint - startingPoint), 4);
   Serial.print(F(","));
-  Serial.print((axis->pidInput() - startingPoint),4);
+  Serial.print((axle->getPIDmmPositionInput() - startingPoint),4);
   Serial.print(F(","));  
-  Serial.print(axis->pidOutput(),4);
+  Serial.print(axle->getPIDOutput(),4);
   Serial.print(F(","));
-  Serial.print(axis->motorGearboxEncoder.cachedSpeed(), 4);
+  Serial.print(axle->motorGearboxEncoder.getCachedSpeed(), 4);
   Serial.print(F(","));
-  Serial.println(axis->motorGearboxEncoder.motor.lastSpeed());
+  Serial.println(axle->motorGearboxEncoder.motor.lastSpeed());
 }
 
-void PIDTestPosition(Axis* axis, float start, float stop, const float steps, const float stepTime, const float version){
+void PIDTestPosition(Axle* axle, float start, float stop, const float steps, const float stepTime, const float version){
     // Moves the defined Axis at series of chain distance steps for PID tuning
     // Start Log
     Serial.println(F("--PID Position Test Start--"));
-    Serial.println(axis->getPIDString());
+    Serial.println(axle->getPIDString());
     if (version == 2) {
       Serial.println(F("setpoint,input,output,rpminput,voltage"));
     }
@@ -94,14 +97,14 @@ void PIDTestPosition(Axis* axis, float start, float stop, const float steps, con
     unsigned long print = micros();
     unsigned long current = micros();
     float error;
-    float startingPoint = axis->read();
+    float startingPoint = axle->getCurrentmmPosition();
     start = startingPoint + start;
     stop  = startingPoint + stop;
     float span = stop - start;
     float location;
     
     // Start the steps
-    axis->attach();
+    axle->attachPWMControl();
     for(int i = 0; i < steps; i++){
         // 1 step = start, 2 step = start & finish, 3 = start, start + 1/2 span...
         location = start;
@@ -110,14 +113,14 @@ void PIDTestPosition(Axis* axis, float start, float stop, const float steps, con
         }
         startTime = micros();
         current = micros();
-        axis->write(location);
+        axle->setTargetmmPosition(location);
         while (startTime + (stepTime * 1000) > current){
           if (current - print > LOOPINTERVAL){
             if (version == 2) {
-              positionPIDOutput(axis, location, startingPoint);
+              positionPIDOutput(axle, location, startingPoint);
             }
             else {
-              error   =  axis->read() - location;
+              error   =  axle->getCurrentmmPosition() - location;
               Serial.println(error);
             }
             print = current;
@@ -131,26 +134,29 @@ void PIDTestPosition(Axis* axis, float start, float stop, const float steps, con
     while (startTime + 1000000 > current){
       if (current - print > LOOPINTERVAL){
         if (version == 2) {
-          positionPIDOutput(axis, location, startingPoint);
+          positionPIDOutput(axle, location, startingPoint);
         }            
         else {
-          error   =  axis->read() - location;
+          error   =  axle->getCurrentmmPosition() - location;
           Serial.println(error);
         }
         print = current;
       }
       current = micros();
     }
-    // Print end of log, and update axis for use again
+    // Print end of log, and update axle for use again
     Serial.println(F("--PID Position Test Stop--\n"));
-    axis->write(axis->read());
-    axis->detach();
-    kinematics.forward(leftAxis.read(), rightAxis.read(), &sys.xPosition, &sys.yPosition, 0.0, 0.0);
+    axle->setTargetmmPosition(axle->getCurrentmmPosition());
+    axle->detachPWMControl();
+
+    //Estimate the XY position based on the machine geometry and chain lenght extending beyond the sproket top.
+    kinematics.forward(leftAxle.getCurrentmmPosition(), rightAxle.getCurrentmmPosition(), &sys.estimatedBitTipXPosition, &sys.estimatedBitTipYPosition, 0, 0);
+
 }
 
-void voltageTest(Axis* axis, int start, int stop){
-    // Moves the defined Axis at a series of voltages and reports the resulting
-    // RPM
+void voltageTest(Axle* axle, int start, int stop){
+    // Moves the specified Axle object according to a series of motor voltages and reports the resulting
+    // RPMs
     Serial.println(F("--Voltage Test Start--"));
     int direction = 1;
     if (stop < start){ direction = -1;}
@@ -158,24 +164,26 @@ void voltageTest(Axis* axis, int start, int stop){
     unsigned long startTime = millis() + 200;
     unsigned long currentTime = millis();
     unsigned long printTime = 0;
-    
+   
     for (int i = 0; i <= steps; i++){
-        axis->motorGearboxEncoder.motor.directWrite((start + (i*direction)));
+        axle->motorGearboxEncoder.motor.directWrite((start + (i*direction)));
         while (startTime > currentTime - (i * 200)){
             currentTime = millis();
             if ((printTime + 50) <= currentTime){
                 Serial.print((start + (i*direction)));
                 Serial.print(F(","));
-                Serial.print(axis->motorGearboxEncoder.computeSpeed(),4);
+                Serial.print(axle->motorGearboxEncoder.computeSpeed(),4);
                 Serial.print(F("\n"));
                 printTime = millis();
             }
         }
     }
     
-    // Print end of log, and update axis for use again
-    axis->motorGearboxEncoder.motor.directWrite(0);
+    // Print end of log, and update axle for use again
+    axle->motorGearboxEncoder.motor.directWrite(0);
     Serial.println(F("--Voltage Test Stop--\n"));
-    axis->write(axis->read());
-    kinematics.forward(leftAxis.read(), rightAxis.read(), &sys.xPosition, &sys.yPosition, 0.0, 0.0);
+    axle->setTargetmmPosition(axle->getCurrentmmPosition());
+    //Estimate the XY position based on the machine geometry and chain lenght extending beyond the sproket top.
+    kinematics.forward(leftAxle.getCurrentmmPosition(), rightAxle.getCurrentmmPosition(), &sys.estimatedBitTipXPosition, &sys.estimatedBitTipYPosition, 0, 0);
+
 }

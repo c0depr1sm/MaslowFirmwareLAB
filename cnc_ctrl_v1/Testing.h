@@ -17,9 +17,9 @@
 #ifndef testing_h
 #define testing_h
 
-void PIDTestVelocity(Axis*, const float, const float, const float, const float);
-void positionPIDOutput (Axis*, float, float);
-void PIDTestPosition(Axis*, float, float, const float, const float, const float);
-void voltageTest(Axis*, int, int);
+void PIDTestVelocity(Axle*, const float, const float, const float, const float);
+void positionPIDOutput (Axle*, float, float);
+void PIDTestPosition(Axle*, float, float, const float, const float, const float);
+void voltageTest(Axle*, int, int);
 
 #endif

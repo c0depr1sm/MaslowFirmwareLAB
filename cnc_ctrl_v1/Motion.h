@@ -25,9 +25,9 @@ extern volatile bool movementUpdated;
 #endif
 
 void initMotion();
-int   coordinatedMove(const float&, const float&, const float&, float);
-void  singleAxisMove(Axis*, const float&, const float&);
-int   arc(const float&, const float&, const float&, const float&, const float&, const float&, const float&, const float&);
+int   straightLineXYZMove(const float&, const float&, const float&, float);
+void  singleAxleMove(Axle*, const float&, const float&);
+int   arcXYZMove(const float&, const float&, const float&, const float&, const float&, const float&, const float&, const float&, const float&, const float&);
 float calculateFeedrate(const float&, const float&);
 float computeStepSize(const float&);
 void movementUpdate();

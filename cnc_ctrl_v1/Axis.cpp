@@ -18,7 +18,10 @@
 
 #include "Maslow.h"
 
-void Axis::setup(const int& pwmPin, const int& directionPin1, const int& directionPin2, const int& encoderPin1, const int& encoderPin2, const char& axisName, const unsigned long& loopInterval)
+// It is true that an Axis is a straitgh line about which a body can rotate, but it must not be confused with either the x, y, or z coordinates directions of a coordinate system. 
+// Hence, The rotation object is renamed to "Axle" who has the property of carying a load and move along a rotation axis.
+// The axle also has a displacement pitch property related to a wheel/sprocket or screw or other. 
+void Axle::setup(const int& pwmPin, const int& directionPin1, const int& directionPin2, const int& encoderPin1, const int& encoderPin2, const char& axleName, const unsigned long& loopInterval)
 {
     // I don't really like this, but I don't know how else to initialize a pointer to a value
     float zero = 0.0;
@@ -26,104 +29,104 @@ void Axis::setup(const int& pwmPin, const int& directionPin1, const int& directi
     _Kp = _Ki = _Kd = &zero;
     
     motorGearboxEncoder.setup(pwmPin, directionPin1, directionPin2, encoderPin1, encoderPin2, loopInterval);
-    _pidController.setup(&_pidInput, &_pidOutput, &_pidSetpoint, _Kp, _Ki, _Kd, &one, REVERSE);
+    _pidController.setup(&_pidRotationCountInput, &_pidOutput, &_pidRotationCountSetPoint, _Kp, _Ki, _Kd, &one, REVERSE);
     
     //initialize variables
-    _axisName     = axisName;
+    _axleName     = axleName;
     
     initializePID(loopInterval);
     
-    motorGearboxEncoder.setName(&_axisName);
+    motorGearboxEncoder.setName(&_axleName);
 }
 
-void   Axis::initializePID(const unsigned long& loopInterval){
+void   Axle::initializePID(const unsigned long& loopInterval){
     _pidController.SetMode(AUTOMATIC);
     _pidController.SetOutputLimits(-20, 20);
-    _pidController.SetSampleTime( loopInterval / 1000);
+    _pidController.SetSampleTime( loopInterval / 1000); // LOOPINTERVAL is usec but SetSampleTime expects msec
 }
 
-void    Axis::write(const float& targetPosition){
+void    Axle::setTargetmmPosition(const float& targetPosition){
     _timeLastMoved = millis();
-    _pidSetpoint   =  targetPosition/ *_mmPerRotation;
+    _pidRotationCountSetPoint   =  targetPosition/ *_mmPerRotation;
     return;
 }
 
-float  Axis::read(){
-    //returns the true axis position
+float  Axle::getCurrentmmPosition(){
+    //returns the true axle position
     
-    return (motorGearboxEncoder.encoder.read()/ *_encoderSteps) * *_mmPerRotation;
+    return (motorGearboxEncoder.encoder.getCurrentCount()/ *_encoderStepsCountPerAxleRotation) * *_mmPerRotation;
     
 }
 
-float  Axis::setpoint(){
-    return _pidSetpoint * *_mmPerRotation;
+float  Axle::getPIDmmPositionsetpoint(){
+    return _pidRotationCountSetPoint * *_mmPerRotation;
 }
 
-void   Axis::set(const float& newAxisPosition){
+void   Axle::setCurrentmmPosition(const float& newAxlePosition){ // and relax PID
     
     //reset everything to the new value
-    _pidSetpoint  =  newAxisPosition/ *_mmPerRotation;
-    motorGearboxEncoder.encoder.write((newAxisPosition * *_encoderSteps)/ *_mmPerRotation);
+    _pidRotationCountSetPoint  =  newAxlePosition/ *_mmPerRotation;
+    motorGearboxEncoder.encoder.setCurrentCount((newAxlePosition * *_encoderStepsCountPerAxleRotation)/ *_mmPerRotation);
     
 }
 
-long Axis::steps(){
+long Axle::getCurrentEncoderCount(){
     /*
     Returns the number of steps reported by the encoder
     */
-    return motorGearboxEncoder.encoder.read();
+    return motorGearboxEncoder.encoder.getCurrentCount();
 }
 
-void   Axis::setSteps(const long& steps){
+void   Axle::setCurrentEncoderCount(const long& stepsCount){ // and relax PID
     
     //reset everything to the new value
-    _pidSetpoint  =  steps/ *_encoderSteps;
-    motorGearboxEncoder.encoder.write(steps);
+    _pidRotationCountSetPoint  =  stepsCount/ *_encoderStepsCountPerAxleRotation;
+    motorGearboxEncoder.encoder.setCurrentCount(stepsCount);
     
 }
 
-void   Axis::computePID(){
+void   Axle::computePID(){
     
     #ifdef FAKE_SERVO
-      if (motorGearboxEncoder.motor.attached()){
+      if (motorGearboxEncoder.motor.attachedPWMControl()){
         // Adds up to 10% error just to simulate servo noise
         double rpm = (-1 * _pidOutput) * random(90, 110) / 100;
-        unsigned long steps = motorGearboxEncoder.encoder.read() + round( rpm * *_encoderSteps * LOOPINTERVAL)/(60 * 1000000);
-        motorGearboxEncoder.encoder.write(steps);
+        unsigned long steps = motorGearboxEncoder.encoder.getCurrentCount() + round( rpm * *_encoderStepsCountPerAxleRotation * LOOPINTERVAL)/(60 * 1000000);
+        motorGearboxEncoder.encoder.setCurrentCount(steps);
       }
     #endif
 
-    if (_disableAxisForTesting || !motorGearboxEncoder.motor.attached()){
+    if (_disableAxleForTesting || !motorGearboxEncoder.motor.attachedPWMControl()){
         return;
     }
     
-    _pidInput      =  motorGearboxEncoder.encoder.read()/ *_encoderSteps;
+    _pidRotationCountInput      =  motorGearboxEncoder.encoder.getCurrentCount()/ *_encoderStepsCountPerAxleRotation;
     
-    if (_pidController.Compute()){
-        // Only write output if the PID calculation was performed
-        motorGearboxEncoder.write(_pidOutput);
-    }
-    
+   // the PID.Compute() function was modified to always return true because the Axle.ComputePID() is called in the timer loop.
+   // So we clean up here... ** C0depr1sm
+    _pidController.Compute();
+    motorGearboxEncoder.setTargetSpeed(_pidOutput);
+
     motorGearboxEncoder.computePID();
     
 }
 
-void   Axis::disablePositionPID(){
+void   Axle::disablePositionPID(){
     
     _pidController.SetMode(MANUAL);
     
 }
 
-void   Axis::enablePositionPID(){
+void   Axle::enablePositionPID(){
     
     _pidController.SetMode(AUTOMATIC);
     
 }
 
-void   Axis::setPIDValues(float* KpPos, float* KiPos, float* KdPos, float* propWeight, float* KpV, float* KiV, float* KdV, float* propWeightV){
+void   Axle::setPIDValues(float* KpPos, float* KiPos, float* KdPos, float* propWeight, float* KpV, float* KiV, float* KdV, float* propWeightV){
     /*
     
-    Sets the positional PID values for the axis
+    Sets the positional PID values for the axle
     
     */
     _Kp = KpPos;
@@ -135,17 +138,18 @@ void   Axis::setPIDValues(float* KpPos, float* KiPos, float* KdPos, float* propW
     motorGearboxEncoder.setPIDValues(KpV, KiV, KdV, propWeightV);
 }
 
-String  Axis::getPIDString(){
+String  Axle::getPIDString(){
     /*
     
     Get PID tuning values
     
     */
     String PIDString = "Kp=";
+ 
     return PIDString + *_Kp + ",Ki=" + *_Ki + ",Kd=" + *_Kd;
 }
 
-void   Axis::setPIDAggressiveness(float aggressiveness){
+void   Axle::setPIDAggressiveness(float aggressiveness){
     /*
     
     The setPIDAggressiveness() function sets the aggressiveness of the PID controller to
@@ -156,104 +160,104 @@ void   Axis::setPIDAggressiveness(float aggressiveness){
     motorGearboxEncoder.setPIDAggressiveness(aggressiveness);
 }
 
-float  Axis::error(){
+float  Axle::getPIDmmPositionError(){
 
-    float encoderErr = (motorGearboxEncoder.encoder.read()/ *_encoderSteps) - _pidSetpoint;
+    float encoderErr = (motorGearboxEncoder.encoder.getCurrentCount()/ *_encoderStepsCountPerAxleRotation) - _pidRotationCountSetPoint;
 
     return encoderErr * *_mmPerRotation;
 }
 
-void   Axis::changePitch(float *newPitch){
+void   Axle::setmmPitch(float *newPitch){
     /*
-    Reassign the distance moved per-rotation for the axis.
+    Reassign the distance moved per-rotation for the axle.
     */
     _mmPerRotation = newPitch;
 }
 
-float  Axis::getPitch(){
+float  Axle::getmmPitch(){
     /*
-    Returns the distance moved per-rotation for the axis.
+    Returns the distance moved per-rotation for the axle.
     */  
     return *_mmPerRotation;
 }
 
-void   Axis::changeEncoderResolution(float *newResolution){
+void   Axle::setEncoderResolution(float *newResolution){
     /*
-    Reassign the encoder resolution for the axis.
+    Reassign the encoder resolution for the axle.
     */
-    _encoderSteps = newResolution;
+    _encoderStepsCountPerAxleRotation = newResolution;
     
     //push to the gearbox for calculating RPM
     motorGearboxEncoder.setEncoderResolution(*newResolution);
     
 }
 
-int    Axis::detach(){
+int    Axle::detachPWMControl(){
     
-    motorGearboxEncoder.motor.detach();
+    motorGearboxEncoder.motor.detachPWMControl();
     
     return 1;
 }
 
-int    Axis::attach(){
-     motorGearboxEncoder.motor.attach();
+int    Axle::attachPWMControl(){
+     motorGearboxEncoder.motor.attachPWMControl();
      return 1;
 }
 
-bool   Axis::attached(){
+bool   Axle::attachedPWMControl(){
     /*
     
-    Returns true if the axis is attached, false if it is not.
+    Returns true if the axle's PID Control is activated, false if it is not.
     
     */
     
-    return motorGearboxEncoder.motor.attached();
+    return motorGearboxEncoder.motor.attachedPWMControl();
 }
 
-void   Axis::detachIfIdle(){
+void   Axle::detachPWMControlIfIdle(){
     /*
-    Detaches the axis, turning off the motor and PID control, if it has been
-    stationary for more than axisDetachTime
+    Detaches the axle, turning off the motor and PID control, if it has been
+    stationary for more than axlePIDControlDetachTimeOutDelay
     */
-    if (millis() - _timeLastMoved > sysSettings.axisDetachTime){
-        detach();
+    if (millis() - _timeLastMoved > sysSettings.axlePIDControlDetachTimeOutDelay){
+        detachPWMControl();
     }
     
 }
 
-void   Axis::endMove(const float& finalTarget){
+void   Axle::endMoveAtmmPosition(const float& finalTarget){
     
     _timeLastMoved = millis();
-    _pidSetpoint    = finalTarget/ *_mmPerRotation;
+    _pidRotationCountSetPoint    = finalTarget/ *_mmPerRotation;
     
 }
 
-void   Axis::stop(){
+void   Axle::stop(){
     /*
 
-    Immediately stop the axis where it is, not where it should be
+    Immediately stop the axle where it is, not where it should be
 
     */
 
     _timeLastMoved = millis();
-    _pidSetpoint   = read()/ *_mmPerRotation;
+    _pidRotationCountSetPoint   = getCurrentmmPosition()/ *_mmPerRotation;
 
 }
 
-void   Axis::test(){
+void   Axle::test(){
     /*
-    Test the axis by directly commanding the motor and observing if the encoder moves
+    Test the axle by directly commanding the motor and observing if the encoder moves
     */
     
     Serial.print(F("Testing "));
-    Serial.print(_axisName);
+    Serial.print(_axleName);
     Serial.println(F(" motor:"));
     
     //print something to prevent the connection from timing out
     Serial.print(F("<Idle,MPos:0,0,0,WPos:0.000,0.000,0.000>"));
     
     int i = 0;
-    double encoderPos = motorGearboxEncoder.encoder.read(); //record the position now
+    double encoderPos = motorGearboxEncoder.encoder.getCurrentCount(); //record the position now
     
     //move the motor
     while (i < 1000){
@@ -264,7 +268,7 @@ void   Axis::test(){
     }
     
     //check to see if it moved
-    if(encoderPos - motorGearboxEncoder.encoder.read() > 500){
+    if(encoderPos - motorGearboxEncoder.encoder.getCurrentCount() > 500){
         Serial.println(F("Direction 1 - Pass"));
     }
     else{
@@ -272,7 +276,7 @@ void   Axis::test(){
     }
     
     //record the position again
-    encoderPos = motorGearboxEncoder.encoder.read();
+    encoderPos = motorGearboxEncoder.encoder.getCurrentCount();
     Serial.print(F("<Idle,MPos:0,0,0,WPos:0.000,0.000,0.000>"));
     
     //move the motor in the other direction
@@ -285,7 +289,7 @@ void   Axis::test(){
     }
     
     //check to see if it moved
-    if(encoderPos - motorGearboxEncoder.encoder.read() < -500){
+    if(encoderPos - motorGearboxEncoder.encoder.getCurrentCount() < -500){
         Serial.println(F("Direction 2 - Pass"));
     }
     else{
@@ -297,5 +301,5 @@ void   Axis::test(){
     Serial.print(F("<Idle,MPos:0,0,0,WPos:0.000,0.000,0.000>"));
 }
 
-double  Axis::pidInput(){ return _pidInput * *_mmPerRotation;}
-double  Axis::pidOutput(){ return _pidOutput;}
+double  Axle::getPIDmmPositionInput(){ return _pidRotationCountInput * *_mmPerRotation;}
+double  Axle::getPIDOutput(){ return _pidOutput;}
