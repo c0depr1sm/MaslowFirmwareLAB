@@ -54,7 +54,7 @@
             void  quadrilateralInverse   (float xTarget,float yTarget, float* aChainLength, float* bChainLength);
             void  triangularInverse   (float xTarget,float yTarget, float* aChainLength, float* bChainLength);
             // common items
-            void _verifyValidTarget(float* xTarget,float* yTarget);
+            void _constrainToWorkSurface(float* xTarget,float* yTarget);
              // quadrilateral specific
             float _h; //distance between sled attach point and bit
             float _moment(const float& Y1Plus, const float& Y2Plus, const float& MSinPhi, const float& MSinPsi1, const float& MCosPsi1, const float& MSinPsi2, const float& MCosPsi2);

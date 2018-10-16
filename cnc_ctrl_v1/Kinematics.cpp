@@ -35,7 +35,7 @@ void Kinematics::init(){
     }
 }
 
-void Kinematics::_verifyValidTarget(float* xTarget,float* yTarget){
+void Kinematics::_constrainToWorkSurface(float* xTarget,float* yTarget){
     //If the target point is beyond one of the edges of the board, the machine stops at the edge
 
     *xTarget = (*xTarget < -halfWidth) ? -halfWidth : (*xTarget > halfWidth) ? halfWidth : *xTarget;
@@ -90,7 +90,7 @@ void  Kinematics::inverse(float xTarget,float yTarget, float* aChainLength, floa
 void  Kinematics::quadrilateralInverse(float xTarget,float yTarget, float* aChainLength, float* bChainLength){
 
     //Confirm that the coordinates are on the wood
-    _verifyValidTarget(&xTarget, &yTarget);
+    _constrainToWorkSurface(&xTarget, &yTarget);
 
     //coordinate shift to put (0,0) in the center of the plywood from the left sprocket
     _y = (halfHeight) + sysSettings.lRMotorsYOffsetAboveWorkSurface  - yTarget;
@@ -208,7 +208,7 @@ void  Kinematics::triangularInverse(float xTarget,float yTarget, float* aChainLe
     */
     
     //Confirm that the coordinates are on the work surface
-    _verifyValidTarget(&xTarget, &yTarget);
+    _constrainToWorkSurface(&xTarget, &yTarget);
 
     //Set up variables
     float leftChainAngle = 0;
