@@ -486,7 +486,7 @@
      inkscape:pageopacity="0.0"
      inkscape:pageshadow="2"
      inkscape:zoom="1.6193896"
-     inkscape:cx="263.99244"
+     inkscape:cx="236.59229"
      inkscape:cy="249.78547"
      inkscape:document-units="mm"
      inkscape:current-layer="layer1"
@@ -958,7 +958,7 @@
          y="174.30588"
          x="55.317848"
          id="tspan216759-2-1"
-         sodipodi:role="line">topBeamRightTipFlexAndTwistVerticalCorrection = flexAndTwistFactor* maxTopBeamTipFlexAndTwist</tspan></text>
+         sodipodi:role="line">topBeamTipFlexAndTwistVerticalCorrection = flexAndTwistFactor* maxTopBeamTipFlexAndTwist</tspan></text>
     <text
        xml:space="preserve"
        style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:2.64583325px;line-height:1.25;font-family:Bumpers;-inkscape-font-specification:Bumpers;letter-spacing:0px;word-spacing:0px;fill:#008000;fill-opacity:1;stroke:none;stroke-width:0.06614583"
@@ -1004,35 +1004,35 @@
     <text
        xml:space="preserve"
        style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:2.64583325px;line-height:1.25;font-family:Bumpers;-inkscape-font-specification:Bumpers;letter-spacing:0px;word-spacing:0px;fill:#008000;fill-opacity:1;stroke:none;stroke-width:0.06614583"
-       x="55.369484"
-       y="183.18646"
+       x="55.376747"
+       y="186.89058"
        id="text22878-8"
        transform="rotate(0.11224304)"><tspan
          sodipodi:role="line"
          id="tspan22876-7"
-         x="55.369484"
-         y="183.18646"
+         x="55.376747"
+         y="186.89058"
          style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-family:Chinacat;-inkscape-font-specification:Chinacat;fill:#008000;stroke-width:0.06614583">distanceRatio = (rightMotorX - estimatedBitTipXPosition) / distBetweenLRMotorsGearBoxShafts</tspan></text>
     <text
        xml:space="preserve"
        style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:2.64583325px;line-height:1.25;font-family:Bumpers;-inkscape-font-specification:Bumpers;letter-spacing:0px;word-spacing:0px;fill:#008000;fill-opacity:1;stroke:none;stroke-width:0.06614583"
-       x="55.379997"
-       y="188.55334"
+       x="55.38726"
+       y="192.25746"
        id="text24726"
        transform="rotate(0.11224304)"><tspan
          sodipodi:role="line"
          id="tspan24724"
-         x="55.379997"
-         y="188.55334"
+         x="55.38726"
+         y="192.25746"
          style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-family:Chinacat;-inkscape-font-specification:Chinacat;fill:#008000;stroke-width:0.06614583">maxTopBeamTipFlexAndTwist = topBeamTipFlexAndTwistVerticalCorrection when sled is under right motor</tspan><tspan
          sodipodi:role="line"
-         x="55.379997"
-         y="191.95572"
+         x="55.38726"
+         y="195.65984"
          style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-family:Chinacat;-inkscape-font-specification:Chinacat;fill:#008000;stroke-width:0.06614583"
          id="tspan25325">                                                   That is when estimatedBitTipXPosition = rightMotorX</tspan><tspan
          sodipodi:role="line"
-         x="55.379997"
-         y="195.35811"
+         x="55.38726"
+         y="199.06223"
          style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-family:Chinacat;-inkscape-font-specification:Chinacat;fill:#008000;stroke-width:0.06614583"
          id="tspan25323">                                                 = factor*SledWeight = a measured calibration outcome</tspan></text>
     <path
@@ -1056,11 +1056,11 @@
        xml:space="preserve"
        style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:2.64583325px;line-height:1;font-family:Bumpers;-inkscape-font-specification:Bumpers;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.06614583"
        x="105.47287"
-       y="185.36087"
+       y="189.06499"
        id="text25292"><tspan
          sodipodi:role="line"
          x="105.47287"
-         y="185.36087"
+         y="189.06499"
          style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;line-height:1;font-family:Courier;-inkscape-font-specification:Courier;text-align:start;text-anchor:start;stroke-width:0.06614583"
          id="tspan25290">^-This changes during sled movement</tspan></text>
     <text
@@ -1077,22 +1077,22 @@
     <text
        xml:space="preserve"
        style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:2.82222223px;line-height:0.89999998;font-family:Bumpers;-inkscape-font-specification:Bumpers;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.26458332"
-       x="129.31924"
-       y="177.95793"
+       x="77.036171"
+       y="180.57208"
        id="text25313"><tspan
          sodipodi:role="line"
          id="tspan25311"
-         x="129.31924"
-         y="177.95793"
-         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-family:Courier;-inkscape-font-specification:Courier;stroke-width:0.26458332">&lt;-Fy varies from 0 (d=L) </tspan><tspan
+         x="77.036171"
+         y="180.57208"
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-family:Courier;-inkscape-font-specification:Courier;stroke-width:0.26458332">Fy varies from 0 (estimatedBitTipXPosition = LeftMotorX) </tspan><tspan
          sodipodi:role="line"
-         x="129.31924"
-         y="180.64801"
+         x="77.036171"
+         y="183.26216"
          style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-family:Courier;-inkscape-font-specification:Courier;stroke-width:0.26458332"
-         id="tspan25321">to Sled Weight (d=0)</tspan><tspan
+         id="tspan25321">to Sled Weight (estimatedBitTipXPosition= RightmotorX)</tspan><tspan
          sodipodi:role="line"
-         x="129.31924"
-         y="183.33809"
+         x="77.036171"
+         y="185.95224"
          style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-family:Courier;-inkscape-font-specification:Courier;stroke-width:0.26458332"
          id="tspan25315" /></text>
   </g>
