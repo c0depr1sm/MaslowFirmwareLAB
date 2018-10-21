@@ -214,14 +214,14 @@ void  Kinematics::triangularInverse(float xTarget,float yTarget, float* aChainLe
     float rightChainAngle = 0;
     float leftChainAroundSprocket = 0;
     float rightChainAroundSprocket = 0;
-    float distanceRatio = 1;
+    float distanceRatio = 1.0f;
     float adjustedLeftMotorY = 0; // accounting for beam vertical deflection depending on sled weight and position
     float adjustedRightMotorY = 0; // accounting for beam vertical deflection depending on sled weight and position
     
     //Calculate vertical beam Tip deflection due to sled weight, according to sled horizontal position
     distanceRatio = (rightMotorX - xTarget)/ sysSettings.distBetweenLRMotorsGearBoxShafts; // note that distance ratio is 0 at right motor X position, and 1 at left motor X possition
-    float topBeamRightTipFlexAndTwistVerticalCorrection = (2*(pow(distanceRatio,2)-distanceRatio)+1) * sysSettings.maxTopBeamTipFlexAndTwist;
-    float topBeamLeftTipFlexAndTwistVerticalCorrection = (2*(pow(1-distanceRatio,2)-(1-distanceRatio))+1) * sysSettings.maxTopBeamTipFlexAndTwist;
+    float topBeamRightTipFlexAndTwistVerticalCorrection = (2.0f*(pow(distanceRatio,2)-distanceRatio)+1.0f) * sysSettings.maxTopBeamTipFlexAndTwist;
+    float topBeamLeftTipFlexAndTwistVerticalCorrection = (2.0f*(pow(1-distanceRatio,2)-(1-distanceRatio))+1.0f) * sysSettings.maxTopBeamTipFlexAndTwist;
     
     adjustedLeftMotorY = leftMotorY - topBeamLeftTipFlexAndTwistVerticalCorrection;
     adjustedRightMotorY = rightMotorY - topBeamRightTipFlexAndTwistVerticalCorrection;
@@ -257,8 +257,8 @@ void  Kinematics::triangularInverse(float xTarget,float yTarget, float* aChainLe
     rightChainStraightSection *= (1 + ((sysSettings.chainSagCorrectionFactor / 1000000000000) * pow(cos(rightChainAngle),2) * pow(rightChainStraightSection,2) * pow((tan(leftChainAngle)  * cos(rightChainAngle)) + sin(rightChainAngle),2)));
 
     //Calculate total chain lengths accounting for sprocket geometry and chain sag
-    float leftChainReachBeyondSprocketTop = leftChainAroundSprocket + leftChainStraightSection * leftChainTolerance;  // madgrizzle point out: "added the chain tolerance here.. this should be <=  1"
-    float rightChainReachBeyondSprocketTop = rightChainAroundSprocket + rightChainStraightSection * rightChainTolerance;
+    float leftChainReachBeyondSprocketTop = leftChainAroundSprocket + leftChainStraightSection * sysSettings.leftChainTolerance;  // madgrizzle point out: "added the chain tolerance here.. this should be <=  1"
+    float rightChainReachBeyondSprocketTop = rightChainAroundSprocket + rightChainStraightSection * sysSettings.rightChainTolerance;
 
     //Subtract of the virtual length which is added to the chain by the rotation mechanism
     leftChainReachBeyondSprocketTop = leftChainReachBeyondSprocketTop - sysSettings.sledRotationDiskRadius;

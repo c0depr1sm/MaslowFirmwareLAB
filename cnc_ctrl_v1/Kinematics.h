@@ -45,13 +45,9 @@
             float rightMotorX = 1800.0;
             float rightMotorY = 1200.0;
             float topBeamRightTipFlexAndTwistVerticalCorrection = 0; // latest calculated right motor vertical position correction 
-            float leftChainTolerance = 0;
-            float rightChainTolerance = 0;
 
             float halfWidth;                      //Half the machine width
             float halfHeight;                    //Half the machine height
-            //float RleftChainTolerance     = 10.1;    // Left sprocket radius including chain tolerance --unused
-            //float RrightChainTolerance    = 10.1;    // Right sprocket radius including chain tolerance --unused
          private:
             void  quadrilateralInverse   (float xTarget,float yTarget, float* aChainLength, float* bChainLength);
             void  triangularInverse   (float xTarget,float yTarget, float* aChainLength, float* bChainLength);

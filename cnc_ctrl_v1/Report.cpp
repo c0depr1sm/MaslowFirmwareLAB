@@ -226,13 +226,11 @@ void reportMaslowSettings() {
     Serial.print(F(" (chain sag correction value)\r\n$38=")); Serial.print(sysSettings.chainOverSprocket);
     Serial.print(F(" (chain over sprocket)\r\n$39=")); Serial.print(sysSettings.fPWM);
     Serial.print(F(" (PWM frequency value 1=39,000Hz, 2=4,100Hz, 3=490Hz)\r\n$40=")); Serial.print(sysSettings.leftChainTolerance, 8);
-    Serial.print(F(" (chain tolerance, left chain, mm)\r\n$41=")); Serial.print(sysSettings.rightChainTolerance, 8);
-    Serial.print(F(" (chain tolerance, right chain, mm)\r\n$42=")); Serial.print(sysSettings.positionErrorLimit, 8);
+    Serial.print(F(" (chain tolerance, left chain, %)\r\n$41=")); Serial.print(sysSettings.rightChainTolerance, 8);
+    Serial.print(F(" (chain tolerance, right chain, %)\r\n$42=")); Serial.print(sysSettings.positionErrorLimit, 8);
     Serial.print(F(" (position error alarm limit, mm)\r\n$43=")); Serial.print(sysSettings.topBeamTilt, 8);
     Serial.print(F(" (top beam tilt, degrees)\r\n$44=")); Serial.print(sysSettings.maxTopBeamTipFlexAndTwist, 8);
-    Serial.print(F(" (top beam tip max vertical deflection, degrees)\r\n")); Serial.print(kinematics.leftChainTolerance,8);
-    Serial.print(F(" (left chain tolerance, degrees)\r\n")); Serial.print(kinematics.rightChainTolerance,8);
-    Serial.print(F(" (right chain tolerance, degrees)\r\n")); Serial.print(kinematics.leftMotorX,8);
+    Serial.print(F(" (top beam tip max vertical deflection, mm)\r\n")); Serial.print(kinematics.leftMotorX,8);
     Serial.print(F(" (left Motor X, mm)\r\n")); Serial.print(kinematics.leftMotorY,8);
     Serial.print(F(" (left Motor Y, mm)\r\n")); Serial.print(kinematics.topBeamLeftTipFlexAndTwistVerticalCorrection,8);
     Serial.print(F(" (left Motor Y correction, mm)\r\n")); Serial.print(kinematics.rightMotorX,8);
