@@ -416,11 +416,15 @@ byte settingsStoreGlobalSetting(const byte& parameter,const float& value){
               setPWMPrescalers(value);
               break;
         case 40:
-              sysSettings.leftChainTolerance = value;
+              // waiting for ground control to change for new meaning. Meanwhile, we convert it here.
+              // distPerRotLeftChainTolerance = (1 + (float(self.config.get('Advanced Settings', 'leftChainTolerance')) / 100)) * float(self.config.get('Advanced Settings', 'gearTeeth')) * float(self.config.get('Advanced Settings', 'chainPitch'))
+              sysSettings.leftChainTolerance = (((value / sysSettings.lRDistPerRot)-1.0f)*100.0f);
               kinematics.recomputeGeometry();
               break;
         case 41:
-              sysSettings.rightChainTolerance = value;
+              // waiting for ground control to change for new meaning. Meanwhile, we convert it here.
+              // distPerRotLeftChainTolerance = (1 + (float(self.config.get('Advanced Settings', 'leftChainTolerance')) / 100)) * float(self.config.get('Advanced Settings', 'gearTeeth')) * float(self.config.get('Advanced Settings', 'chainPitch'))
+              sysSettings.rightChainTolerance = (((value / sysSettings.lRDistPerRot)-1.0f)*100.0f);
               kinematics.recomputeGeometry();
               break;
         case 42:

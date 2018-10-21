@@ -179,8 +179,10 @@ void reportMaslowSettings() {
     Serial.print(F("$37=")); Serial.println(sysSettings.chainSagCorrectionFactor, 8);
     Serial.print(F("$38=")); Serial.println(sysSettings.chainOverSprocket);
     Serial.print(F("$39=")); Serial.println(sysSettings.fPWM);
-    Serial.print(F("$40=")); Serial.println(sysSettings.leftChainTolerance, 8);
-    Serial.print(F("$41=")); Serial.println(sysSettings.rightChainTolerance, 8);
+    // waiting for ground control to change for new meaning. Meanwhile, we convert it here.
+    // distPerRotLeftChainTolerance = (1 + (float(self.config.get('Advanced Settings', 'leftChainTolerance')) / 100)) * float(self.config.get('Advanced Settings', 'gearTeeth')) * float(self.config.get('Advanced Settings', 'chainPitch'))
+    Serial.print(F("$40=")); Serial.println(((sysSettings.leftChainTolerance / 100.0f)+1.0f)*sysSettings.lRDistPerRot, 8);
+    Serial.print(F("$41=")); Serial.println(((sysSettings.rightChainTolerance / 100.0f)+1.0f)*sysSettings.lRDistPerRot, 8);
     Serial.print(F("$42=")); Serial.println(sysSettings.positionErrorLimit, 8);
     Serial.print(F("$43=")); Serial.println(sysSettings.topBeamTilt, 8);
     Serial.print(F("$44=")); Serial.println(sysSettings.maxTopBeamTipFlexAndTwist, 8);
