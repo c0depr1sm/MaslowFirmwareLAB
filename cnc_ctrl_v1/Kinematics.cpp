@@ -62,10 +62,10 @@ void Kinematics::recomputeGeometry(){
     
     // according to madgrizzle proposal to integrate into kynematics the chain tolerance and motor x,y coordinates
     // these are the idealised motor positions BEFORE any any adjustment accounting for deflection induced by sled weight
-    leftMotorX = cos(sysSettings.topBeamTilt*DEGREE_TO_RADIAN)*sysSettings.distBetweenLRMotorsGearBoxShafts/-2.0;
-    leftMotorY = (sysSettings.lRMotorsYOffsetAboveWorkSurface+sysSettings.workSurfaceHeight/2.0) - (sin(sysSettings.topBeamTilt*DEGREE_TO_RADIAN)*sysSettings.distBetweenLRMotorsGearBoxShafts/2.0);
-    rightMotorX = cos(sysSettings.topBeamTilt*DEGREE_TO_RADIAN)*sysSettings.distBetweenLRMotorsGearBoxShafts/2.0;
-    rightMotorY = (sysSettings.lRMotorsYOffsetAboveWorkSurface+sysSettings.workSurfaceHeight/2.0) + (sin(sysSettings.topBeamTilt*DEGREE_TO_RADIAN)*sysSettings.distBetweenLRMotorsGearBoxShafts/2.0);
+    leftMotorX = cos(sysSettings.topBeamTilt*DEG_TO_RAD)*sysSettings.distBetweenLRMotorsGearBoxShafts/-2.0;
+    leftMotorY = (sysSettings.lRMotorsYOffsetAboveWorkSurface+sysSettings.workSurfaceHeight/2.0) - (sin(sysSettings.topBeamTilt*DEG_TO_RAD)*sysSettings.distBetweenLRMotorsGearBoxShafts/2.0);
+    rightMotorX = cos(sysSettings.topBeamTilt*DEG_TO_RAD)*sysSettings.distBetweenLRMotorsGearBoxShafts/2.0;
+    rightMotorY = (sysSettings.lRMotorsYOffsetAboveWorkSurface+sysSettings.workSurfaceHeight/2.0) + (sin(sysSettings.topBeamTilt*DEG_TO_RAD)*sysSettings.distBetweenLRMotorsGearBoxShafts/2.0);
     leftChainTolerance = sysSettings.lRDistPerRot/sysSettings.distPerRotLeftChainTolerance; //doing it this way only to reduce changes to existing code
     rightChainTolerance = sysSettings.lRDistPerRot/sysSettings.distPerRotRightChainTolerance; //doing it this way only to reduce changes to existing code
     
