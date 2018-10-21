@@ -45,8 +45,8 @@
             float rightMotorX = 1800.0;
             float rightMotorY = 1200.0;
             float topBeamRightTipFlexAndTwistVerticalCorrection = 0; // latest calculated right motor vertical position correction 
-            float leftChainTolerance = 1;
-            float rightChainTolerance = 1;
+            float leftChainTolerance = 0;
+            float rightChainTolerance = 0;
 
             float halfWidth;                      //Half the machine width
             float halfHeight;                    //Half the machine height

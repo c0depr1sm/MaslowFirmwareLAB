@@ -66,8 +66,6 @@ void Kinematics::recomputeGeometry(){
     leftMotorY = (sysSettings.lRMotorsYOffsetAboveWorkSurface+sysSettings.workSurfaceHeight/2.0) - (sin(sysSettings.topBeamTilt*DEG_TO_RAD)*sysSettings.distBetweenLRMotorsGearBoxShafts/2.0);
     rightMotorX = cos(sysSettings.topBeamTilt*DEG_TO_RAD)*sysSettings.distBetweenLRMotorsGearBoxShafts/2.0;
     rightMotorY = (sysSettings.lRMotorsYOffsetAboveWorkSurface+sysSettings.workSurfaceHeight/2.0) + (sin(sysSettings.topBeamTilt*DEG_TO_RAD)*sysSettings.distBetweenLRMotorsGearBoxShafts/2.0);
-    leftChainTolerance = sysSettings.lRDistPerRot/sysSettings.distPerRotLeftChainTolerance; //doing it this way only to reduce changes to existing code
-    rightChainTolerance = sysSettings.lRDistPerRot/sysSettings.distPerRotRightChainTolerance; //doing it this way only to reduce changes to existing code
     
 }
 
@@ -239,8 +237,8 @@ void  Kinematics::triangularInverse(float xTarget,float yTarget, float* aChainLe
         leftChainAngle  = asin((adjustedLeftMotorY  - yTarget)/leftMotorDistance)  + asin(sprocketEffectiveRadius/leftMotorDistance); // removing chain tolerance and , updated to reflect new way of using X,Y coordinates of motors
         rightChainAngle = asin((adjustedRightMotorY - yTarget)/rightMotorDistance) + asin(sprocketEffectiveRadius/rightMotorDistance);
 
-        leftChainAroundSprocket  = sprocketEffectiveRadius * leftChainAngle;
-        rightChainAroundSprocket = sprocketEffectiveRadius * rightChainAngle;
+        leftChainAroundSprocket  = sprocketEffectiveRadius * (1.0f + sysSettings.leftChainTolerance / 100.0f);
+        rightChainAroundSprocket = sprocketEffectiveRadius * (1.0f + sysSettings.rightChainTolerance / 100.0f);
     }
     else{
         leftChainAngle  = asin((adjustedLeftMotorY  - yTarget)/leftMotorDistance)  - asin(sprocketEffectiveRadius/leftMotorDistance); // removing chain tolerance and , updated to reflect new way of using X,Y coordinates of motors

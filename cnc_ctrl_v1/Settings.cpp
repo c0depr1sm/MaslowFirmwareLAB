@@ -113,8 +113,8 @@ void settingsReset() {
     sysSettings.chainSagCorrectionFactor = 0.0;  // float chainSagCorrectionFactor;
     sysSettings.chainOverSprocket = 1;   // byte chainOverSprocket;
     sysSettings.fPWM = 3;   // byte fPWM;
-    sysSettings.distPerRotLeftChainTolerance = 63.5;    // float distPerRotLeftChainTolerance;
-    sysSettings.distPerRotRightChainTolerance = 63.5;    // float distPerRotRightChainTolerance;
+    sysSettings.leftChainTolerance = 0.0;    // float leftChainTolerance;
+    sysSettings.rightChainTolerance = 0.0;    // float rightChainTolerance;
     sysSettings.positionErrorLimit = 2.0;  // float positionErrorLimit;
     sysSettings.topBeamTilt = 0.0; // degree, measured relative to horizontal, counter clockwise is positive 
     sysSettings.maxTopBeamTipFlexAndTwist = 2.9; // mm beam tip vertical shift under sled weight 
@@ -416,11 +416,11 @@ byte settingsStoreGlobalSetting(const byte& parameter,const float& value){
               setPWMPrescalers(value);
               break;
         case 40:
-              sysSettings.distPerRotLeftChainTolerance = value;
+              sysSettings.leftChainTolerance = value;
               kinematics.recomputeGeometry();
               break;
         case 41:
-              sysSettings.distPerRotRightChainTolerance = value;
+              sysSettings.rightChainTolerance = value;
               kinematics.recomputeGeometry();
               break;
         case 42:
