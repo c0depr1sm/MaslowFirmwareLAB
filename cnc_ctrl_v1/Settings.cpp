@@ -116,7 +116,8 @@ void settingsReset() {
     sysSettings.distPerRotLeftChainTolerance = 63.5;    // float distPerRotLeftChainTolerance;
     sysSettings.distPerRotRightChainTolerance = 63.5;    // float distPerRotRightChainTolerance;
     sysSettings.positionErrorLimit = 2.0;  // float positionErrorLimit;
-    sysSettings.topBeamTilt = 0.0; 
+    sysSettings.topBeamTilt = 0.0; // degree, measured relative to horizontal, counter clockwise is positive 
+    sysSettings.maxTopBeamTipFlexAndTwist = 2.9; // mm beam tip vertical shift under sled weight 
     sysSettings.eepromValidData = EEPROMVALIDDATA; // byte eepromValidData;
 }
 
@@ -428,7 +429,11 @@ byte settingsStoreGlobalSetting(const byte& parameter,const float& value){
               sysSettings.topBeamTilt = value;
               kinematics.recomputeGeometry();
               break;
-       default:
+        case 44:
+              sysSettings.maxTopBeamTipFlexAndTwist = value;
+              kinematics.recomputeGeometry();
+              break;
+        default:
               return(STATUS_INVALID_STATEMENT);
     }
     settingsSaveToEEprom();

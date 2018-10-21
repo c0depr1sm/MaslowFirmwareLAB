@@ -41,8 +41,10 @@
             // here some default values upon initialization
             float leftMotorX = -1800.0;
             float leftMotorY = 1200.0;
+            float topBeamLeftTipFlexAndTwistVerticalCorrection = 0; // latest calculated left motor vertical position correction 
             float rightMotorX = 1800.0;
             float rightMotorY = 1200.0;
+            float topBeamRightTipFlexAndTwistVerticalCorrection = 0; // latest calculated right motor vertical position correction 
             float leftChainTolerance = 1;
             float rightChainTolerance = 1;
 

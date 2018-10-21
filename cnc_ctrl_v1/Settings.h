@@ -20,9 +20,10 @@ Copyright 2014-2017 Bar Smith*/
 #ifndef settings_h
 #define settings_h
 
-#define SETTINGSVERSION 5      // The current version of settings, if this doesn't
+#define SETTINGSVERSION 6      // The current version of settings, if this doesn't
                                // match what is in EEPROM then settings on
                                // machine are reset to defaults // following madgrizzle proposal, get to rev 5 for beamtilt parameter and new chain tolerance parameter meaning gets enabled
+                               // Also Includes a proposal for maxTopBeamTipFlexAndTwist calibration factor 
 #define EEPROMVALIDDATA 56     // This is just a random byte value that is used 
                                // to determine if the data in the EEPROM was 
                                // saved by maslow, or something else.
@@ -82,6 +83,7 @@ typedef struct {  // I think this is about ~128 bytes in size if I counted corre
   float distPerRotRightChainTolerance; // repurposed
   float positionErrorLimit;
   float topBeamTilt;  // (deg), positive counterclockwise // madgrizzle proposal to add for Holey Calibration . Note: angle is positive counter clockwise, 0 deg = pointing to the right on the X axis.
+  float maxTopBeamTipFlexAndTwist;  // (mm) beam tip vertical shift under sled weight (We assume the left and right end of the beam have similar deflection 
   byte eepromValidData;  // This should always be last, that way if an error
                          // happens in writing, it will not be written and we
 } settings_t;            // will know to reset the settings

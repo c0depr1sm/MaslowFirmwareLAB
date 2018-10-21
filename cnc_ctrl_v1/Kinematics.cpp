@@ -61,6 +61,7 @@ void Kinematics::recomputeGeometry(){
     sprocketEffectiveRadius = (sysSettings.lRDistPerRot)/(2.0 * M_PI); //replaced numerical with value defined in avr-lib.c (see http://www.nongnu.org/avr-libc/user-manual/group__avr__math.html)
     
     // according to madgrizzle proposal to integrate into kynematics the chain tolerance and motor x,y coordinates
+    // these are the idealised motor positions BEFORE any any adjustment accounting for deflection induced by sled weight
     leftMotorX = cos(sysSettings.topBeamTilt*DEGREE_TO_RADIAN)*sysSettings.distBetweenLRMotorsGearBoxShafts/-2.0;
     leftMotorY = (sysSettings.lRMotorsYOffsetAboveWorkSurface+sysSettings.workSurfaceHeight/2.0) - (sin(sysSettings.topBeamTilt*DEGREE_TO_RADIAN)*sysSettings.distBetweenLRMotorsGearBoxShafts/2.0);
     rightMotorX = cos(sysSettings.topBeamTilt*DEGREE_TO_RADIAN)*sysSettings.distBetweenLRMotorsGearBoxShafts/2.0;
@@ -215,24 +216,35 @@ void  Kinematics::triangularInverse(float xTarget,float yTarget, float* aChainLe
     float rightChainAngle = 0;
     float leftChainAroundSprocket = 0;
     float rightChainAroundSprocket = 0;
+    float distanceRatio = 1;
+    float adjustedLeftMotorY = 0; // accounting for beam vertical deflection depending on sled weight and position
+    float adjustedRightMotorY = 0; // accounting for beam vertical deflection depending on sled weight and position
+    
+    //Calculate vertical beam Tip deflection due to sled weight, according to sled horizontal position
+    distanceRatio = (rightMotorX - xTarget)/ sysSettings.distBetweenLRMotorsGearBoxShafts; // note that distance ratio is 0 at right motor X position, and 1 at left motor X possition
+    float topBeamRightTipFlexAndTwistVerticalCorrection = (2*(pow(distanceRatio,2)-distanceRatio)+1) * sysSettings.maxTopBeamTipFlexAndTwist;
+    float topBeamLeftTipFlexAndTwistVerticalCorrection = (2*(pow(1-distanceRatio,2)-(1-distanceRatio))+1) * sysSettings.maxTopBeamTipFlexAndTwist;
+    
+    adjustedLeftMotorY = leftMotorY - topBeamLeftTipFlexAndTwistVerticalCorrection;
+    adjustedRightMotorY = rightMotorY - topBeamRightTipFlexAndTwistVerticalCorrection;
 
     //Calculate motor axles chain length to the router bit
-    float leftMotorDistance = sqrt(pow((leftMotorX - xTarget),2)+pow((leftMotorY - yTarget),2)); // updated to reflect new madgrizzle proposal of using X,Y coordinates of motors
-    float rightMotorDistance = sqrt(pow((rightMotorX - xTarget),2)+pow((rightMotorY - yTarget),2));
+    float leftMotorDistance = sqrt(pow((leftMotorX - xTarget),2)+pow((adjustedLeftMotorY - yTarget),2)); // updated to reflect new madgrizzle proposal of using X,Y coordinates of motors
+    float rightMotorDistance = sqrt(pow((rightMotorX - xTarget),2)+pow((adjustedRightMotorY - yTarget),2));
 
     //Calculate the chain angles from horizontal, based on if the chain connects to the sled from the top or bottom of the sprocket
     if(sysSettings.chainOverSprocket == 1){
 		// Thanks to madgrizle pointing out that 
 		//            this part is the chain not touching the sprocket + this part is the chain wrapped around the sprocket(held at tooth pitch distance).
-        leftChainAngle  = asin((leftMotorY  - yTarget)/leftMotorDistance)  + asin(sprocketEffectiveRadius/leftMotorDistance); // removing chain tolerance and , updated to reflect new way of using X,Y coordinates of motors
-        rightChainAngle = asin((rightMotorY - yTarget)/rightMotorDistance) + asin(sprocketEffectiveRadius/rightMotorDistance);
+        leftChainAngle  = asin((adjustedLeftMotorY  - yTarget)/leftMotorDistance)  + asin(sprocketEffectiveRadius/leftMotorDistance); // removing chain tolerance and , updated to reflect new way of using X,Y coordinates of motors
+        rightChainAngle = asin((adjustedRightMotorY - yTarget)/rightMotorDistance) + asin(sprocketEffectiveRadius/rightMotorDistance);
 
         leftChainAroundSprocket  = sprocketEffectiveRadius * leftChainAngle;
         rightChainAroundSprocket = sprocketEffectiveRadius * rightChainAngle;
     }
     else{
-        leftChainAngle  = asin((leftMotorY  - yTarget)/leftMotorDistance)  - asin(sprocketEffectiveRadius/leftMotorDistance); // removing chain tolerance and , updated to reflect new way of using X,Y coordinates of motors
-        rightChainAngle = asin((rightMotorY - yTarget)/rightMotorDistance) - asin(sprocketEffectiveRadius/rightMotorDistance);
+        leftChainAngle  = asin((adjustedLeftMotorY  - yTarget)/leftMotorDistance)  - asin(sprocketEffectiveRadius/leftMotorDistance); // removing chain tolerance and , updated to reflect new way of using X,Y coordinates of motors
+        rightChainAngle = asin((adjustedRightMotorY - yTarget)/rightMotorDistance) - asin(sprocketEffectiveRadius/rightMotorDistance);
 
         leftChainAroundSprocket  = sprocketEffectiveRadius * (M_PI - leftChainAngle); //replaced numerical with value defined in avr-lib.c (see http://www.nongnu.org/avr-libc/user-manual/group__avr__math.html)
         rightChainAroundSprocket = sprocketEffectiveRadius * (M_PI - rightChainAngle); //replaced numerical with value defined in avr-lib.c (see http://www.nongnu.org/avr-libc/user-manual/group__avr__math.html)
