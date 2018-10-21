@@ -125,7 +125,7 @@ void MotorGearboxEncoder::setEncoderResolution(float resolution){
     
     */
     
-    _encoderStepsUsecDurationForOneRPM_ScaleFactor = 60000000.0/resolution; //usec per step for 1RMP -> 6*10^7 us per minute divided by 8113.7 steps per revolution
+    _encoderStepsUsecDurationForOneRPM_ScaleFactor = 60000000.0/resolution; //usec per step for 1RMP -> 6*10^7 us per minute divided by 8113.73 steps per revolution
     
 }
 
