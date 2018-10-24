@@ -79,8 +79,8 @@ typedef struct {  // I think this is about ~128 bytes in size if I counted corre
   float chainSagCorrectionFactor; // Formerly chainSagCorrection, but this is thereally the correction factor for the sag compensation calculation. It is computed during a calibration procedure.
   byte chainOverSprocket;
   byte fPWM;
-  float leftChainTolerance; 
-  float rightChainTolerance;
+  float leftChainLengthCorrection; 
+  float rightChainLengthCorrection;
   float positionErrorLimit;
   float topBeamTilt;  // (deg), positive counterclockwise // madgrizzle proposal to add for Holey Calibration . Note: angle is positive counter clockwise, 0 deg = pointing to the right on the X axis.
   float maxTopBeamTipFlexAndTwist;  // (mm) beam tip vertical shift under sled weight (We assume the left and right end of the beam have similar deflection 

@@ -181,8 +181,8 @@ void reportMaslowSettings() {
     Serial.print(F("$39=")); Serial.println(sysSettings.fPWM);
     // waiting for ground control to change for new meaning. Meanwhile, we convert it here.
     // distPerRotLeftChainTolerance = (1 + (float(self.config.get('Advanced Settings', 'leftChainTolerance')) / 100)) * float(self.config.get('Advanced Settings', 'gearTeeth')) * float(self.config.get('Advanced Settings', 'chainPitch'))
-    Serial.print(F("$40=")); Serial.println(((sysSettings.leftChainTolerance / 100.0f)+1.0f)*sysSettings.lRDistPerRot, 8);
-    Serial.print(F("$41=")); Serial.println(((sysSettings.rightChainTolerance / 100.0f)+1.0f)*sysSettings.lRDistPerRot, 8);
+    Serial.print(F("$40=")); Serial.println(sysSettings.leftChainLengthCorrection*sysSettings.lRDistPerRot, 8);
+    Serial.print(F("$41=")); Serial.println(sysSettings.rightChainLengthCorrection*sysSettings.lRDistPerRot, 8);
     Serial.print(F("$42=")); Serial.println(sysSettings.positionErrorLimit, 8);
     Serial.print(F("$43=")); Serial.println(sysSettings.topBeamTilt, 8);
     Serial.print(F("$44=")); Serial.println(sysSettings.maxTopBeamTipFlexAndTwist, 8);
@@ -230,8 +230,8 @@ void reportMaslowSettings() {
     Serial.print(F(" (PWM frequency value 1=39,000Hz, 2=4,100Hz, 3=490Hz)\r\n$40="));
    // waiting for ground control to change for new meaning. Meanwhile, we convert it here.
     // distPerRotLeftChainTolerance = (1 + (float(self.config.get('Advanced Settings', 'leftChainTolerance')) / 100)) * float(self.config.get('Advanced Settings', 'gearTeeth')) * float(self.config.get('Advanced Settings', 'chainPitch'))
-    Serial.println(((sysSettings.leftChainTolerance / 100.0f)+1.0f)*sysSettings.lRDistPerRot, 8);
-    Serial.print(F(" (chain tolerance, left chain, %)\r\n$41=")); Serial.println(((sysSettings.rightChainTolerance / 100.0f)+1.0f)*sysSettings.lRDistPerRot, 8);
+    Serial.println(sysSettings.leftChainLengthCorrection*sysSettings.lRDistPerRot, 8);
+    Serial.print(F(" (chain tolerance, left chain, %)\r\n$41=")); Serial.println(sysSettings.rightChainLengthCorrection*sysSettings.lRDistPerRot, 8);
     Serial.print(F(" (chain tolerance, right chain, %)\r\n$42=")); Serial.print(sysSettings.positionErrorLimit, 8);
     Serial.print(F(" (position error alarm limit, mm)\r\n$43=")); Serial.print(sysSettings.topBeamTilt, 8);
     Serial.print(F(" (top beam tilt, degrees)\r\n$44=")); Serial.print(sysSettings.maxTopBeamTipFlexAndTwist, 8);

@@ -113,8 +113,8 @@ void settingsReset() {
     sysSettings.chainSagCorrectionFactor = 0.0;  // float chainSagCorrectionFactor;
     sysSettings.chainOverSprocket = 1;   // byte chainOverSprocket;
     sysSettings.fPWM = 3;   // byte fPWM;
-    sysSettings.leftChainTolerance = 0.0;    // float leftChainTolerance;
-    sysSettings.rightChainTolerance = 0.0;    // float rightChainTolerance;
+    sysSettings.leftChainLengthCorrection = 1.0;    // float leftChainLengthCorrection;
+    sysSettings.rightChainLengthCorrection = 1.0;    // float rightChainLengthCorrection;
     sysSettings.positionErrorLimit = 2.0;  // float positionErrorLimit;
     sysSettings.topBeamTilt = 0.0; // degree, measured relative to horizontal, counter clockwise is positive 
     sysSettings.maxTopBeamTipFlexAndTwist = 2.9; // mm beam tip vertical shift under sled weight 
@@ -418,13 +418,13 @@ byte settingsStoreGlobalSetting(const byte& parameter,const float& value){
         case 40:
               // waiting for ground control to change for new meaning. Meanwhile, we convert it here.
               // distPerRotLeftChainTolerance = (1 + (float(self.config.get('Advanced Settings', 'leftChainTolerance')) / 100)) * float(self.config.get('Advanced Settings', 'gearTeeth')) * float(self.config.get('Advanced Settings', 'chainPitch'))
-              sysSettings.leftChainTolerance = (((value / sysSettings.lRDistPerRot)-1.0f)*100.0f);
+              sysSettings.leftChainLengthCorrection = (value / sysSettings.lRDistPerRot);
               kinematics.recomputeGeometry();
               break;
         case 41:
               // waiting for ground control to change for new meaning. Meanwhile, we convert it here.
               // distPerRotLeftChainTolerance = (1 + (float(self.config.get('Advanced Settings', 'leftChainTolerance')) / 100)) * float(self.config.get('Advanced Settings', 'gearTeeth')) * float(self.config.get('Advanced Settings', 'chainPitch'))
-              sysSettings.rightChainTolerance = (((value / sysSettings.lRDistPerRot)-1.0f)*100.0f);
+              sysSettings.rightChainLengthCorrection = (value / sysSettings.lRDistPerRot);
               kinematics.recomputeGeometry();
               break;
         case 42:
