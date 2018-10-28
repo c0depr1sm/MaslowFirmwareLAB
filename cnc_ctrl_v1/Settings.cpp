@@ -113,10 +113,11 @@ void settingsReset() {
     sysSettings.chainSagCorrectionFactor = 0.0;  // float chainSagCorrectionFactor;
     sysSettings.chainOverSprocket = 1;   // byte chainOverSprocket;
     sysSettings.fPWM = 3;   // byte fPWM;
-    sysSettings.distPerRotLeftChainTolerance = 63.5;    // float distPerRotLeftChainTolerance;
-    sysSettings.distPerRotRightChainTolerance = 63.5;    // float distPerRotRightChainTolerance;
+    sysSettings.leftChainLengthCorrection = 1.0;    // float leftChainLengthCorrection;
+    sysSettings.rightChainLengthCorrection = 1.0;    // float rightChainLengthCorrection;
     sysSettings.positionErrorLimit = 2.0;  // float positionErrorLimit;
-    sysSettings.topBeamTilt = 0.0; 
+    sysSettings.topBeamTilt = 0.0; // degree, measured relative to horizontal, counter clockwise is positive 
+    sysSettings.maxTopBeamTipFlexAndTwist = 2.9; // mm beam tip vertical shift under sled weight 
     sysSettings.eepromValidData = EEPROMVALIDDATA; // byte eepromValidData;
 }
 
@@ -243,6 +244,7 @@ byte settingsStoreGlobalSetting(const byte& parameter,const float& value){
                       break;
                 case 1:
                       sysSettings.workSurfaceHeight = value;
+                      kinematics.recomputeGeometry();
                       break;
                 case 2:
                       sysSettings.distBetweenLRMotorsGearBoxShafts = value;
@@ -414,11 +416,15 @@ byte settingsStoreGlobalSetting(const byte& parameter,const float& value){
               setPWMPrescalers(value);
               break;
         case 40:
-              sysSettings.distPerRotLeftChainTolerance = value;
+              // waiting for ground control to change for new meaning. Meanwhile, we convert it here.
+              // distPerRotLeftChainTolerance = (1 + (float(self.config.get('Advanced Settings', 'leftChainTolerance')) / 100)) * float(self.config.get('Advanced Settings', 'gearTeeth')) * float(self.config.get('Advanced Settings', 'chainPitch'))
+              sysSettings.leftChainLengthCorrection = (value / sysSettings.lRDistPerRot);
               kinematics.recomputeGeometry();
               break;
         case 41:
-              sysSettings.distPerRotRightChainTolerance = value;
+              // waiting for ground control to change for new meaning. Meanwhile, we convert it here.
+              // distPerRotLeftChainTolerance = (1 + (float(self.config.get('Advanced Settings', 'leftChainTolerance')) / 100)) * float(self.config.get('Advanced Settings', 'gearTeeth')) * float(self.config.get('Advanced Settings', 'chainPitch'))
+              sysSettings.rightChainLengthCorrection = (value / sysSettings.lRDistPerRot);
               kinematics.recomputeGeometry();
               break;
         case 42:
@@ -428,7 +434,11 @@ byte settingsStoreGlobalSetting(const byte& parameter,const float& value){
               sysSettings.topBeamTilt = value;
               kinematics.recomputeGeometry();
               break;
-       default:
+        case 44:
+              sysSettings.maxTopBeamTipFlexAndTwist = value;
+              kinematics.recomputeGeometry();
+              break;
+        default:
               return(STATUS_INVALID_STATEMENT);
     }
     settingsSaveToEEprom();

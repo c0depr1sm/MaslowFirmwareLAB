@@ -179,10 +179,13 @@ void reportMaslowSettings() {
     Serial.print(F("$37=")); Serial.println(sysSettings.chainSagCorrectionFactor, 8);
     Serial.print(F("$38=")); Serial.println(sysSettings.chainOverSprocket);
     Serial.print(F("$39=")); Serial.println(sysSettings.fPWM);
-    Serial.print(F("$40=")); Serial.println(sysSettings.distPerRotLeftChainTolerance, 8);
-    Serial.print(F("$41=")); Serial.println(sysSettings.distPerRotRightChainTolerance, 8);
+    // waiting for ground control to change for new meaning. Meanwhile, we convert it here.
+    // distPerRotLeftChainTolerance = (1 + (float(self.config.get('Advanced Settings', 'leftChainTolerance')) / 100)) * float(self.config.get('Advanced Settings', 'gearTeeth')) * float(self.config.get('Advanced Settings', 'chainPitch'))
+    Serial.print(F("$40=")); Serial.println(sysSettings.leftChainLengthCorrection*sysSettings.lRDistPerRot, 8);
+    Serial.print(F("$41=")); Serial.println(sysSettings.rightChainLengthCorrection*sysSettings.lRDistPerRot, 8);
     Serial.print(F("$42=")); Serial.println(sysSettings.positionErrorLimit, 8);
     Serial.print(F("$43=")); Serial.println(sysSettings.topBeamTilt, 8);
+    Serial.print(F("$44=")); Serial.println(sysSettings.maxTopBeamTipFlexAndTwist, 8);
     
   #else
     Serial.print(F("$0=")); Serial.print(sysSettings.workSurfaceWidth);
@@ -224,17 +227,21 @@ void reportMaslowSettings() {
     Serial.print(F(" (z axle Velocity proportional weight)\r\n$37=")); Serial.print(sysSettings.chainSagCorrectionFactor, 8);
     Serial.print(F(" (chain sag correction value)\r\n$38=")); Serial.print(sysSettings.chainOverSprocket);
     Serial.print(F(" (chain over sprocket)\r\n$39=")); Serial.print(sysSettings.fPWM);
-    Serial.print(F(" (PWM frequency value 1=39,000Hz, 2=4,100Hz, 3=490Hz)\r\n$40=")); Serial.print(sysSettings.distPerRotLeftChainTolerance, 8);
-    Serial.print(F(" (distance / rotation, including chain tolerance, left chain, mm)\r\n$41=")); Serial.print(sysSettings.distPerRotRightChainTolerance, 8);
-    Serial.print(F(" (distance / rotation, including chain tolerance, right chain, mm)\r\n$42=")); Serial.print(sysSettings.positionErrorLimit, 8);
+    Serial.print(F(" (PWM frequency value 1=39,000Hz, 2=4,100Hz, 3=490Hz)\r\n$40="));
+   // waiting for ground control to change for new meaning. Meanwhile, we convert it here.
+    // distPerRotLeftChainTolerance = (1 + (float(self.config.get('Advanced Settings', 'leftChainTolerance')) / 100)) * float(self.config.get('Advanced Settings', 'gearTeeth')) * float(self.config.get('Advanced Settings', 'chainPitch'))
+    Serial.println(sysSettings.leftChainLengthCorrection*sysSettings.lRDistPerRot, 8);
+    Serial.print(F(" (chain tolerance, left chain, %)\r\n$41=")); Serial.println(sysSettings.rightChainLengthCorrection*sysSettings.lRDistPerRot, 8);
+    Serial.print(F(" (chain tolerance, right chain, %)\r\n$42=")); Serial.print(sysSettings.positionErrorLimit, 8);
     Serial.print(F(" (position error alarm limit, mm)\r\n$43=")); Serial.print(sysSettings.topBeamTilt, 8);
-    Serial.print(F(" (top beam tilt, degrees)\r\n")); Serial.print(kinematics.leftChainTolerance,8);
-    Serial.print(F(" (left chain tolerance, degrees)\r\n")); Serial.print(kinematics.rightChainTolerance,8);
-    Serial.print(F(" (right chain tolerance, degrees)\r\n")); Serial.print(kinematics.leftMotorX,8);
+    Serial.print(F(" (top beam tilt, degrees)\r\n$44=")); Serial.print(sysSettings.maxTopBeamTipFlexAndTwist, 8);
+    Serial.print(F(" (top beam tip max vertical deflection, mm)\r\n")); Serial.print(kinematics.leftMotorX,8);
     Serial.print(F(" (left Motor X, mm)\r\n")); Serial.print(kinematics.leftMotorY,8);
-    Serial.print(F(" (left Motor Y, mm)\r\n")); Serial.print(kinematics.rightMotorX,8);
+    Serial.print(F(" (left Motor Y, mm)\r\n")); Serial.print(kinematics.topBeamLeftTipFlexAndTwistVerticalCorrection,8);
+    Serial.print(F(" (left Motor Y correction, mm)\r\n")); Serial.print(kinematics.rightMotorX,8);
     Serial.print(F(" (right Motor X, mm)\r\n")); Serial.print(kinematics.rightMotorY,8);
-    Serial.print(F(" (right Motor Y, mm)\r\n"));
+    Serial.print(F(" (right Motor Y, mm)\r\n")); Serial.print(kinematics.topBeamRightTipFlexAndTwistVerticalCorrection,8);
+    Serial.print(F(" (right Motor Y correction, mm)\r\n"));
     Serial.println();
   #endif
 }

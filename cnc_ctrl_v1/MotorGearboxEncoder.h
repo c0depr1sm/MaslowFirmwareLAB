@@ -50,7 +50,7 @@
             // calculation would have to be done at a much higher level and 
             // passed through each axle for it to have a single pointer to 
             // both main motors
-            float      _encoderStepsUsecDurationForOneRPM_ScaleFactor = 7394.9; // usec per step for 1 RPM.   //6*10^7 us per minute divided by 8113.7 steps per revolution
+            float      _encoderStepsUsecDurationForOneRPM_ScaleFactor = 7394.9; // usec per step for 1 RPM.   //6*10^7 us per minute divided by 8113.73 steps per revolution
     };
 
     #endif
