@@ -254,9 +254,10 @@ void  Kinematics::triangularInverse(float xTarget,float yTarget, float* aChainLe
     float rightChainStraightSection = sqrt(pow(rightMotorDistance,2)-pow(sprocketEffectiveRadius,2));
 
     //Correct the straight chain lengths to account for chain sag
-    leftChainStraightSection  *= (1 + ((sysSettings.chainSagCorrectionFactor / 1000000000000) * pow(cos(leftChainAngle),2)  * pow(leftChainStraightSection,2)  * pow((tan(rightChainAngle) * cos(leftChainAngle))  + sin(leftChainAngle),2)));
-    rightChainStraightSection *= (1 + ((sysSettings.chainSagCorrectionFactor / 1000000000000) * pow(cos(rightChainAngle),2) * pow(rightChainStraightSection,2) * pow((tan(leftChainAngle)  * cos(rightChainAngle)) + sin(rightChainAngle),2)));
-
+    if (sysSettings.chainSagCorrectionFactor>=0) {
+      leftChainStraightSection  *= (1 + ((sysSettings.chainSagCorrectionFactor / 1000000000000) * pow(cos(leftChainAngle),2)  * pow(leftChainStraightSection,2)  * pow((tan(rightChainAngle) * cos(leftChainAngle))  + sin(leftChainAngle),2)));
+      rightChainStraightSection *= (1 + ((sysSettings.chainSagCorrectionFactor / 1000000000000) * pow(cos(rightChainAngle),2) * pow(rightChainStraightSection,2) * pow((tan(leftChainAngle)  * cos(rightChainAngle)) + sin(rightChainAngle),2)));
+    }
     //Calculate total chain lengths accounting for sprocket geometry and chain sag
     float leftChainReachBeyondSprocketTop = leftChainAroundSprocket + leftChainStraightSection * sysSettings.leftChainLengthCorrection;  // madgrizzle point out: "added the chain tolerance here.. this should be <=  1"
     float rightChainReachBeyondSprocketTop = rightChainAroundSprocket + rightChainStraightSection * sysSettings.rightChainLengthCorrection;
