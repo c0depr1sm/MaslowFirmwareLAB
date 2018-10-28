@@ -7,5 +7,5 @@ I renamed a few things, and I'm working out a parametric model to address source
 Hopefully, when the optical measurement work will yield accurate error measurements, 
 we'll have a parametric model ready for tune up.
 
-For any questions abut the generic Malsow cnc, reach for the main maslow cnc github :-)
+For any questions about the generic Malsow cnc, reach for the main maslow cnc github :-)
 c0depr1sm
