@@ -213,18 +213,21 @@ byte  executeBcodeLine(const String& gcodeLine){
         float lDist = extractGcodeValue(gcodeLine, 'L', 0);
         float rDist = extractGcodeValue(gcodeLine, 'R', 0);
         float speed = extractGcodeValue(gcodeLine, 'F', 800);
-
         if(sys.useRelativeUnits){
-            if(abs(lDist) > 0){
+            if(abs(lDist) > 0){ // Can't we just say if (lDist!=0) ? What is this expression supposed to do? 
                 singleAxleMove(&leftAxle,  leftAxle.getCurrentmmPosition()  + lDist, speed);
             }
-            if(abs(rDist) > 0){
+            if(abs(rDist) > 0){ // Can't we just say if (lDist!=0) ? What is this expression supposed to do?
                 singleAxleMove(&rightAxle, rightAxle.getCurrentmmPosition() + rDist, speed);
             }
         }
-        else{
-            singleAxleMove(&leftAxle,  lDist, speed);
+        else{ // Added condition to only move the axis for which we got position targets. c0depr1sm 2018-11-01
+          if(lDist>0){
+            singleAxleMove(&leftAxle, lDist, speed);
+          }
+          if(rDist>0){
             singleAxleMove(&rightAxle, rDist, speed);
+          }
         }
 
         return STATUS_OK;
