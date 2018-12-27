@@ -217,6 +217,8 @@ void  Kinematics::triangularInverse(float xTarget,float yTarget, float* aChainLe
     float distanceRatio = 1.0f;
     float adjustedLeftMotorY = leftMotorY; 
     float adjustedRightMotorY = rightMotorY; 
+    float chainElongationFactor = 8.1E-6; // m/m/N
+    float sledWeight = 11.6*9.8; // N
     
     //Calculate vertical beam Tip deflection due to sled weight, according to sled horizontal position
     // Assumption: leftMotorX = -rightMotorX
@@ -240,6 +242,7 @@ void  Kinematics::triangularInverse(float xTarget,float yTarget, float* aChainLe
 
         leftChainAroundSprocket  = sprocketEffectiveRadius * leftChainAngle; //replaced numerical with value defined in avr-lib.c (see http://www.nongnu.org/avr-libc/user-manual/group__avr__math.html)
         rightChainAroundSprocket = sprocketEffectiveRadius * rightChainAngle; //replaced numerical with value defined in avr-lib.c (see http://www.nongnu.org/avr-libc/user-manual/group__avr__math.html)
+
     }
     else{
         leftChainAngle  = asin((adjustedLeftMotorY  - yTarget)/leftMotorDistance)  - asin(sprocketEffectiveRadius/leftMotorDistance); // removing chain tolerance and , updated to reflect new way of using X,Y coordinates of motors
@@ -247,20 +250,39 @@ void  Kinematics::triangularInverse(float xTarget,float yTarget, float* aChainLe
 
         leftChainAroundSprocket  = sprocketEffectiveRadius * (M_PI - leftChainAngle); //replaced numerical with value defined in avr-lib.c (see http://www.nongnu.org/avr-libc/user-manual/group__avr__math.html)
         rightChainAroundSprocket = sprocketEffectiveRadius * (M_PI - rightChainAngle); //replaced numerical with value defined in avr-lib.c (see http://www.nongnu.org/avr-libc/user-manual/group__avr__math.html)
-    }
 
-    //Calculate the straight chain length from the sprocket to the bit
+    }
+    // reduce computation?
+    float cos_leftAngle = cos(leftChainAngle);
+    float sin_leftAngle = sin(leftChainAngle);
+    float tan_leftAngle = sin(leftChainAngle)/cos(leftChainAngle);
+    float cos_rightAngle = cos(rightChainAngle);
+    float sin_rightAngle = sin(rightChainAngle);
+    float tan_rightAngle = sin(rightChainAngle)/cos(rightChainAngle);
+    
+    //Calculate the straight chain length from the sprocket to the bit, including sprocket radius displacment of the triangle.
     float leftChainStraightSection = sqrt(pow(leftMotorDistance,2)-pow(sprocketEffectiveRadius,2)); // will apply chain tolerance after sag correction... because Ground control computes a correction without chain tolerance? (ask madgrizzle 
     float rightChainStraightSection = sqrt(pow(rightMotorDistance,2)-pow(sprocketEffectiveRadius,2));
+    
+    //Estimate chains tension, not considering chain weight
+    float leftChainT = sledWeight/(cos_leftAngle*tan_rightAngle + sin_leftAngle);
+    float rightChainT = sledWeight/(cos_rightAngle*tan_leftAngle + sin_rightAngle);
+
+    //Corect the straight chain length to compensate stretch
+    float leftChainElongationFactor = 1+ (leftChainT * chainElongationFactor);
+    leftChainStraightSection = leftChainStraightSection / leftChainElongationFactor;
+    float rightChainElongationFactor = 1+ (rightChainT * chainElongationFactor);
+    rightChainStraightSection = rightChainStraightSection / rightChainElongationFactor;
 
     //Correct the straight chain lengths to account for chain sag
     if (sysSettings.chainSagCorrectionFactor>=0) {
-      leftChainStraightSection  *= (1 + ((sysSettings.chainSagCorrectionFactor / 1000000000000) * pow(cos(leftChainAngle),2)  * pow(leftChainStraightSection,2)  * pow((tan(rightChainAngle) * cos(leftChainAngle))  + sin(leftChainAngle),2)));
-      rightChainStraightSection *= (1 + ((sysSettings.chainSagCorrectionFactor / 1000000000000) * pow(cos(rightChainAngle),2) * pow(rightChainStraightSection,2) * pow((tan(leftChainAngle)  * cos(rightChainAngle)) + sin(rightChainAngle),2)));
+      leftChainStraightSection  *= (1 + ((sysSettings.chainSagCorrectionFactor / 1000000000000) * pow(cos_leftAngle,2)  * pow(leftChainStraightSection,2)  * pow(tan_rightAngle * cos_leftAngle  + sin_leftAngle,2)));
+      rightChainStraightSection *= (1 + ((sysSettings.chainSagCorrectionFactor / 1000000000000) * pow(cos_rightAngle,2) * pow(rightChainStraightSection,2) * pow(tan_leftAngle  * cos_rightAngle + sin_rightAngle,2)));
     }
     //Calculate total chain lengths accounting for sprocket geometry and chain sag
-    float leftChainReachBeyondSprocketTop = leftChainAroundSprocket + leftChainStraightSection * sysSettings.leftChainLengthCorrection;  // madgrizzle point out: "added the chain tolerance here.. this should be <=  1"
-    float rightChainReachBeyondSprocketTop = rightChainAroundSprocket + rightChainStraightSection * sysSettings.rightChainLengthCorrection;
+    // 2018-12-02 test: inverse compensation: divide instead of multiply.
+    float leftChainReachBeyondSprocketTop = leftChainAroundSprocket + leftChainStraightSection / sysSettings.leftChainLengthCorrection;  // madgrizzle point out: "added the chain tolerance here.. "
+    float rightChainReachBeyondSprocketTop = rightChainAroundSprocket + rightChainStraightSection / sysSettings.rightChainLengthCorrection;
 
     //Subtract of the virtual length which is added to the chain by the rotation mechanism
     leftChainReachBeyondSprocketTop = leftChainReachBeyondSprocketTop - sysSettings.sledRotationDiskRadius;

@@ -117,7 +117,7 @@ void settingsReset() {
     sysSettings.rightChainLengthCorrection = 1.0;    // float rightChainLengthCorrection;
     sysSettings.positionErrorLimit = 2.0;  // float positionErrorLimit;
     sysSettings.topBeamTilt = 0.0; // degree, measured relative to horizontal, counter clockwise is positive 
-    sysSettings.maxTopBeamTipFlexAndTwist = 2.9; // mm beam tip vertical shift under sled weight 
+    sysSettings.maxTopBeamTipFlexAndTwist = 0.0; // mm beam tip vertical shift under sled weight 
     sysSettings.eepromValidData = EEPROMVALIDDATA; // byte eepromValidData;
 }
 
