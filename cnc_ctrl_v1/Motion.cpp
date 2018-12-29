@@ -358,7 +358,7 @@ int   arcXYZMove(const float& X1, const float& Y1, const float& Z1, const float&
             
             degreeComplete = float(numberOfStepsTaken)/float(neededNumberOfSteps);
             
-            angleNow = startingAngle + theta*direction*degreeComplete;
+            angleNow = startingAngle + theta*degreeComplete; // c0depr1sm removed theta*direction because theta already has a polarity.
             
             nextXPosition = radius * cos(angleNow) + centerX;
             nextYPosition = radius * sin(angleNow) + centerY;
