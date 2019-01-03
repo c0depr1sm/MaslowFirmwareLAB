@@ -186,6 +186,8 @@ void reportMaslowSettings() {
     Serial.print(F("$42=")); Serial.println(sysSettings.positionErrorLimit, 8);
     Serial.print(F("$43=")); Serial.println(sysSettings.topBeamTilt, 8);
     Serial.print(F("$44=")); Serial.println(sysSettings.maxTopBeamTipFlexAndTwist, 8);
+    Serial.print(F("$45=")); Serial.println(sysSettings.chainElongationFactor, 8);
+    Serial.print(F("$46=")); Serial.println(sysSettings.sledWeight, 8);
     
   #else
     Serial.print(F("$0=")); Serial.print(sysSettings.workSurfaceWidth);
@@ -228,20 +230,17 @@ void reportMaslowSettings() {
     Serial.print(F(" (chain sag correction value)\r\n$38=")); Serial.print(sysSettings.chainOverSprocket);
     Serial.print(F(" (chain over sprocket)\r\n$39=")); Serial.print(sysSettings.fPWM);
     Serial.print(F(" (PWM frequency value 1=39,000Hz, 2=4,100Hz, 3=490Hz)\r\n$40="));
-   // waiting for ground control to change for new meaning. Meanwhile, we convert it here.
-    // distPerRotLeftChainTolerance = (1 + (float(self.config.get('Advanced Settings', 'leftChainTolerance')) / 100)) * float(self.config.get('Advanced Settings', 'gearTeeth')) * float(self.config.get('Advanced Settings', 'chainPitch'))
-    Serial.println(sysSettings.leftChainLengthCorrection*sysSettings.lRDistPerRot, 8);
-    Serial.print(F(" (chain tolerance, left chain, %)\r\n$41=")); Serial.println(sysSettings.rightChainLengthCorrection*sysSettings.lRDistPerRot, 8);
+   /* waiting for ground control to change for new meaning. Meanwhile, we convert it here.
+     distPerRotLeftChainTolerance = (1 + (float(self.config.get('Advanced Settings', 'leftChainTolerance')) / 100)) * float(self.config.get('Advanced Settings', 'gearTeeth')) * float(self.config.get('Advanced Settings', 'chainPitch'))
+   */
+    Serial.print(sysSettings.leftChainLengthCorrection*sysSettings.lRDistPerRot, 8);
+    Serial.print(F(" (chain tolerance, left chain, %)\r\n$41=")); Serial.print(sysSettings.rightChainLengthCorrection*sysSettings.lRDistPerRot, 8);
     Serial.print(F(" (chain tolerance, right chain, %)\r\n$42=")); Serial.print(sysSettings.positionErrorLimit, 8);
-    Serial.print(F(" (position error alarm limit, mm)\r\n$43=")); Serial.print(sysSettings.topBeamTilt, 8);
-    Serial.print(F(" (top beam tilt, degrees)\r\n$44=")); Serial.print(sysSettings.maxTopBeamTipFlexAndTwist, 8);
-    Serial.print(F(" (top beam tip max vertical deflection, mm)\r\n")); Serial.print(kinematics.leftMotorX,8);
-    Serial.print(F(" (left Motor X, mm)\r\n")); Serial.print(kinematics.leftMotorY,8);
-    Serial.print(F(" (left Motor Y, mm)\r\n")); Serial.print(kinematics.topBeamLeftTipFlexAndTwistVerticalCorrection,8);
-    Serial.print(F(" (left Motor Y correction, mm)\r\n")); Serial.print(kinematics.rightMotorX,8);
-    Serial.print(F(" (right Motor X, mm)\r\n")); Serial.print(kinematics.rightMotorY,8);
-    Serial.print(F(" (right Motor Y, mm)\r\n")); Serial.print(kinematics.topBeamRightTipFlexAndTwistVerticalCorrection,8);
-    Serial.print(F(" (right Motor Y correction, mm)\r\n"));
+    Serial.print(F(" (position error alarm limit, mm)\r\n$43="));  Serial.print(sysSettings.topBeamTilt,8);
+    Serial.print(F(" (top beam tilt angle, deg)\r\n$44="));Serial.print(sysSettings.maxTopBeamTipFlexAndTwist,8);
+    Serial.print(F(" (top beam tip max vertical deflection, mm)\r\n$45=")); Serial.print(sysSettings.chainElongationFactor,8);
+    Serial.print(F(" (chain stretch factor, m/m/N)\r\n$46=")); Serial.print(sysSettings.sledWeight,8);
+    Serial.print(F(" (Sled Weight, N)\r\n"));
     Serial.println();
   #endif
 }
@@ -327,5 +326,43 @@ void  reportMaslowHelp(){
         Serial.println(F("! (feed hold)"));    // Maslow treats this as a cycle stop.
         // Serial.println(F("? (current status)"));
         // Serial.println(F("ctrl-x (reset Maslow)"));
+    #endif
+}
+
+void  reportCorrectionGrid(){
+    #ifndef REPORT_GUI_MODE
+    unsigned int i = 0 ;
+    unsigned int j = 0 ;
+    Serial.print(F("deltas to be used for X and Y value corrections\r\n"));
+    Serial.print(F(" deltaX=")); Serial.print(wsCorrections.deltaX,0);
+    Serial.print(F(" deltaY=")); Serial.print(wsCorrections.deltaY,0);
+    Serial.print(F("\r\n Ranges to be used for X and Y value corrections\r\n"));
+    Serial.print(F(" xRange=")); Serial.print(wsCorrections.xRange[0],0);
+    Serial.print(F(" ,")); Serial.print(wsCorrections.xRange[1],0);
+    Serial.print(F(" ,")); Serial.print(wsCorrections.xRange[2],0);
+    Serial.print(F(" ,")); Serial.print(wsCorrections.xRange[3],0);
+    Serial.print(F(" ,")); Serial.print(wsCorrections.xRange[4],0);
+    Serial.print(F("\r\n yRange=")); Serial.print(wsCorrections.xRange[0],0);
+    Serial.print(F(" ,")); Serial.print(wsCorrections.xRange[1],0);
+    Serial.print(F(" ,")); Serial.print(wsCorrections.xRange[2],0);
+    
+    Serial.print(F("\r\n Corrections to be added to X values before computing chain lengths\r\n"));
+    for (j=0;j<CORR_NBLINES;j++){
+      for (i=0;i<CORR_NBCOLUMNS;i++){
+        Serial.print(F(" X"));
+        Serial.print(j+1,DEC); Serial.print(i+1,DEC); Serial.print('=');
+        Serial.print(wsCorrections.xCorrections[j][i]*CORR_STEPS_SIZE ,1);
+      }
+      Serial.println(F("\r\n"));
+    } 
+    Serial.print(F("Corrections to be added to Y values before computing chain lengths\r\n"));
+    for (j=0;j<CORR_NBLINES;j++){
+      for (i=0;i<CORR_NBCOLUMNS;i++){
+        Serial.print(F(" Y"));
+        Serial.print(j+1,DEC); Serial.print(i+1,DEC); Serial.print('=');
+        Serial.print(wsCorrections.yCorrections[j][i]*CORR_STEPS_SIZE ,1);
+      }
+      Serial.println(F("\r\n"));
+    } 
     #endif
 }

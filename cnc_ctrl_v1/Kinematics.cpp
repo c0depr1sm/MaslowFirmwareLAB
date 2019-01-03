@@ -217,8 +217,6 @@ void  Kinematics::triangularInverse(float xTarget,float yTarget, float* aChainLe
     float distanceRatio = 1.0f;
     float adjustedLeftMotorY = leftMotorY; 
     float adjustedRightMotorY = rightMotorY; 
-    float chainElongationFactor = 8.1E-6; // m/m/N
-    float sledWeight = 11.6*9.8; // N
     
     //Calculate vertical beam Tip deflection due to sled weight, according to sled horizontal position
     // Assumption: leftMotorX = -rightMotorX
@@ -265,13 +263,13 @@ void  Kinematics::triangularInverse(float xTarget,float yTarget, float* aChainLe
     float rightChainStraightSection = sqrt(pow(rightMotorDistance,2)-pow(sprocketEffectiveRadius,2));
     
     //Estimate chains tension, not considering chain weight
-    float leftChainT = sledWeight/(cos_leftAngle*tan_rightAngle + sin_leftAngle);
-    float rightChainT = sledWeight/(cos_rightAngle*tan_leftAngle + sin_rightAngle);
+    float leftChainT = sysSettings.sledWeight/(cos_leftAngle*tan_rightAngle + sin_leftAngle);
+    float rightChainT = sysSettings.sledWeight/(cos_rightAngle*tan_leftAngle + sin_rightAngle);
 
     //Corect the straight chain length to compensate stretch
-    float leftChainElongationFactor = 1+ (leftChainT * chainElongationFactor);
+    float leftChainElongationFactor = 1+ (leftChainT * sysSettings.chainElongationFactor);
     leftChainStraightSection = leftChainStraightSection / leftChainElongationFactor;
-    float rightChainElongationFactor = 1+ (rightChainT * chainElongationFactor);
+    float rightChainElongationFactor = 1+ (rightChainT * sysSettings.chainElongationFactor);
     rightChainStraightSection = rightChainStraightSection / rightChainElongationFactor;
 
     //Correct the straight chain lengths to account for chain sag
@@ -467,4 +465,134 @@ float Kinematics::_YOffsetEqn(const float& YPlus, const float& Denominator, cons
     float Temp;
     Temp = ((sqrt(YPlus * YPlus - sprocketEffectiveRadius * sprocketEffectiveRadius)/sprocketEffectiveRadius) - (_y + YPlus - _h * sin(Psi))/Denominator);
     return Temp;
+}
+/* Decode a string of the form B18DX591DY591MX1.1X1.2X1.3X1.4X1.5LX2.1X2.2X2.3X2.4X2.5LX3.1X3.2X3.3X3.4X3.5EY4.1Y4.2Y4.3Y4.4Y4.5LY5.1Y5.2Y5.3Y5.4Y5.5LY6.2Y6.2Y6.3Y6.4Y6.5E
+ * where DX, DY, MX, X and LX, LY, Y EY are simply arbitrary non digit delimiters for individual values.
+ * Only the order of values is important
+ * The two first values are int, the following ones are floats values and any precision higher than one digit will be rounded off.  
+ * first table line is most negative Y, first line item is most negative X.
+ * In the example, DX and DY are preceeding the horizontal and vertical distance between correction values
+ * The center of the matrix is always designating the 0,0 in the workspace
+ * X and Y values of these tables are offsets to be removed on the x or Y coordinates before executing inverse kinematics calculation. 
+ * Another function interpolates table values for coordinates that lie between mutiples of deltaX and deltaY.
+ * */
+byte setCorrectionGrid(const String& gcodeLine) {
+
+  int begin = 3; // skip B18 code
+  int end;
+  String numberAsString;
+  float numberAsFloat;
+  int numberAsInt;
+
+  // check if string is not exhausted
+  if (begin >= gcodeLine.length()) {
+    return(STATUS_BAD_NUMBER_FORMAT); // string too short, bad format
+  }
+  //locate value, skipping newline delimiter if needed
+  end = findEndOfNumber(gcodeLine,begin);
+  while (end == begin and begin < gcodeLine.length()) {
+    begin = begin +1;
+    end = findEndOfNumber(gcodeLine,begin);
+  }
+  // get deltaX value if exists
+  if (end>begin) {// some digits were found
+    // extract number
+    numberAsString  =  gcodeLine.substring(begin,end);
+    numberAsInt   =  numberAsString.toInt();
+    begin           =  end+1; // skip next delimiter
+    //add value to table X
+    wsCorrections.deltaX =  numberAsInt;
+    wsCorrections.xRange[0] =  -2*numberAsInt;
+    wsCorrections.xRange[1] =  -numberAsInt;
+    wsCorrections.xRange[2] =  0;
+    wsCorrections.xRange[3] =  numberAsInt;
+    wsCorrections.xRange[4] =  2*numberAsInt;
+  }
+  else {
+   return(STATUS_BAD_NUMBER_FORMAT);
+  }
+  // check if string remains
+  if (begin >= gcodeLine.length()) {
+    return(STATUS_BAD_NUMBER_FORMAT); // string too short, bad format
+  }
+  //locate value, skipping newline delimiter if needed
+  end = findEndOfNumber(gcodeLine,begin);
+  while (end == begin and begin < gcodeLine.length()) {
+    begin = begin +1;
+    end = findEndOfNumber(gcodeLine,begin);
+  }
+  // get deltaY value if exists
+  if (end>begin) {// some digits were found
+    // extract number
+    numberAsString  =  gcodeLine.substring(begin,end);
+    numberAsInt   =  numberAsString.toInt();
+    begin           =  end+1; // skip next delimiter
+    //add value to table Y
+    wsCorrections.deltaY =  numberAsInt;
+    wsCorrections.yRange[0] =  -numberAsInt;
+    wsCorrections.yRange[1] =  0;
+    wsCorrections.yRange[2] =  numberAsInt;
+  }
+  else {
+   return(STATUS_BAD_NUMBER_FORMAT);
+  }
+  
+  unsigned int i = 0 ;
+  unsigned int j = 0 ;
+  //table X
+  for (j=0;j<CORR_NBLINES;j++){
+    for (i=0;i<CORR_NBCOLUMNS;i++){
+      // check if string remains
+      if (begin >= gcodeLine.length()) {
+        return(STATUS_BAD_NUMBER_FORMAT); // string too short, bad format
+      }
+      //locate value, skipping newline delimiter if needed
+      end = findEndOfNumber(gcodeLine,begin);
+      while (end == begin and begin < gcodeLine.length()) {
+        begin = begin +1;
+        end = findEndOfNumber(gcodeLine,begin);
+      }
+      // get value if exists
+      if (end>begin) {// some digits were found
+        // extract number
+        numberAsString  =  gcodeLine.substring(begin,end);
+        numberAsFloat   =  numberAsString.toFloat();
+        begin           =  end+1; // skip next delimiter
+        //add value to table X
+        wsCorrections.xCorrections[j][i]=  (char)(numberAsFloat/CORR_STEPS_SIZE);
+      }
+      else {
+       return(STATUS_BAD_NUMBER_FORMAT);
+      }
+    }
+  } 
+  i = 0 ;
+  j = 0 ;
+  //table Y
+  for (j=0;j<CORR_NBLINES;j++){
+    for (i=0;i<CORR_NBCOLUMNS;i++){
+      // check if string remains
+      if (begin >= gcodeLine.length()) {
+        return(STATUS_BAD_NUMBER_FORMAT); // string too short, bad format
+      }
+      //locate value, skipping newline delimiter if needed
+      end = findEndOfNumber(gcodeLine,begin);
+      while (end == begin and begin < gcodeLine.length()) {
+        begin = begin +1;
+        end = findEndOfNumber(gcodeLine,begin);
+      }
+      // get value if exists
+      if (end>begin) {// some digits were found
+        // extract number
+        numberAsString  =  gcodeLine.substring(begin,end);
+        numberAsFloat   =  numberAsString.toFloat();
+        begin           =  end+1; // skip next delimiter
+        //add value to table Y
+        wsCorrections.yCorrections[j][i]=  (char)(numberAsFloat/CORR_STEPS_SIZE);
+      }
+      else {
+       return(STATUS_BAD_NUMBER_FORMAT);
+      }
+    }
+  } 
 }

@@ -41,6 +41,9 @@ system_t sys;
 // Define the global settings storage - treat as readonly
 settings_t sysSettings;
 
+// Define XY correction values
+corrections_t wsCorrections;
+
 // Global realtime executor bitflag variable for setting various alarms.
 byte systemRtExecAlarm;  
 

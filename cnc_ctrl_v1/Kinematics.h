@@ -96,5 +96,28 @@
             float Chain2; //right chain length
 
     };
+/*    /deltaX\
+    X11   X12   X13   X14   X15
+  deltaY  
+    X21   X22   X23   X24   X25
 
+    X31   X32   X33   X34   X35
+
+ X23 is measured at the workspace center, X11 upper left, etc.
+*/
+    #define CORR_NBLINES 3
+    #define CORR_NBCOLUMNS 5
+    #define CORR_STEPS_SIZE 0.1
+
+    typedef struct {
+      float deltaX; // The horizontal spacing between error sampling points
+      float deltaY; // The vertical spacing between error sampling points
+      float xRange[CORR_NBCOLUMNS]; // the set of boundaries delimiting the workspace zones
+      float yRange[CORR_NBLINES]; 
+      float xCorrections[CORR_NBLINES][CORR_NBCOLUMNS] = {{0.0,0.0,0.0,0.0,0.0},{0.0,0.0,0.0,0.0,0.0},{0.0,0.0,0.0,0.0,0.0}}; // bottom, middle and top row to follow indices  
+      float yCorrections[CORR_NBLINES][CORR_NBCOLUMNS] = {{0.0,0.0,0.0,0.0,0.0},{0.0,0.0,0.0,0.0,0.0},{0.0,0.0,0.0,0.0,0.0}}; // bottom, middle and top row to follow indices  
+    } corrections_t;
+    extern corrections_t wsCorrections;
+
+byte setCorrectionGrid(const String&);
     #endif

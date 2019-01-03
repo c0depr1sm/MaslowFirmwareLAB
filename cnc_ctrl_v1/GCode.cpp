@@ -337,6 +337,16 @@ byte  executeBcodeLine(const String& gcodeLine){
                 
         return STATUS_OK;
     }
+    // New Gcode to get report of the XY offsets correction grid
+    if(gcodeLine.substring(0, 3) == "B17"){
+        reportCorrectionGrid();
+        return STATUS_OK;
+    }
+    // New Gcode to set the XY offsets correction grid
+    if(gcodeLine.substring(0, 3) == "B18"){
+        return setCorrectionGrid(gcodeLine);
+    }
+
     return STATUS_INVALID_STATEMENT;
 }
 

@@ -65,15 +65,15 @@ void settingsReset() {
     so that if a value is not changed by a user or is not used, it doesn't
     need to be updated here.
     */
-    sysSettings.workSurfaceWidth = 2438.4; // float workSurfaceWidth
-    sysSettings.workSurfaceHeight = 1219.2; // float workSurfaceHeight;
-    sysSettings.distBetweenLRMotorsGearBoxShafts = 2978.4; // float distBetweenLRMotors;
-    sysSettings.lRMotorsYOffsetAboveWorkSurface = 463.0;  // float LRMotorsYOffsetAboveWorkSurface;
+    sysSettings.workSurfaceWidth = 2446; // float workSurfaceWidth
+    sysSettings.workSurfaceHeight = 1222; // float workSurfaceHeight;
+    sysSettings.distBetweenLRMotorsGearBoxShafts = 3501.2; // float distBetweenLRMotors;
+    sysSettings.lRMotorsYOffsetAboveWorkSurface = 618;  // float LRMotorsYOffsetAboveWorkSurface;
     sysSettings.sledWidth = 310.0;  // float sledWidth;
     sysSettings.sledHeight = 139.0;  // float sledHeight;
     sysSettings.sledCG = 79.0;   // float sledCG;
     sysSettings.kinematicsType = 1;      // byte kinematicsType;
-    sysSettings.sledRotationDiskRadius = 250.0;  // float sledRotationDiskRadius;
+    sysSettings.sledRotationDiskRadius = 138.14;  // float sledRotationDiskRadius;
     sysSettings.axlePIDControlDetachTimeOutDelay = 2000;   // int axlePIDControlDetachTimeOutDelay;
 /*
  blurfl commit da17048 on october 1st 2018 
@@ -84,15 +84,15 @@ void settingsReset() {
  * ```
  *  GC responds by sending it's own setting value ($10), but the kinematics error requires the user to recalibrate the chains.
  */ 
-    sysSettings.maxChainReachBeyondSprocketTop = 3360;   // int maximum length of chain;
-    sysSettings.originalChainLength = 1650;   // int originalChainLength;
+    sysSettings.maxChainReachBeyondSprocketTop = 3450;   // int maximum length of chain;
+    sysSettings.originalChainLength = 2000;   // int originalChainLength;
     sysSettings.encoderLRMotorStepsCountPerOutputShaftTurn = 8113.73; // float encoderLRMotorStepsCountPerOutputShaftTurn -- Updated by madgrizzle on sept 10 2018
     sysSettings.lRDistPerRot = 63.5;   // float distPerRot;
-    sysSettings.maxXYFeedRate = 700;   // int targetMaxXYFeedRate
+    sysSettings.maxXYFeedRate = 800;   // int targetMaxXYFeedRate
     sysSettings.zAxleMotorized = true;   // zAxleMotorized;
     sysSettings.spindleAutomateType = NONE;  // bool spindleAutomate;
     sysSettings.zScrewMaxRPM = 12.60;  // float zScrewMaxRPM;
-    sysSettings.zDistPerRot = 3.17;   // float zDistPerRot;
+    sysSettings.zDistPerRot = 2.5;   // float zDistPerRot;
     sysSettings.encoderZScrewStepsCountPerTurn = 7560.0; // float encoderZScrewStepsCountPerTurn;
     sysSettings.KpPos = 1300.0; // float KpPos;
     sysSettings.KiPos = 0.0;    // float KiPos;
@@ -110,14 +110,16 @@ void settingsReset() {
     sysSettings.zKiV = 0.0;    // float zKiV;
     sysSettings.zKdV = 0.28;   // float zKdV;
     sysSettings.zPropWeightV = 1.0;    // float zPropWeightV;
-    sysSettings.chainSagCorrectionFactor = 0.0;  // float chainSagCorrectionFactor;
+    sysSettings.chainSagCorrectionFactor = 12;  // float chainSagCorrectionFactor;
     sysSettings.chainOverSprocket = 1;   // byte chainOverSprocket;
     sysSettings.fPWM = 3;   // byte fPWM;
-    sysSettings.leftChainLengthCorrection = 1.0;    // float leftChainLengthCorrection;
-    sysSettings.rightChainLengthCorrection = 1.0;    // float rightChainLengthCorrection;
+    sysSettings.leftChainLengthCorrection = 1.0+0.00271;    // float leftChainLengthCorrection;
+    sysSettings.rightChainLengthCorrection = 1.0-0.0008;    // float rightChainLengthCorrection;
     sysSettings.positionErrorLimit = 2.0;  // float positionErrorLimit;
     sysSettings.topBeamTilt = 0.0; // degree, measured relative to horizontal, counter clockwise is positive 
     sysSettings.maxTopBeamTipFlexAndTwist = 0.0; // mm beam tip vertical shift under sled weight 
+    sysSettings.chainElongationFactor = 8.1E-6; // m/m/N
+    sysSettings.sledWeight = 11.6*9.8; // Newtons. My sled has one ring kit, one Rigid 2200 router and two 2.35kg bricks on a 5/8" thick mdf 18" diameter base.
     sysSettings.eepromValidData = EEPROMVALIDDATA; // byte eepromValidData;
 }
 
@@ -436,6 +438,14 @@ byte settingsStoreGlobalSetting(const byte& parameter,const float& value){
               break;
         case 44:
               sysSettings.maxTopBeamTipFlexAndTwist = value;
+              kinematics.recomputeGeometry();
+              break;
+        case 45:
+              sysSettings.chainElongationFactor = value;
+              kinematics.recomputeGeometry();
+              break;
+        case 46:
+              sysSettings.sledWeight = value;
               kinematics.recomputeGeometry();
               break;
         default:

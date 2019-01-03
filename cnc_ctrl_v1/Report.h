@@ -81,5 +81,6 @@ void  reportAlarmMessage(byte);
 void  returnAxlesmmPositionErrors();
 void  returnPoz();
 void  reportMaslowHelp();
+void  reportCorrectionGrid();
 
 #endif
