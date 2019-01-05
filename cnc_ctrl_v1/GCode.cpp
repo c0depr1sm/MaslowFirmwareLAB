@@ -339,14 +339,25 @@ byte  executeBcodeLine(const String& gcodeLine){
     }
     // New Gcode to get report of the XY offsets correction grid
     if(gcodeLine.substring(0, 3) == "B17"){
-        reportCorrectionGrid();
-        return STATUS_OK;
+      kinematics.reportCorrectionGrid();
+      return STATUS_OK;
     }
     // New Gcode to set the XY offsets correction grid
     if(gcodeLine.substring(0, 3) == "B18"){
-        return setCorrectionGrid(gcodeLine);
+      return kinematics.setCorrectionGrid(gcodeLine);
     }
-
+    // New Gcode to set the XY offsets correction grid
+    if(gcodeLine.substring(0, 3) == "B19"){
+      float testCorrectedXPos; //target for computation
+      float testCorrectedYPos;
+      float testInitXPos = sys.estimatedBitTipXPosition; // current sled coordinates
+      float testInitYPos = sys.estimatedBitTipYPosition;
+      float testXPos = sys.mmConversionFactor*extractGcodeValue(gcodeLine, 'X', testInitXPos/sys.mmConversionFactor); // commanded
+      float testYPos = sys.mmConversionFactor*extractGcodeValue(gcodeLine, 'Y', testInitYPos/sys.mmConversionFactor); 
+      kinematics.getCorrection(testXPos, testYPos, testCorrectedXPos, testCorrectedYPos);
+      Serial.print(F(" Corr X & Y = (")); Serial.print(testCorrectedXPos,1);Serial.print(':');Serial.print(testCorrectedYPos,1); Serial.print(F(")\r\n")); 
+      return STATUS_OK;
+    }
     return STATUS_INVALID_STATEMENT;
 }
 

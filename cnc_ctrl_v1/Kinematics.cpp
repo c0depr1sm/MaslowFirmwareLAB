@@ -75,13 +75,22 @@ void  Kinematics::inverse(float xTarget,float yTarget, float* aChainLength, floa
     This function works as a switch to call either the quadrilateralInverse kinematic function 
     or the triangularInverse kinematic function
     
+    It also inserts the coordinates offset wsCorrections to seemlessly correct the remaining errors both
+    in inverse and forward kinematics, both on triangular and quadrilateral...
     */
     
+    //Confirm that the coordinates are on the wood
+    _constrainToWorkSurface(&xTarget, &yTarget);
+
+    float correctedXTarget = xTarget;
+    float correctedYTarget = yTarget;
+    kinematics.getCorrection(xTarget, yTarget, correctedXTarget, correctedYTarget);
+    
     if(sysSettings.kinematicsType == 1){
-        quadrilateralInverse(xTarget, yTarget, aChainLength, bChainLength);
+        quadrilateralInverse(correctedXTarget, correctedYTarget, aChainLength, bChainLength);
     }
     else{
-        triangularInverse(xTarget, yTarget, aChainLength, bChainLength);
+        triangularInverse(correctedXTarget, correctedYTarget, aChainLength, bChainLength);
     }
     
 }
@@ -89,7 +98,7 @@ void  Kinematics::inverse(float xTarget,float yTarget, float* aChainLength, floa
 void  Kinematics::quadrilateralInverse(float xTarget,float yTarget, float* aChainLength, float* bChainLength){
 
     //Confirm that the coordinates are on the wood
-    _constrainToWorkSurface(&xTarget, &yTarget);
+//    _constrainToWorkSurface(&xTarget, &yTarget); // moved to trhe inverse dispatch function
 
     //coordinate shift to put (0,0) in the center of the plywood from the left sprocket
     _y = (halfHeight) + sysSettings.lRMotorsYOffsetAboveWorkSurface  - yTarget;
@@ -207,7 +216,7 @@ void  Kinematics::triangularInverse(float xTarget,float yTarget, float* aChainLe
     */
     
     //Confirm that the coordinates are on the work surface
-    _constrainToWorkSurface(&xTarget, &yTarget);
+//    _constrainToWorkSurface(&xTarget, &yTarget); // moved to the inverse dispatch function
 
     //Set up variables
     float leftChainAngle = 0;
@@ -466,7 +475,23 @@ float Kinematics::_YOffsetEqn(const float& YPlus, const float& Denominator, cons
     Temp = ((sqrt(YPlus * YPlus - sprocketEffectiveRadius * sprocketEffectiveRadius)/sprocketEffectiveRadius) - (_y + YPlus - _h * sin(Psi))/Denominator);
     return Temp;
 }
-/* Decode a string of the form B18DX591DY591MX1.1X1.2X1.3X1.4X1.5LX2.1X2.2X2.3X2.4X2.5LX3.1X3.2X3.3X3.4X3.5EY4.1Y4.2Y4.3Y4.4Y4.5LY5.1Y5.2Y5.3Y5.4Y5.5LY6.2Y6.2Y6.3Y6.4Y6.5E
+
+/* Decode a string of the form 
+ *  B18DX591DY591MX1.1X1.2X1.3X1.4X1.5LX2.1X2.2X2.3X2.4X2.5LX3.1X3.2X3.3X3.4X3.5EY4.1Y4.2Y4.3Y4.4Y4.5LY5.1Y5.2Y5.3Y5.4Y5.5LY6.2Y6.2Y6.3Y6.4Y6.5E
+ * X1.1X1.2X1.3X1.4X1.5L
+ * X2.1X2.2X2.3X2.4X2.5L
+ * X3.1X3.2X3.3X3.4X3.5
+ * 
+ * Y4.1Y4.2Y4.3Y4.4Y4.5L
+ * Y5.1Y5.2Y5.3Y5.4Y5.5L
+ * Y6.2Y6.2Y6.3Y6.4Y6.5E
+ * 
+ *  B18DX591DY591MX-1.1X-1.2X-1.3X-1.4X-1.5LX-2.1X-2.2X-2.3X-2.4X-2.5LX-3.1X-3.2X-3.3X-3.4X-3.5EY-4.1Y-4.2Y-4.3Y-4.4Y-4.5LY-5.1Y-5.2Y-5.3Y-5.4Y-5.5LY-6.2Y-6.2Y-6.3Y-6.4Y-6.5E
+ *  B18DX591DY591MX0X0X0X0X0LX0X0X0X0X0LX0X0X0X0X0EY0Y0Y0Y0Y0LY0Y0Y0Y0Y0LY0Y0Y0Y0Y0E
+ *  Real MAslow errors 2019-01-03
+ *  B18DX585DY585MX-0.6X-0.3X0X0.2X0.0LX-1.0X-1.0X0X0.3X1.3LX-0.1X-0.6X0X0.6X1.2EY-3.0Y-1.3Y-1.3Y-2.8Y-2.8YLY-2.8Y-2.1Y-2.1Y-2.1Y-2.8YLY-3.0Y-3.0Y-3.8Y-3.1Y-3.0YE
+ *  Real Maslow errors 2019-01-04
+ *  B18DX585DY585MX-0.6X-0.3X0X0.2X0.0LX-0.5X-0.5X0X0.3X1.3LX-0.6X-0.6X0X0.6X1.2EY-3.0Y-1.3Y-1.3Y-2.8Y-2.8YLY-2.8Y-2.1Y-2.1Y-2.6Y-2.8YLY-3.5Y-3.0Y-4.3Y-3.6Y-3.0YE
  * where DX, DY, MX, X and LX, LY, Y EY are simply arbitrary non digit delimiters for individual values.
  * Only the order of values is important
  * The two first values are int, the following ones are floats values and any precision higher than one digit will be rounded off.  
@@ -475,11 +500,15 @@ float Kinematics::_YOffsetEqn(const float& YPlus, const float& Denominator, cons
  * The center of the matrix is always designating the 0,0 in the workspace
  * X and Y values of these tables are offsets to be removed on the x or Y coordinates before executing inverse kinematics calculation. 
  * Another function interpolates table values for coordinates that lie between mutiples of deltaX and deltaY.
+ * 
+ * The following deals with Gcode line decoding responses but also handles kinnematics private data.
+ * Would need to be split.
+ * 
  * */
-byte setCorrectionGrid(const String& gcodeLine) {
+byte Kinematics::setCorrectionGrid(const String& gcodeLine) {
 
-  int begin = 3; // skip B18 code
-  int end;
+  unsigned int begin = 3; // skip B18 code
+  unsigned int end;
   String numberAsString;
   float numberAsFloat;
   int numberAsInt;
@@ -595,4 +624,207 @@ byte setCorrectionGrid(const String& gcodeLine) {
       }
     }
   } 
+  return(STATUS_OK);
+}
+
+/* The following function could be a Repport.cpp item, but it deals with private Kinamatics class data.
+ * Would need to split the string generation and string serial port communication. 
+*/
+void  Kinematics::reportCorrectionGrid(){
+    #ifndef REPORT_GUI_MODE
+    unsigned int i = 0 ;
+    unsigned int j = 0 ;
+    Serial.print(F("deltas to be used for X and Y value corrections\r\n"));
+    Serial.print(F(" deltaX=")); Serial.print(wsCorrections.deltaX,0);
+    Serial.print(F(" deltaY=")); Serial.print(wsCorrections.deltaY,0);
+    Serial.print(F("\r\n Ranges to be used for X and Y value corrections\r\n"));
+    Serial.print(F(" xRange=")); Serial.print(wsCorrections.xRange[0],0);
+    Serial.print(F(" ,")); Serial.print(wsCorrections.xRange[1],0);
+    Serial.print(F(" ,")); Serial.print(wsCorrections.xRange[2],0);
+    Serial.print(F(" ,")); Serial.print(wsCorrections.xRange[3],0);
+    Serial.print(F(" ,")); Serial.print(wsCorrections.xRange[4],0);
+    Serial.print(F("\r\n yRange=")); Serial.print(wsCorrections.yRange[0],0);
+    Serial.print(F(" ,")); Serial.print(wsCorrections.yRange[1],0);
+    Serial.print(F(" ,")); Serial.print(wsCorrections.yRange[2],0);
+    
+    Serial.print(F("\r\n Corrections to be added to X values before computing chain lengths\r\n"));
+    for (j=0;j<CORR_NBLINES;j++){
+      for (i=0;i<CORR_NBCOLUMNS;i++){
+        Serial.print(F(" X"));
+        Serial.print(j+1,DEC); Serial.print(i+1,DEC); Serial.print('=');
+        Serial.print(wsCorrections.xCorrections[j][i]*CORR_STEPS_SIZE ,1);
+      }
+      Serial.println(F("\r\n"));
+    } 
+    Serial.print(F("Corrections to be added to Y values before computing chain lengths\r\n"));
+    for (j=0;j<CORR_NBLINES;j++){
+      for (i=0;i<CORR_NBCOLUMNS;i++){
+        Serial.print(F(" Y"));
+        Serial.print(j+1,DEC); Serial.print(i+1,DEC); Serial.print('=');
+        Serial.print(wsCorrections.yCorrections[j][i]*CORR_STEPS_SIZE ,1);
+      }
+      Serial.println(F("\r\n"));
+    } 
+    #endif
+}
+
+/*
+ * This function should yield an error if the correction table was not initialised. 
+ * 
+*/
+void Kinematics::getCorrection(const float xposraw, const float yposraw, float& xPosCorrected, float& yPosCorrected) {
+  // analyse the coordinates to find the correction matrix zone to use
+  int i = 0;
+  int j = 0;
+  bool inXRange = false;
+  bool inYRange = false;
+  float dx =0.0;
+  float dy =0.0;
+  float px11 =0.0;
+  float px12 =0.0;
+  float px21 =0.0;
+  float px22 =0.0;
+  float py11 =0.0;
+  float py12 =0.0;
+  float py21 =0.0;
+  float py22 =0.0;
+  float dE1 = 0.0;
+  float dE2 = 0.0;
+  float xC = 0.0;
+  float yC = 0.0;
+  float A = 0.0;
+  float B = 0.0;
+  float Cx = 0.0;
+  float Cy = 0.0;
+
+  if (wsCorrections.deltaX==0) { // this is a sign the correction table was not initialised
+    Serial.print(F("error: correction table not initialised"));
+    xPosCorrected = xposraw;
+    yPosCorrected = yposraw;
+    return;
+  }        
+  
+  #if defined (verboseDebug) && verboseDebug > 0
+  Serial.print(F(" xraw,yraw = ")); Serial.print(xposraw,1); Serial.print(yposraw,1);
+  #endif  
+
+        
+  for (i=0;i<CORR_NBCOLUMNS;i++){
+    if (xposraw <= wsCorrections.xRange[i]) {
+      inXRange = true;
+      break;
+    }
+  }
+  //fix index if value is above table range
+  if (inXRange == false) i=CORR_NBCOLUMNS-1;
+  
+  for (j=0;j<CORR_NBLINES;j++){
+    if (yposraw <= wsCorrections.yRange[j]) {
+      inYRange = true;
+      break;
+    }
+  }
+  //fix index if value is above table range
+  if (inYRange == false) j=CORR_NBLINES-1;
+
+  #if defined (verboseDebug) && verboseDebug > 0
+  Serial.print(F(" j,i = ")); Serial.print(j,DEC); Serial.print(','); Serial.print(i,DEC);
+  #endif  
+
+  // i and j now are indicating the correction table interval to be used.
+  // lets collect data to compute the interpolation.  
+  if (i>0 && j>0 && inXRange==true && inYRange==true) {
+    // far from table edges, we can use freely the indices
+    dx = xposraw-wsCorrections.xRange[i-1];
+    dy = yposraw-wsCorrections.yRange[j-1];
+    px11 = wsCorrections.xCorrections[j-1][i-1];
+    px12 = wsCorrections.xCorrections[j-1][i];
+    px21 = wsCorrections.xCorrections[j][i-1];
+    px22 = wsCorrections.xCorrections[j][i];
+    py11 = wsCorrections.yCorrections[j-1][i-1];
+    py12 = wsCorrections.yCorrections[j-1][i];
+    py21 = wsCorrections.yCorrections[j][i-1];
+    py22 = wsCorrections.yCorrections[j][i];
+  }
+  else {
+    if (i==0 || inXRange==false) { // leftmost or right most column edge 
+      dx = wsCorrections.deltaX;
+      if (j==0 || inYRange ==false) { // corner
+        dy = wsCorrections.deltaY;
+        px11 = wsCorrections.xCorrections[j][i];
+        px12 = wsCorrections.xCorrections[j][i];
+        px21 = wsCorrections.xCorrections[j][i];
+        px22 = wsCorrections.xCorrections[j][i];
+        py11 = wsCorrections.yCorrections[j][i];
+        py12 = wsCorrections.yCorrections[j][i];
+        py21 = wsCorrections.yCorrections[j][i];
+        py22 = wsCorrections.yCorrections[j][i];        
+      }
+      else { // mid left or right edge column
+        dy = yposraw-wsCorrections.yRange[j-1];
+        px11 = wsCorrections.xCorrections[j-1][i];
+        px12 = wsCorrections.xCorrections[j-1][i];
+        px21 = wsCorrections.xCorrections[j][i];
+        px22 = wsCorrections.xCorrections[j][i];
+        py11 = wsCorrections.yCorrections[j-1][i];
+        py12 = wsCorrections.yCorrections[j-1][i];
+        py21 = wsCorrections.yCorrections[j][i];
+        py22 = wsCorrections.yCorrections[j][i];
+      }
+    }
+    else {
+      if (j==0 || inYRange==false) { // top or bottom rows excluding corners
+        dy = wsCorrections.deltaY;
+        dx = xposraw-wsCorrections.xRange[i-1];
+        px11 = wsCorrections.xCorrections[j][i-1];
+        px12 = wsCorrections.xCorrections[j][i];
+        px21 = wsCorrections.xCorrections[j][i-1];
+        px22 = wsCorrections.xCorrections[j][i];
+        py11 = wsCorrections.yCorrections[j][i-1];
+        py12 = wsCorrections.yCorrections[j][i];
+        py21 = wsCorrections.yCorrections[j][i-1];
+        py22 = wsCorrections.yCorrections[j][i];
+      }        
+      else {
+        Serial.print(F("error: correction out of bound"));
+        dy = wsCorrections.deltaY; 
+        dx = wsCorrections.deltaX;
+        px11 = 1;
+        px12 = 1;
+        px21 = 1;
+        px22 = 1;
+        py11 = 1;
+        py12 = 1;
+        py21 = 1;
+        py22 = 1;
+      }
+    }
+  } 
+  // calculs de Cx et Cy.
+  dE1 = px12-px11;
+  dE2 = px22-px21;
+  xC = dx/wsCorrections.deltaX;
+  yC = dy/wsCorrections.deltaY;
+  A = px11+dE1*xC;
+  B = px21+dE2*xC;
+  Cx = (A+(B-A)*yC)*CORR_STEPS_SIZE;
+  #if defined (verboseDebug) && verboseDebug > 0
+  Serial.print(F(" Cx Correction = ")); Serial.print(Cx,1);
+  #endif  
+  //offset is to be removed from target x value
+  xPosCorrected = xposraw-Cx;
+
+  dE1 = py12-py11;
+  dE2 = py22-py21;
+  xC = dx/wsCorrections.deltaX;
+  yC = dy/wsCorrections.deltaY;
+  A = py11+dE1*xC;
+  B = py21+dE2*xC;
+  Cy = (A+(B-A)*yC)*CORR_STEPS_SIZE;
+  #if defined (verboseDebug) && verboseDebug > 0
+  Serial.print(F(" Cy Correction = ")); Serial.print(Cy,1);
+  #endif  
+  //offset is to be removed from target y value
+  yPosCorrected = yposraw-Cy;
+ 
 }

@@ -26,6 +26,28 @@
     #define KINEMATICSMAXINVERSE 10
     #define KINEMATICSMAXGUESS 200
 
+    #define CORR_NBLINES 3
+    #define CORR_NBCOLUMNS 5
+    #define CORR_STEPS_SIZE 0.1
+    /*         /deltaX\
+     *     /  X31    X32    X33    X34    X35
+     *deltaY  
+     *     \  X21    X22    X23    X24    X25
+     * 
+     *        X11    X12    X13    X14    X15
+     *
+     X23 is measured at the workspace center, X11 lower left, etc.
+    */
+
+    typedef struct {
+      float deltaX; // The horizontal spacing between error sampling points
+      float deltaY; // The vertical spacing between error sampling points
+      float xRange[CORR_NBCOLUMNS]; // the set of boundaries delimiting the workspace zones
+      float yRange[CORR_NBLINES]; 
+      float xCorrections[CORR_NBLINES][CORR_NBCOLUMNS] = {{0.0,0.0,0.0,0.0,0.0},{0.0,0.0,0.0,0.0,0.0},{0.0,0.0,0.0,0.0,0.0}}; // bottom, middle and top row to follow indices  
+      float yCorrections[CORR_NBLINES][CORR_NBCOLUMNS] = {{0.0,0.0,0.0,0.0,0.0},{0.0,0.0,0.0,0.0,0.0},{0.0,0.0,0.0,0.0,0.0}}; // bottom, middle and top row to follow indices  
+    } corrections_t;
+
     class Kinematics{
         public:
             //setup functions
@@ -35,6 +57,11 @@
             //control functions
             void inverse   (float xTarget,float yTarget, float* aChainLength, float* bChainLength);
             void forward(const float& chainALength, const float& chainBLength, float* xPos, float* yPos, float xGuess, float yGuess);
+            //Correction functions
+            byte setCorrectionGrid(const String&);
+            void reportCorrectionGrid();
+            void getCorrection(const float xposraw, const float yposraw, float& xPosCorrected, float& yPosCorrected);
+            
             //set geometry
             float sprocketEffectiveRadius = 10.1;                                //sprocket radius
             // ref: madgrizzle proposal to let Kynematics handle chain tolerance and motor positions.
@@ -94,30 +121,8 @@
             // output = chain lengths measured from 12 o'clock
             float Chain1; //left chain length 
             float Chain2; //right chain length
-
+            // corrections table
+             corrections_t wsCorrections;
     };
-/*    /deltaX\
-    X11   X12   X13   X14   X15
-  deltaY  
-    X21   X22   X23   X24   X25
 
-    X31   X32   X33   X34   X35
-
- X23 is measured at the workspace center, X11 upper left, etc.
-*/
-    #define CORR_NBLINES 3
-    #define CORR_NBCOLUMNS 5
-    #define CORR_STEPS_SIZE 0.1
-
-    typedef struct {
-      float deltaX; // The horizontal spacing between error sampling points
-      float deltaY; // The vertical spacing between error sampling points
-      float xRange[CORR_NBCOLUMNS]; // the set of boundaries delimiting the workspace zones
-      float yRange[CORR_NBLINES]; 
-      float xCorrections[CORR_NBLINES][CORR_NBCOLUMNS] = {{0.0,0.0,0.0,0.0,0.0},{0.0,0.0,0.0,0.0,0.0},{0.0,0.0,0.0,0.0,0.0}}; // bottom, middle and top row to follow indices  
-      float yCorrections[CORR_NBLINES][CORR_NBCOLUMNS] = {{0.0,0.0,0.0,0.0,0.0},{0.0,0.0,0.0,0.0,0.0},{0.0,0.0,0.0,0.0,0.0}}; // bottom, middle and top row to follow indices  
-    } corrections_t;
-    extern corrections_t wsCorrections;
-
-byte setCorrectionGrid(const String&);
     #endif

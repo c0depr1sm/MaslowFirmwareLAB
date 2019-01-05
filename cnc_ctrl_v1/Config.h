@@ -19,7 +19,7 @@
 #define config_h
 
 // Debugging Options
-#define verboseDebug 1     // set to 0 for no debug messages, 1 for single-line messages, 2 to also output ring buffer contents
+#define verboseDebug 0     // set to 0 for no debug messages, 1 for single-line messages, 2 to also output ring buffer contents
 #define misloopDebug 0     // set to 1 for a warning every time the movement loop fails
                            // to complete before being interrupted, helpful for loop
                            // LOOPINTERVAL tuning
@@ -44,9 +44,10 @@
 #define VERS6 27
 
 // Serial variables
-#define INCBUFFERLENGTH 128 // The number of bytes(characters) allocated to the
+// c0depr1sm 2018-01-04 needed to increase buffer length to allow B18 to provide complete correction table.
+#define INCBUFFERLENGTH 220 // The number of bytes(characters) allocated to the
                             // incoming buffer.
-#define EXPGCODELINE 60     // Maximum expected Gcode line length in characters
+#define EXPGCODELINE 180     // Maximum expected Gcode line length in characters
                             // including line ending character(s).  Assumes
                             // client will not send more than this.  Ground
                             // Control is currently set to 60.  NIST spec allows
